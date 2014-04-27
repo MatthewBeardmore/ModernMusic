@@ -1,0 +1,98 @@
+﻿<Page
+    x:Class="HubApp1.HubPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HubApp1"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:data="using:HubApp1.Data"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Page.Resources>
+        <ResourceDictionary>
+            <!-- Grid-appropriate item template as seen in section 2 -->
+            <DataTemplate x:Key="Standard200x180TileItemTemplate">
+                <Grid Width="180">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Border Background="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}" Height="173" Width="173" Grid.Row="0" HorizontalAlignment="Left">
+                        <Image Source="{Binding ImagePath}" Stretch="UniformToFill" AutomationProperties.Name="{Binding Title}" Height="173" Width="173"/>
+                    </Border>
+                    <TextBlock Text="{Binding Title}" Style="{ThemeResource BaseTextBlockStyle}" Typography.Capitals="SmallCaps" Grid.Row="1" Margin="0,12,0,0" IsTextScaleFactorEnabled="False"/>
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Key="StandardTripleLineItemTemplate">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Background="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}" Height="99" Width="99" Grid.Column="0" HorizontalAlignment="Left">
+                        <Image Source="{Binding ImagePath}" Stretch="UniformToFill" AutomationProperties.Name="{Binding Title}" Height="99" Width="99"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                        <TextBlock Text="{Binding Title}" Style="{ThemeResource ListViewItemTextBlockStyle}"/>
+                        <TextBlock Text="{Binding Subtitle}" Style="{ThemeResource ListViewItemSubheaderTextBlockStyle}" />
+                        <TextBlock Text="{Binding Description}" Style="{ThemeResource ListViewItemContentTextBlockStyle}"/>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Key="StandardDoubleLineItemTemplate">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Background="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}" Height="99" Width="99" Grid.Column="0" HorizontalAlignment="Left">
+                        <Image Source="{Binding ImagePath}" Stretch="UniformToFill" AutomationProperties.Name="{Binding Title}" Height="99" Width="99"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                        <TextBlock Text="{Binding Title}" Style="{ThemeResource ListViewItemTextBlockStyle}"/>
+                        <TextBlock Text="{Binding Subtitle}" Style="{ThemeResource ListViewItemContentTextBlockStyle}"/>
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Page.Resources>
+
+    <Grid x:Name="LayoutRoot">
+        <Pivot Title="MODERN MUSIC"
+               x:Name="pivot"
+               CommonNavigationTransitionInfo.IsStaggerElement="True"
+               Margin="0">
+            <PivotItem x:Name="artistsPivot" Header="collections" CommonNavigationTransitionInfo.IsStaggerElement="True">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60"/>
+                        <RowDefinition Height="60"/>
+                        <RowDefinition Height="60"/>
+                        <RowDefinition Height="320*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Padding="0,12.5" Grid.Row="0" Style="{StaticResource SubheaderTextBlockStyle}" Text="artists" Tapped="TextBlock_Artists_Tapped"/>
+                    <TextBlock Padding="0,12.5" Grid.Row="1" Style="{StaticResource SubheaderTextBlockStyle}" Text="albums" Tapped="TextBlock_Albums_Tapped"/>
+                    <TextBlock Padding="0,12.5" Grid.Row="2" Style="{StaticResource SubheaderTextBlockStyle}" Text="songs" Tapped="TextBlock_Songs_Tapped"/>
+                </Grid>
+            </PivotItem>
+            <PivotItem x:Name="playlistsPivot" Header="playlist" CommonNavigationTransitionInfo.IsStaggerElement="True">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60"/>
+                        <RowDefinition Height="60"/>
+                        <RowDefinition Height="60"/>
+                        <RowDefinition Height="320*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Padding="0,15" Grid.Row="0" Text="A" FontSize="20" FontWeight="SemiBold" FontFamily="Segoe WP"/>
+                    <TextBlock Padding="0,15" Grid.Row="1" Text="B" FontSize="20" FontWeight="SemiBold" FontFamily="Segoe WP"/>
+                    <TextBlock Padding="0,15" Grid.Row="2" Text="C" FontSize="20" FontWeight="SemiBold" FontFamily="Segoe WP"/>
+                </Grid>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

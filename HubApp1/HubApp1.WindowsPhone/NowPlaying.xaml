@@ -1,0 +1,36 @@
+﻿<Page
+    x:Class="HubApp1.NowPlaying"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HubApp1"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="50"/>
+            <ColumnDefinition Width="27*"/>
+            <ColumnDefinition Width="50"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="183*"/>
+            <RowDefinition Height="260*"/>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="55"/>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+        <MediaElement x:Name="mediaControl" HorizontalAlignment="Left" Height="100" Margin="200,0,0,0" VerticalAlignment="Top" Width="100" Grid.Column="1"/>
+        <TextBlock Grid.Column="1" Grid.Row="2" HorizontalAlignment="Left" Margin="10,6,0,0" TextWrapping="Wrap" Text="{Binding Song.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource BaseTextBlockStyle}"/>
+        <TextBlock Grid.Column="1" Grid.Row="2" HorizontalAlignment="Left" Margin="10,30,0,0" TextWrapping="Wrap" Text="{Binding Song.Artist}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemContentTextBlockStyle}"/>
+        <TextBlock Grid.Column="1" Grid.Row="2" HorizontalAlignment="Left" Margin="10,54,0,0" TextWrapping="Wrap" Text="{Binding Song.Album}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemContentTextBlockStyle}"/>
+        <TextBlock Grid.Column="1" Grid.Row="3" HorizontalAlignment="Left" Margin="10,6,0,0" TextWrapping="Wrap" Text="{Binding NextSong.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"/>
+        <TextBlock Grid.Column="1" Grid.Row="3" HorizontalAlignment="Left" Margin="10,30,0,0" TextWrapping="Wrap" Text="{Binding SubsequentSong.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"/>
+        <AppBarButton Grid.Column="1" Grid.Row="4" x:Name="nextButton" HorizontalAlignment="Right" Icon="Forward" Label="appbarbutton" Margin="0,0,0,0" VerticalAlignment="Center" Height="60" Width="60" IsCompact="True" Click="nextButton_Click"/>
+        <AppBarButton Grid.Column="1" Grid.Row="4" x:Name="previousButton" HorizontalAlignment="Left" Icon="Back" Label="appbarbutton" Margin="0,0,0,0" VerticalAlignment="Center" Height="60" Width="60" IsCompact="True" Click="previousButton_Click"/>
+        <AppBarButton Grid.Column="1" Grid.Row="4" x:Name="playButton" HorizontalAlignment="Center" Icon="Pause" Label="appbarbutton" Margin="0,0,0,0" VerticalAlignment="Center" Height="60" Width="60" IsCompact="True" Click="playButton_Click"/>
+    </Grid>
+</Page>

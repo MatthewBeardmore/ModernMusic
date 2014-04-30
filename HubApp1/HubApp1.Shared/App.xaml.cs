@@ -16,6 +16,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using HubApp1.Common;
+using ModernMusic.Library;
 
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
@@ -68,7 +69,7 @@ namespace HubApp1
                 SuspensionManager.RegisterFrame(rootFrame, "AppFrame");
 
                 // TODO: change this value to a cache size that is appropriate for your application
-                rootFrame.CacheSize = 1;
+                rootFrame.CacheSize = 10;
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {

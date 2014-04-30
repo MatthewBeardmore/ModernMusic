@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Foundation.Collections;
 
-namespace HubApp1.Common
+namespace ModernMusic.Library.Helpers
 {
     /// <summary>
     /// Implementation of IObservableMap that supports reentrancy for use as a default view
@@ -26,7 +26,7 @@ namespace HubApp1.Common
         private Dictionary<string, object> _dictionary = new Dictionary<string, object>();
         public event MapChangedEventHandler<string, object> MapChanged;
 
-        private void InvokeMapChanged(CollectionChange change, string key)
+        public void InvokeMapChanged(CollectionChange change, string key)
         {
             var eventHandler = MapChanged;
             if (eventHandler != null)

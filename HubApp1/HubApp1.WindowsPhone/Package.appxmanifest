@@ -3,9 +3,9 @@
   <Identity Name="705ca922-1ae8-44d5-8b9f-ea48585a7af0" Publisher="CN=Matthew" Version="1.0.0.0" />
   <mp:PhoneIdentity PhoneProductId="705ca922-1ae8-44d5-8b9f-ea48585a7af0" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>HubApp1.WindowsPhone</DisplayName>
-    <PublisherDisplayName>Matthew</PublisherDisplayName>
-    <Logo>Assets\StoreLogo.png</Logo>
+    <DisplayName>ModernMusic</DisplayName>
+    <PublisherDisplayName>Matthew Beardmore</PublisherDisplayName>
+    <Logo>Assets\headphones_120.png</Logo>
   </Properties>
   <Prerequisites>
     <OSMinVersion>6.3.1</OSMinVersion>
@@ -16,25 +16,28 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="HubApp1.WindowsPhone.App">
-      <m3:VisualElements DisplayName="HubApp1.WindowsPhone" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="HubApp1.WindowsPhone" ForegroundText="light" BackgroundColor="transparent">
-        <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Square71x71Logo.png">
+      <m3:VisualElements DisplayName="Modern Music" Square150x150Logo="Assets\headphones_360.png" Square44x44Logo="Assets\headphones_106.png" Description="Modern Music App" ForegroundText="light" BackgroundColor="transparent">
+        <m3:DefaultTile Square71x71Logo="Assets\Square71x71Logo.png">
         </m3:DefaultTile>
-        <m3:SplashScreen Image="Assets\SplashScreen.png" />
+        <m3:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#323232" />
         <m3:ApplicationView MinWidth="width320" />
         <!--Used in XAML Designer. DO NOT REMOVE-->
+        <m3:InitialRotationPreference>
+          <m3:Rotation Preference="portrait" />
+        </m3:InitialRotationPreference>
       </m3:VisualElements>
+      <Extensions>
+        <Extension Category="windows.backgroundTasks" EntryPoint="BackgroundAudioTask.BackgroundAudioTask">
+          <BackgroundTasks>
+            <Task Type="audio" />
+          </BackgroundTasks>
+        </Extension>
+      </Extensions>
     </Application>
   </Applications>
   <Capabilities>
     <Capability Name="internetClientServer" />
     <Capability Name="musicLibrary" />
     <Capability Name="removableStorage" />
-    <Capability Name="videosLibrary" />
-    <Capability Name="picturesLibrary" />
-    <m3:Capability Name="contacts" />
-    <m3:Capability Name="appointments" />
-    <DeviceCapability Name="proximity" />
-    <DeviceCapability Name="location" />
-    <DeviceCapability Name="microphone" />
   </Capabilities>
 </Package>

@@ -1,16 +1,12 @@
 ﻿using HubApp1.Common;
-using HubApp1.Controls;
-using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
+using ModernMusic.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Graphics.Display;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -19,27 +15,18 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-// The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
+// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
 
 namespace HubApp1
 {
     /// <summary>
-    /// A page that displays an overview of a single group, including a preview of the items
-    /// within the group.
-    /// </summary
-    public sealed partial class AlbumView : Page
+    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// </summary>
+    public sealed partial class SettingsPage : Page
     {
         private readonly NavigationHelper navigationHelper;
-        private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
-        private Album _currentAlbum = null;
 
-        public AlbumView()
-        {
-            this.InitializeComponent();
-
-            this.navigationHelper = new NavigationHelper(this);
-            this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
-        }
+        public Settings Settings { get { return Settings.Instance; } }
 
         /// <summary>
         /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
@@ -49,13 +36,15 @@ namespace HubApp1
             get { return this.navigationHelper; }
         }
 
-        /// <summary>
-        /// Gets the view model for this <see cref="Page"/>.
-        /// This can be changed to a strongly typed view model.
-        /// </summary>
-        public ObservableDictionary DefaultViewModel
+        public SettingsPage()
         {
-            get { return this.defaultViewModel; }
+            this.InitializeComponent();
+
+            this.NavigationCacheMode = NavigationCacheMode.Required;
+
+            this.navigationHelper = new NavigationHelper(this);
+            this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
+            this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
         }
 
         /// <summary>
@@ -71,22 +60,22 @@ namespace HubApp1
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            _currentAlbum = (Album)e.NavigationParameter;
-
-            this.DefaultViewModel["Artist"] = MusicLibrary.Instance.GetArtist(_currentAlbum.Artist);
-            this.DefaultViewModel["Album"] = _currentAlbum;
-            this.DefaultViewModel["Songs"] = MusicLibrary.Instance.GetSongs(_currentAlbum);
         }
 
-        private void songView_ItemClick(object sender, ItemClickEventArgs e)
+        /// <summary>
+        /// Preserves state associated with this page in case the application is suspended or the
+        /// page is discarded from the navigation cache.  Values must conform to the serialization
+        /// requirements of <see cref="SuspensionManager.SessionState"/>.
+        /// </summary>
+        /// <param name="sender">The source of the event; typically <see cref="NavigationHelper"/></param>
+        /// <param name="e">Event data that provides an empty dictionary to be populated with
+        /// serializable state.</param>
+        private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
-            KeyValuePair<Album, int> kvp = new KeyValuePair<Album, int>(_currentAlbum,
-                MusicLibrary.Instance.GetSongs(_currentAlbum).IndexOf(((Song)e.ClickedItem)));
-            if (!Frame.Navigate(typeof(NowPlaying), kvp))
-            {
-                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
-            }
+            Settings.ClearCacheOnNextStart = clearCacheOnNextStart.IsOn;
+            Settings.Save();
+
+            Application.Current.Exit();
         }
 
         #region NavigationHelper registration
@@ -114,10 +103,5 @@ namespace HubApp1
         }
 
         #endregion
-
-        private void addToNowPlaying_Click(object sender, RoutedEventArgs e)
-        {
-            NowPlayingManager.AddToNowPlaying(_currentAlbum);
-        }
     }
 }

@@ -81,8 +81,34 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <ProjectReference Include="..\..\ModernMusic.Library\ModernMusic.Library.csproj">
+      <Project>{983d9808-b64a-4242-8bb9-5e2a447f575a}</Project>
+      <Name>ModernMusic.Library</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SampleBackgroundAudioTask\BackgroundAudioTask.csproj">
+      <Project>{8b214c2e-8bc3-48ea-bcbc-05b352531676}</Project>
+      <Name>BackgroundAudioTask</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PlaylistView.xaml.cs">
+      <DependentUpon>PlaylistView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\AlbumItemControl.xaml.cs">
+      <DependentUpon>AlbumItemControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ArtistItemControl.xaml.cs">
+      <DependentUpon>ArtistItemControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\NowPlayingControl.xaml.cs">
+      <DependentUpon>NowPlayingControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SongItemControl.xaml.cs">
+      <DependentUpon>SongItemControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsPage.xaml.cs">
+      <DependentUpon>SettingsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CollectionsHub.xaml.cs">
       <DependentUpon>CollectionsHub.xaml</DependentUpon>
     </Compile>
@@ -106,7 +132,10 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Assets\001430-3d-transparent-glass-icon-media-a-media22-arrow-forward1.png" />
+    <Content Include="Assets\headphones.scale-240.png" />
+    <Content Include="Assets\headphones_106.scale-240.png" />
+    <Content Include="Assets\headphones_120.scale-240.png" />
+    <Content Include="Assets\headphones_360.scale-240.png" />
     <Content Include="Assets\Logo.scale-240.png" />
     <Content Include="Assets\SmallLogo.scale-240.png" />
     <Content Include="Assets\SplashScreen.scale-240.png" />
@@ -117,6 +146,30 @@
     <Content Include="Assets\HubBackground.theme-light.png" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="PlaylistView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\AlbumItemControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ArtistItemControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\NowPlayingControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SongItemControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SettingsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CollectionsHub.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

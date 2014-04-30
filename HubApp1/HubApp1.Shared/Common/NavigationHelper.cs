@@ -61,6 +61,7 @@ namespace HubApp1.Common
     {
         private Page Page { get; set; }
         private Frame Frame { get { return this.Page.Frame; } }
+        public bool OnBackClearState { private get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NavigationHelper"/> class.
@@ -344,7 +345,10 @@ namespace HubApp1.Common
                 // from cache
                 if (this.LoadState != null)
                 {
-                    this.LoadState(this, new LoadStateEventArgs(e.Parameter, (Dictionary<String, Object>)frameState[this._pageKey]));
+                    if (!OnBackClearState)
+                        this.LoadState(this, new LoadStateEventArgs(e.Parameter, (Dictionary<String, Object>)frameState[this._pageKey]));
+                    else
+                        this.LoadState(this, new LoadStateEventArgs(null, null));
                 }
             }
         }

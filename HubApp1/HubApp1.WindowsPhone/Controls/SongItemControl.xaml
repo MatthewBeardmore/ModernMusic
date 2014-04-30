@@ -1,0 +1,35 @@
+﻿<UserControl
+    x:Class="HubApp1.Controls.SongItemControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HubApp1.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DataContext="{Binding Source={d:DesignData Source=../../ModernMusic.Library/Library/Samples/SampleSongView.json}}"
+    d:DesignHeight="70"
+    d:DesignWidth="400">
+    <StackPanel Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Height="70">
+        <Border VerticalAlignment="Top" Margin="0,10,0,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90"  Width="38" Height="38">
+            <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <ContentControl HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <SymbolIcon Symbol="Play" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </ContentControl>
+            </ContentPresenter>
+        </Border>
+        <StackPanel Margin="20,0,0,0" Height="70" Background="{ThemeResource PageBackgroundThemeBrush}">
+            <TextBlock Style="{StaticResource ListViewItemTextBlockStyle}"
+                                           Text="{Binding SongTitle}"
+                                           Padding="0,0,0,0" TextWrapping="WrapWholeWords" MaxHeight="40"
+                                           CommonNavigationTransitionInfo.IsStaggerElement="True"/>
+            <TextBlock Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"
+                                           Text="{Binding Artist}"
+                                           Padding="0,0,0,0" TextWrapping="NoWrap"
+                                           CommonNavigationTransitionInfo.IsStaggerElement="True"/>
+            <!--<TextBlock Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"
+                                           Text="{Binding Album}"
+                                           Padding="10,0,0,10"
+                                           CommonNavigationTransitionInfo.IsStaggerElement="True"/>-->
+        </StackPanel>
+    </StackPanel>
+</UserControl>

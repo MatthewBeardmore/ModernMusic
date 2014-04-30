@@ -27,13 +27,13 @@ namespace HubApp1
     /// A page that displays an overview of a single group, including a preview of the items
     /// within the group.
     /// </summary
-    public sealed partial class AlbumView : Page
+    public sealed partial class PlaylistView : Page
     {
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
-        private Album _currentAlbum = null;
+        private Playlist _currentPlaylist = null;
 
-        public AlbumView()
+        public PlaylistView()
         {
             this.InitializeComponent();
 
@@ -71,17 +71,15 @@ namespace HubApp1
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            _currentAlbum = (Album)e.NavigationParameter;
+            _currentPlaylist = (Playlist)e.NavigationParameter;
 
-            this.DefaultViewModel["Artist"] = MusicLibrary.Instance.GetArtist(_currentAlbum.Artist);
-            this.DefaultViewModel["Album"] = _currentAlbum;
-            this.DefaultViewModel["Songs"] = MusicLibrary.Instance.GetSongs(_currentAlbum);
+            this.DefaultViewModel["Songs"] = _currentPlaylist.Songs;
         }
 
         private void songView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            KeyValuePair<Album, int> kvp = new KeyValuePair<Album, int>(_currentAlbum,
-                MusicLibrary.Instance.GetSongs(_currentAlbum).IndexOf(((Song)e.ClickedItem)));
+            KeyValuePair<Playlist, int> kvp = new KeyValuePair<Playlist, int>(_currentPlaylist,
+                _currentPlaylist.Songs.IndexOf(((Song)e.ClickedItem)));
             if (!Frame.Navigate(typeof(NowPlaying), kvp))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
@@ -114,10 +112,5 @@ namespace HubApp1
         }
 
         #endregion
-
-        private void addToNowPlaying_Click(object sender, RoutedEventArgs e)
-        {
-            NowPlayingManager.AddToNowPlaying(_currentAlbum);
-        }
     }
 }

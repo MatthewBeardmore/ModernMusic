@@ -1,11 +1,14 @@
 ﻿using HubApp1.Common;
-using HubApp1.Data;
-using ModernMusic.MusicLibrary;
+using ModernMusic.Library;
+using ModernMusic.Library.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
+using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Graphics.Display;
@@ -29,6 +32,7 @@ namespace HubApp1
     {
         private NavigationHelper navigationHelper;
         private ObservableDictionary defaultViewModel = new ObservableDictionary();
+        private object _lastClicked = null;
 
         public CollectionsHub()
         {
@@ -85,6 +89,8 @@ namespace HubApp1
             {
                 pivot.SelectedIndex = 2;
             }
+
+            Task t = MusicLibrary.Instance.LoadAllArtwork();
         }
 
         /// <summary>
@@ -128,19 +134,61 @@ namespace HubApp1
 
         private void lvArtists_ItemClick(object sender, ItemClickEventArgs e)
         {
-            var artist = ((Artist)e.ClickedItem);
-            this.Frame.Navigate(typeof(ArtistView), artist);
+            _lastClicked = e.ClickedItem;
         }
 
         private void lvAlbums_ItemClick(object sender, ItemClickEventArgs e)
         {
-            var artist = ((Album)e.ClickedItem);
-            this.Frame.Navigate(typeof(AlbumView), artist);
+            _lastClicked = e.ClickedItem;
         }
 
         private void lvSongs_ItemClick(object sender, ItemClickEventArgs e)
         {
+            var artist = ((Song)e.ClickedItem);
+            this.Frame.Navigate(typeof(NowPlaying), artist);
+        }
 
+        private void ArtistPlay_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            var artist = ((Artist)((Control)sender).Tag);
+            this.Frame.Navigate(typeof(NowPlaying), artist);
+        }
+
+        private void ArtistItem_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (_lastClicked == null)
+            {
+                Debug.WriteLine("NO ARTIST ITEM");
+                return;
+            }
+
+            e.Handled = true;
+            var artist = ((Artist)_lastClicked);
+            this.Frame.Navigate(typeof(ArtistView), artist);
+        }
+
+        private void AlbumArt_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            var album = ((Album)_lastClicked);
+            this.Frame.Navigate(typeof(NowPlaying), album);
+        }
+
+        private void AlbumItem_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            var album = ((Album)_lastClicked);
+            this.Frame.Navigate(typeof(AlbumView), album);
+        }
+
+        private void nowPlaying_click(object sender, RoutedEventArgs e)
+        {
+            if (!Frame.Navigate(typeof(NowPlaying), null))
+            {
+                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
+            }
         }
     }
 }

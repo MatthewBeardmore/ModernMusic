@@ -6,27 +6,60 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    DataContext="{Binding DefaultViewModel.MusicLibrary, RelativeSource={RelativeSource Self}}"
-    d:DataContext="{Binding Source={d:DesignData Source=../HubApp1.Shared/DataModel/SampleData.json, Type=data:MusicLibrary}}"
-    xmlns:data="using:ModernMusic.MusicLibrary"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
+    xmlns:data="using:ModernMusic.Library"
+    xmlns:controls="using:HubApp1.Controls"
+    xmlns:helpers="using:ModernMusic.Helpers"
+    Background="{ThemeResource PageBackgroundThemeBrush}">
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Label="now playing" Click="nowPlaying_click" Icon="AllApps"/>
+        </CommandBar>
+    </Page.BottomAppBar>
+    <Page.Transitions>
+        <TransitionCollection>
+            <NavigationThemeTransition>
+                <NavigationThemeTransition.DefaultNavigationTransitionInfo>
+                    <ContinuumNavigationTransitionInfo/>
+                </NavigationThemeTransition.DefaultNavigationTransitionInfo>
+            </NavigationThemeTransition>
+        </TransitionCollection>
+    </Page.Transitions>
+    
     <Pivot Title="MODERN MUSIC"
                x:Name="pivot"
+               DataContext="{Binding MusicLibrary}"
+               d:DataContext="{Binding Source={d:DesignData Source=../../ModernMusic.Library/Library/Samples/SampleMusicLibrary.json, Type=data:MusicLibrary}}"
                CommonNavigationTransitionInfo.IsStaggerElement="True"
                Margin="0">
-        <PivotItem x:Name="artistsPivot" Header="artists" CommonNavigationTransitionInfo.IsStaggerElement="True">
-            <ListView x:Name="lvArtists" 
-                          ContinuumNavigationTransitionInfo.ExitElementContainer="True"
-                          IsItemClickEnabled="True"
-                          ItemsSource="{Binding Artists}" ItemClick="lvArtists_ItemClick">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Height="55" Style="{StaticResource SubheaderTextBlockStyle}"
-                                       Text="{Binding ArtistName}"
-                                       CommonNavigationTransitionInfo.IsStaggerElement="True"/>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+        <PivotItem x:Name="artistsPivot" Header="artists" 
+                   CommonNavigationTransitionInfo.IsStaggerElement="True" 
+                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <SemanticZoom CommonNavigationTransitionInfo.IsStaggerElement="True">
+                <SemanticZoom.ZoomedOutView>
+                    <GridView Margin="20,20,0,0" ItemsSource="{Binding ArtistsCollection.View.CollectionGroups}"
+                              ItemTemplate="{StaticResource AlphaJumpListItemTemplate}" />
+                </SemanticZoom.ZoomedOutView>
+                <SemanticZoom.ZoomedInView>
+                    <ListView x:Name="lvArtists" 
+                              ContinuumNavigationTransitionInfo.ExitElementContainer="True"
+                              IsItemClickEnabled="True"
+                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                              ItemsSource="{Binding ArtistsCollection.View}" ItemClick="lvArtists_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <controls:ArtistItemControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                    OnItem_Tapped="ArtistItem_Tapped"
+                                    OnPlay_Tapped="ArtistPlay_Tapped"/>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.GroupStyle>
+                            <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
+                                            HidesIfEmpty="True" />
+                        </ListView.GroupStyle>
+                    </ListView>
+                </SemanticZoom.ZoomedInView>
+            </SemanticZoom>
         </PivotItem>
         <PivotItem x:Name="albumPivot" Header="albums"
                        CommonNavigationTransitionInfo.IsStaggerElement="True">
@@ -36,20 +69,7 @@
                           ItemsSource="{Binding Albums}" ItemClick="lvAlbums_ItemClick">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Grid HorizontalAlignment="Stretch" Height="80">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Border Background="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}" Margin="0,0,0,0" Width="60" Height="60">
-                                <Image Source="{Binding ImagePath}" Stretch="UniformToFill"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,10,0,0">
-                                <TextBlock Text="{Binding AlbumName}" Style="{ThemeResource ListViewItemTextBlockStyle}"/>
-                                <TextBlock Text="{Binding Artist}" Style="{ThemeResource ListViewItemTextBlockStyle}" FontSize="12"/>
-                            </StackPanel>
-                        </Grid>
+                        <controls:AlbumItemControl OnAlbumArtTapped="AlbumArt_Tapped" OnItemTapped="AlbumItem_Tapped"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -62,20 +82,7 @@
                           ItemsSource="{Binding Songs}" ItemClick="lvSongs_ItemClick">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel MinHeight="60">
-                            <TextBlock Style="{StaticResource SubheaderTextBlockStyle}"
-                                       Text="{Binding SongTitle}"
-                                       Padding="0,10,0,0"
-                                       CommonNavigationTransitionInfo.IsStaggerElement="True"/>
-                            <TextBlock Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"
-                                       Text="{Binding Artist}"
-                                       Padding="10,0,0,0"
-                                       CommonNavigationTransitionInfo.IsStaggerElement="True"/>
-                            <TextBlock Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"
-                                       Text="{Binding Album}"
-                                       Padding="10,0,0,10"
-                                       CommonNavigationTransitionInfo.IsStaggerElement="True"/>
-                        </StackPanel>
+                        <controls:SongItemControl/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

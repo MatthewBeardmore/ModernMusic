@@ -1,22 +1,15 @@
 ﻿<Page
-    x:Class="HubApp1.ArtistView"
+    x:Class="HubApp1.PlaylistView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:HubApp1"
+    xmlns:common="using:HubApp1.Common"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:controls="using:HubApp1.Controls"
     DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     Background="{ThemeResource PageBackgroundThemeBrush}">
-    <Page.BottomAppBar>
-        <CommandBar>
-            <AppBarButton Icon="Pin" Label="pin"/>
-            <CommandBar.SecondaryCommands>
-                <AppBarButton Label="add to now playing" Click="addToNowPlaying_Click"/>
-            </CommandBar.SecondaryCommands>
-        </CommandBar>
-    </Page.BottomAppBar>
     <Page.Transitions>
         <TransitionCollection>
             <NavigationThemeTransition>
@@ -26,31 +19,17 @@
             </NavigationThemeTransition>
         </TransitionCollection>
     </Page.Transitions>
+    <Page.Resources>
+        <common:ObjectToTypeStringConverter x:Key="ObjectToTypeString" />
+    </Page.Resources>
 
-    <Pivot Title="{Binding Artist.ArtistNameCaps}"
+    <Pivot Title="MODERN MUSIC"
                x:Name="pivot"
                CommonNavigationTransitionInfo.IsStaggerElement="True"
                Margin="0">
-        <PivotItem x:Name="albumsPivot" Header="albums" CommonNavigationTransitionInfo.IsStaggerElement="True">
+        <PivotItem x:Name="songsPivot" Header="playlist" CommonNavigationTransitionInfo.IsStaggerElement="True">
             <ListView
-                x:Name="itemListView"
-                AutomationProperties.AutomationId="ItemListView"
-                AutomationProperties.Name="Items In Group"
-                TabIndex="1"
-                ItemsSource="{Binding Albums}"
-                IsItemClickEnabled="True"
-                ItemClick="albumView_ItemClick"
-                SelectionMode="None"
-                IsSwipeEnabled="false">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <controls:AlbumItemControl OnAlbumArtTapped="AlbumArt_Tapped" OnItemTapped="AlbumItem_Tapped"/>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </PivotItem>
-        <PivotItem x:Name="songsPivot" Header="songs" CommonNavigationTransitionInfo.IsStaggerElement="True">
-            <ListView
+                x:Name="songView"
                 AutomationProperties.AutomationId="ItemListView"
                 AutomationProperties.Name="Items In Group"
                 TabIndex="1"
@@ -58,7 +37,8 @@
                 IsItemClickEnabled="True"
                 ItemClick="songView_ItemClick"
                 SelectionMode="None"
-                IsSwipeEnabled="false">
+                IsSwipeEnabled="false"
+                Grid.Row="1" Grid.ColumnSpan="2">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <controls:SongItemControl/>

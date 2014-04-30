@@ -15,22 +15,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Common\RealObservableCollection.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DataModel\Album.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DataModel\Artist.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DataModel\MusicDataSource.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DataModel\MusicLibrary.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DataModel\SampleDataSource.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DataModel\Song.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)DataModel\XboxMusicConnection.cs" />
-    <Content Include="$(MSBuildThisFileDirectory)DataModel\SampleData.json" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\Utilities.cs" />
     <Content Include="$(MSBuildThisFileDirectory)Assets\LightGray.png" />
     <Content Include="$(MSBuildThisFileDirectory)Assets\MediumGray.png" />
     <Content Include="$(MSBuildThisFileDirectory)Assets\DarkGray.png" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\NavigationHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\RelayCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\SuspensionManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Common\ObservableDictionary.cs" />
     <PRIResource Include="$(MSBuildThisFileDirectory)Strings\en-US\Resources.resw" />
   </ItemGroup>
 </Project>

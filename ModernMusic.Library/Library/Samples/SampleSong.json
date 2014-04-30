@@ -1,0 +1,23 @@
+{
+  "Song":
+	{
+		"Album": "Shine",
+		"Artist": "Trey Anastasio",
+		"FilePath": "C:\\Data\\Users\\Public\\Music\\Trey Anastasio\\Shine\\06 - Trey Anastasio - Wherever You Find It.mp3",
+		"SongTitle": "Wherever You Find It"
+	},
+  "NextSong":
+	{
+		"Album": "Shine",
+		"Artist": "Trey Anastasio",
+		"FilePath": "C:\\Data\\Users\\Public\\Music\\Trey Anastasio\\Shine\\07 - Trey Anastasio - Sweet Dreams Melinda.mp3",
+		"SongTitle": "Sweet Dreams Melinda"
+	},
+  "SubsequentSong":
+	{
+		"Album": "Shine",
+		"Artist": "Trey Anastasio",
+		"FilePath": "C:\\Data\\Users\\Public\\Music\\Trey Anastasio\\Shine\\08 - Trey Anastasio - Love Is Freedom.mp3",
+		"SongTitle": "Love Is Freedom"
+	}
+}

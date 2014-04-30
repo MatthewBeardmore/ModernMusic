@@ -1,20 +1,25 @@
 ﻿using HubApp1.Common;
-using HubApp1.Data;
-using ModernMusic.MusicLibrary;
+using ModernMusic.Library;
+using ModernMusic.Library.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Media;
+using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
@@ -28,43 +33,61 @@ namespace HubApp1
     {
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
-        private Song _currentSong;
 
         public NowPlaying()
         {
             this.InitializeComponent();
 
-            this.navigationHelper = new NavigationHelper(this);
+            nowPlayingControl.SetupPage(this);
+
+            this.navigationHelper = new NavigationHelper(this) { OnBackClearState = true };
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             //this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
         }
 
-        private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
+        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            _currentSong = (Song)e.NavigationParameter;
-            this.DefaultViewModel["Song"] = _currentSong;
-
-            var sourceFile = await StorageFile.GetFileFromPathAsync(_currentSong.FilePath);
-            if(sourceFile != null)
+            if (e.NavigationParameter == null)
             {
-                var stream = await sourceFile.OpenAsync(Windows.Storage.FileAccessMode.Read);
-
-                // mediaControl is a MediaElement defined in XAML
-                if (null != stream)
-                {
-                    mediaControl.SetSource(stream, sourceFile.ContentType);
-
-                    mediaControl.Play();
-                }
+                nowPlayingControl.ResumeLayout();
+                return;
             }
-        }
 
-        /// <summary>
-        /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
-        /// </summary>
-        public NavigationHelper NavigationHelper
-        {
-            get { return this.navigationHelper; }
+            Playlist playlist = new Playlist();
+            int currentSongIndex = 0;
+
+            if (e.NavigationParameter is Artist)
+            {
+                Artist artist = (Artist)e.NavigationParameter;
+                playlist.Songs = MusicLibrary.Instance.GetSongs(artist);
+            }
+            else if (e.NavigationParameter is Album)
+            {
+                Album album = (Album)e.NavigationParameter;
+                playlist.Songs = MusicLibrary.Instance.GetSongs(album);
+            }
+            else if (e.NavigationParameter is Song)
+            {
+                Song song = (Song)e.NavigationParameter;
+
+                playlist.Songs.Add(song);
+            }
+            else if (e.NavigationParameter is KeyValuePair<Album, int>)
+            {
+                KeyValuePair<Album, int> kvp = ((KeyValuePair<Album, int>)e.NavigationParameter);
+                playlist.Songs = MusicLibrary.Instance.GetSongs(kvp.Key);
+                currentSongIndex = kvp.Value;
+            }
+            else if (e.NavigationParameter is KeyValuePair<Playlist, int>)
+            {
+                KeyValuePair<Playlist, int> kvp = ((KeyValuePair<Playlist, int>)e.NavigationParameter);
+                playlist.Songs = kvp.Key.Songs;
+                currentSongIndex = kvp.Value;
+            }
+
+            NowPlayingManager.SetPlaylist(playlist, currentSongIndex);
+            nowPlayingControl.ResumeLayout();
+            NowPlayingManager.StartAudio(Dispatcher);
         }
 
         /// <summary>
@@ -101,28 +124,5 @@ namespace HubApp1
         }
 
         #endregion
-
-        private void playButton_Click(object sender, RoutedEventArgs e)
-        {
-            if(mediaControl.CurrentState == MediaElementState.Paused)
-            {
-                playButton.Icon = new SymbolIcon(Symbol.Pause);
-                mediaControl.Play();
-            }
-            else
-            {
-                playButton.Icon = new SymbolIcon(Symbol.Play);
-                mediaControl.Pause();
-            }
-        }
-
-        private void nextButton_Click(object sender, RoutedEventArgs e)
-        { 
-        }
-
-        private void previousButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }

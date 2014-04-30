@@ -1,30 +1,44 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Data.Json;
 using Windows.Storage;
 
-namespace ModernMusic.MusicLibrary
+namespace ModernMusic.Library
 {
     [DataContract]
-    public class Artist : INotifyPropertyChanged
+    public class Album : INotifyPropertyChanged
     {
+        private string _imagePath = "Assets/LightGray.png";
+        
         [DataMember]
-        public string ArtistName { get; private set; }
-
-        public Artist(String artistName)
+        public string AlbumName { get; private set; }
+        [DataMember]
+        public string Artist { get; private set; }
+        [DataMember]
+        public string ImagePath
         {
-            this.ArtistName = artistName;
+            get { return _imagePath; }
+            set { _imagePath = value; OnPropertyChanged<string>(); }
+        }
+
+        public Album Self { get { return this; } }
+
+        public Album(string artist, string albumName)
+        {
+            this.Artist = artist;
+            this.AlbumName = albumName;
+            this.ImagePath = "Assets/LightGray.png";
         }
 
         public override string ToString()
         {
-            return this.ArtistName;
+            return this.AlbumName;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

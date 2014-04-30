@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Web.Http;
 
-namespace ModernMusic.MusicLibrary
+namespace ModernMusic.Library
 {
     public class XboxMusicConnection
     {
@@ -19,9 +19,9 @@ namespace ModernMusic.MusicLibrary
         private static string Token;
         private static DateTime? TokenExpirationDate = null;
 
-        private static async void CreateConnection()
+        private static async Task CreateConnection()
         {
-            if(Token != null && (TokenExpirationDate.Value - DateTime.Now).TotalSeconds > 0)
+            if (Token != null && TokenExpirationDate.HasValue && (TokenExpirationDate.Value - DateTime.Now).TotalSeconds > 0)
                 return;
 
             // Define the data needed to request an authorization token.
@@ -38,13 +38,14 @@ namespace ModernMusic.MusicLibrary
             var response = await client.PostAsync(new Uri(SERVICE_URL), new HttpFormUrlEncodedContent(requestData));
             var responseString = await response.Content.ReadAsStringAsync();
 
-            var token = Regex.Match(responseString, ".*\"access_token\":\"(.*?)\".*", RegexOptions.IgnoreCase).Groups[1].Value;
-
+            JsonObject obj = JsonObject.Parse(responseString);
+            Token = obj["access_token"].GetString();
+            TokenExpirationDate = DateTime.Now.AddSeconds(double.Parse(obj["expires_in"].GetString()));
         }
 
         public static async Task<JsonObject> GetArtistData(Artist artist)
         {
-            CreateConnection();
+            await CreateConnection();
 
             var client = new HttpClient();
             string service = "https://music.xboxlive.com/1/content/music/search?q=" + WebUtility.UrlEncode(artist.ArtistName) + "&accessToken=Bearer+";
@@ -66,7 +67,7 @@ namespace ModernMusic.MusicLibrary
 
         public static async Task<JsonObject> GetAlbumData(Album album)
         {
-            CreateConnection();
+            await CreateConnection();
 
             var client = new HttpClient();
             string service = "https://music.xboxlive.com/1/content/music/search?q=" + WebUtility.UrlEncode(album.Artist + " " + album.AlbumName) + "&accessToken=Bearer+";
@@ -88,7 +89,11 @@ namespace ModernMusic.MusicLibrary
 
         public static async Task<JsonArray> GetAllAlbumData(Artist artist)
         {
-            CreateConnection();
+            if (artist.HasDownloadedArtistData)
+                return null;
+            artist.HasDownloadedArtistData = true;
+
+            await CreateConnection();
 
             var client = new HttpClient();
             string service = "https://music.xboxlive.com/1/content/music/search?q=" + WebUtility.UrlEncode(artist.ArtistName) + "&accessToken=Bearer+";

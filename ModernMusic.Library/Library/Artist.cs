@@ -1,35 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Data.Json;
 using Windows.Storage;
 
-namespace ModernMusic.MusicLibrary
+namespace ModernMusic.Library
 {
     [DataContract]
-    public class Album : INotifyPropertyChanged
+    public class Artist : INotifyPropertyChanged
     {
         [DataMember]
-        public string AlbumName { get; private set; }
+        public string ArtistName { get; private set; }
+        public string ArtistNameCaps { get { return ArtistName.ToUpper(); } }
         [DataMember]
-        public string Artist { get; private set; }
-        public string ImagePath { get; set; }
+        public bool HasDownloadedArtistData { get; set; }
 
-        public Album(string artist, string albumName)
+        public Artist Self { get { return this; } }
+
+        public Artist(String artistName)
         {
-            this.Artist = artist;
-            this.AlbumName = albumName;
-            ImagePath = "Assets/LightGray.png";
+            this.ArtistName = artistName;
         }
 
         public override string ToString()
         {
-            return this.AlbumName;
+            return this.ArtistName;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

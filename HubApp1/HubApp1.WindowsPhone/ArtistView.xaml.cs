@@ -1,11 +1,12 @@
 ﻿using HubApp1.Common;
-using HubApp1.Data;
-using ModernMusic.MusicLibrary;
+using ModernMusic.Library;
+using ModernMusic.Library.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -31,6 +32,7 @@ namespace HubApp1
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private Artist _currentArtist = null;
+        private object _lastClicked = null;
 
         public ArtistView()
         {
@@ -70,20 +72,16 @@ namespace HubApp1
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            // TODO: Create an appropriate data model for your problem domain to replace the sample data.
             _currentArtist = (Artist)e.NavigationParameter;
             this.DefaultViewModel["Artist"] = _currentArtist;
             this.DefaultViewModel["Albums"] = MusicLibrary.Instance.GetAlbums(_currentArtist);
             this.DefaultViewModel["Songs"] = MusicLibrary.Instance.GetSongs(_currentArtist);
+            Task t = MusicLibrary.Instance.DownloadAlbumArt(_currentArtist);
         }
 
         private void albumView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if (!Frame.Navigate(typeof(AlbumView), ((Album)e.ClickedItem)))
-            {
-                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
-            }
+            _lastClicked = e.ClickedItem;
         }
 
         #region NavigationHelper registration
@@ -119,6 +117,31 @@ namespace HubApp1
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
                 throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
             }
+        }
+
+        private void AlbumArt_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (!Frame.Navigate(typeof(NowPlaying), ((Album)_lastClicked)))
+            {
+                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
+            }
+        }
+
+        private void AlbumItem_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (!Frame.Navigate(typeof(AlbumView), ((Album)_lastClicked)))
+            {
+                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
+            }
+        }
+
+        private void addToNowPlaying_Click(object sender, RoutedEventArgs e)
+        {
+            NowPlayingManager.AddToNowPlaying(_currentArtist);
         }
     }
 }

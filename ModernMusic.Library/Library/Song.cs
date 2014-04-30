@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage.FileProperties;
 
-namespace ModernMusic.MusicLibrary
+namespace ModernMusic.Library
 {
     [DataContract]
     public class Song : INotifyPropertyChanged
@@ -22,12 +22,14 @@ namespace ModernMusic.MusicLibrary
         [DataMember]
         public string Artist { get; set; }
 
-        public Song(String filePath, String songTitle, MusicProperties songProperties)
+        public Song Self { get { return this; } }
+
+        public Song(string artist, string albumName, String filePath, String songTitle, MusicProperties songProperties)
         {
             this.FilePath = filePath;
             this.SongTitle = songTitle;
-            this.Album = songProperties.Album;
-            this.Artist = songProperties.Artist;
+            this.Artist = artist;
+            this.Album = albumName;
         }
 
         public override string ToString()

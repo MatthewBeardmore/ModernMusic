@@ -5,13 +5,19 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text;
 
-namespace HubApp1.Common
+namespace ModernMusic.Library.Helpers
 {
     public class RealObservableCollection<T> : ObservableCollection<T>
         where T : INotifyPropertyChanged
     {
         public RealObservableCollection()
             : base()
+        {
+            CollectionChanged += new NotifyCollectionChangedEventHandler(TrulyObservableCollection_CollectionChanged);
+        }
+
+        public RealObservableCollection(IEnumerable<T> enumerable)
+            : base(enumerable)
         {
             CollectionChanged += new NotifyCollectionChangedEventHandler(TrulyObservableCollection_CollectionChanged);
         }

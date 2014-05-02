@@ -39,9 +39,10 @@ namespace ModernMusic.Library
         {
             get
             {
-                return BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Playing ||
-                    BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Buffering ||
-                    BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Opening;
+                MediaPlayerState state = BackgroundMediaPlayer.Current.CurrentState;
+                return state == MediaPlayerState.Playing ||
+                    state == MediaPlayerState.Buffering ||
+                    state == MediaPlayerState.Opening;
             }
         }
 
@@ -49,10 +50,11 @@ namespace ModernMusic.Library
         {
             get
             {
-                return BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Playing ||
-                    BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Paused ||
-                    BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Buffering ||
-                    BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Opening;
+                MediaPlayerState state = BackgroundMediaPlayer.Current.CurrentState;
+                return state == MediaPlayerState.Playing ||
+                    state == MediaPlayerState.Paused ||
+                    state == MediaPlayerState.Buffering ||
+                    state == MediaPlayerState.Opening;
             }
         }
 

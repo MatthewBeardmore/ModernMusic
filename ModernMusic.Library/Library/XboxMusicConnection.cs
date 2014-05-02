@@ -89,6 +89,9 @@ namespace ModernMusic.Library
 
         public static async Task<JsonArray> GetAllAlbumData(Artist artist)
         {
+            if (!ModernMusic.Helpers.Settings.Instance.AllowXboxMusicIntegration)
+                return null;
+
             if (artist.HasDownloadedArtistData)
                 return null;
             artist.HasDownloadedArtistData = true;

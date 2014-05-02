@@ -14,7 +14,9 @@ namespace ModernMusic.Library
     [DataContract]
     public class Album : INotifyPropertyChanged
     {
-        private string _imagePath = "Assets/LightGray.png";
+        public delegate void AlbumTappedHandler(Album album);
+
+        private string _imagePath = "ms-appx:///Assets/MediumGray.png";
         
         [DataMember]
         public string AlbumName { get; private set; }
@@ -33,7 +35,7 @@ namespace ModernMusic.Library
         {
             this.Artist = artist;
             this.AlbumName = albumName;
-            this.ImagePath = "Assets/LightGray.png";
+            this.ImagePath = "ms-appx:///Assets/MediumGray.png";
         }
 
         public override string ToString()

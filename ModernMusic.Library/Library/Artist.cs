@@ -14,6 +14,8 @@ namespace ModernMusic.Library
     [DataContract]
     public class Artist : INotifyPropertyChanged
     {
+        public delegate void ArtistTappedHandler(Artist artist);
+
         [DataMember]
         public string ArtistName { get; private set; }
         public string ArtistNameCaps { get { return ArtistName.ToUpper(); } }

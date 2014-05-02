@@ -141,12 +141,14 @@ namespace BackgroundAudioTask
         /// <summary>
         /// Update UVC using SystemMediaTransPortControl apis
         /// </summary>
-        private void UpdateUVCOnNewTrack(Song song)
+        private async void UpdateUVCOnNewTrack(Song song)
         {
             systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Playing;
-            systemmediatransportcontrol.DisplayUpdater.Type = MediaPlaybackType.Music;
+            /*systemmediatransportcontrol.DisplayUpdater.Type = MediaPlaybackType.Music;
             systemmediatransportcontrol.DisplayUpdater.MusicProperties.Title = song.SongTitle;
-            systemmediatransportcontrol.DisplayUpdater.MusicProperties.Artist = song.Artist;
+            systemmediatransportcontrol.DisplayUpdater.MusicProperties.Artist = song.Artist;*/
+            await systemmediatransportcontrol.DisplayUpdater.CopyFromFileAsync(MediaPlaybackType.Music,
+                await StorageFile.GetFileFromPathAsync(song.FilePath));
             systemmediatransportcontrol.DisplayUpdater.Update();
         }
 

@@ -39,27 +39,16 @@ namespace ModernMusic.Library
         private int _hasLoadedArtists;
 
         [DataMember]
-        public ObservableCollection<Artist> Artists { get; private set; }
-        [DataMember]
-        public ObservableCollection<Album> Albums { get; private set; }
-        [DataMember]
-        public ObservableCollection<Song> Songs { get; private set; }
-
-        private CollectionViewSource collection = new CollectionViewSource() { IsSourceGrouped = true };
-        public CollectionViewSource ArtistsCollection
-        {
-            get
-            {
-                if (collection == null)
-                {
-                    collection = new CollectionViewSource();
-                    collection.Source = CreateAlphaGroupInfo(Artists, x => x.ArtistName);
-                    collection.IsSourceGrouped = true;
-                }
-                return collection;
-            }
-        }
+        public CollectionViewSource ArtistsCollection { get; private set; }
         public RealObservableCollection<GroupInfoList<Artist>> ArtistGroupDictionary { get; private set; }
+
+        [DataMember]
+        public CollectionViewSource AlbumsCollection { get; private set; }
+        public RealObservableCollection<GroupInfoList<Album>> AlbumGroupDictionary { get; private set; }
+
+        [DataMember]
+        public CollectionViewSource SongsCollection { get; private set; }
+        public RealObservableCollection<GroupInfoList<Song>> SongGroupDictionary { get; private set; }
 
         public static RealObservableCollection<GroupInfoList<TSource>> CreateObservableGroupDictionary<TSource>()
         {
@@ -70,81 +59,63 @@ namespace ModernMusic.Library
                 keys.Select(x => new GroupInfoList<TSource>() { Key = x }));
         }
 
-        public static List<GroupInfoList<TSource>> CreateAlphaGroupInfo<TSource>(
-            IEnumerable<TSource> source, Func<TSource, string> sortSelector)
+        public static void AddItemToGroup<T>(RealObservableCollection<GroupInfoList<T>> group, T addition, Func<T, char> keyConversion)
         {
-            var keys = "#abcdefghijklmnopqrstuvwxyz".ToCharArray().Select(x => x.ToString()).ToList();
-            keys.Add("\uD83C\uDF10");
-            var groupDictionary = keys.Select(x => new GroupInfoList<TSource>() { Key = x }).ToDictionary(x => (string)x.Key);
-            var groups = new List<GroupInfoList<TSource>>();
+            string key = (keyConversion(addition).ToString().ToLower());
+            if (Char.IsDigit(key[0]) || Char.IsSymbol(key[0]))
+                key = "#";
+            else if (!Char.IsLetter(key[0]))
+                key = "\uD83C\uDF10";
 
-            var query = from item in source
-                        orderby sortSelector(item)
-                        select item;
-
-            foreach (var item in query)
+            GroupInfoList<T> list = group.FirstOrDefault((g) => g.Key.ToString() == key);
+            if(list == null)
             {
-                var sortValue = sortSelector(item);
-                if (!string.IsNullOrWhiteSpace(sortValue))
-                {
-                    if (Char.IsDigit(sortValue[0]) || Char.IsSymbol(sortValue[0]))
-                        groupDictionary["#"].Add(item);
-                    else if (groupDictionary.ContainsKey(sortValue[0].ToString().ToLower()))
-                        groupDictionary[sortValue[0].ToString().ToLower()].Add(item);
-                    else
-                        groupDictionary["\uD83C\uDF10"].Add(item);
-                }
+                key = "\uD83C\uDF10";
+                list = group.First((g) => g.Key.ToString() == key);
             }
-
-            return groupDictionary.Select(x => x.Value).ToList();
+            list.Add(addition);
         }
 
         private MusicLibraryCache _cache;
 
         private MusicLibrary()
         {
-            Artists = new ObservableCollection<Artist>();
-            Albums = new ObservableCollection<Album>();
-            Songs = new ObservableCollection<Song>();
             ArtistGroupDictionary = CreateObservableGroupDictionary<Artist>();
-            collection.Source = ArtistGroupDictionary;
+            ArtistsCollection = new CollectionViewSource() { IsSourceGrouped = true, Source = ArtistGroupDictionary };
+
+            AlbumGroupDictionary = CreateObservableGroupDictionary<Album>();
+            AlbumsCollection = new CollectionViewSource() { IsSourceGrouped = true, Source = AlbumGroupDictionary };
+
+            SongGroupDictionary = CreateObservableGroupDictionary<Song>();
+            SongsCollection = new CollectionViewSource() { IsSourceGrouped = true, Source = SongGroupDictionary };
             _cache = new MusicLibraryCache();
         }
 
-        public async void LoadLibrary()
+        public async Task LoadLibrary()
         {
             if (Interlocked.CompareExchange(ref _hasLoadedArtists, 1, 0) == 1)
                 return;
 
             try
             {
-                await Windows.Storage.ApplicationData.Current.LocalFolder.GetItemAsync("cache");
+                StorageFile cacheFile = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("cache");
 
                 {
-                    await _cache.Deserialize();
+                    await _cache.Deserialize(cacheFile);
 
                     foreach (Artist artist in _cache.Artists.Values)
                     {
-                        Artists.Add(artist);
-
-                        string key = artist.ArtistName[0].ToString().ToLower();
-                        if (Char.IsDigit(key[0]) || Char.IsSymbol(key[0]))
-                            key = "#";
-                        else if (!Char.IsLetter(key[0]))
-                            key = "\uD83C\uDF10";
-
-                        GroupInfoList<Artist> list = ArtistGroupDictionary.First((g) => g.Key.ToString() == key);
-                        list.Add(artist);
+                        AddItemToGroup(ArtistGroupDictionary, artist, a => a.ArtistName[0]);
                     }
                     foreach (List<Album> albums in _cache.Albums.Values)
                     {
                         foreach (Album album in albums)
-                            Albums.Add(album);
+                            AddItemToGroup(AlbumGroupDictionary, album, a => a.AlbumName[0]);
                     }
                     foreach (List<Song> songs in _cache.Songs.Values)
                     {
                         foreach (Song song in songs)
-                            Songs.Add(song);
+                            AddItemToGroup(SongGroupDictionary, song, a => song.SongTitle[0]);
                     }
                 }
             }
@@ -155,27 +126,25 @@ namespace ModernMusic.Library
             await LoadAllArtwork();
 
             await _cache.Serialize();
-
-            Serialize();
-        }
-
-        public void Serialize()
-        {
-            /*using (MemoryStream ms = new MemoryStream())
-            {
-                var _Serializer = new DataContractJsonSerializer(GetType());
-                _Serializer.WriteObject(ms, this);
-                ms.Position = 0;
-                
-                using(StreamReader reader = new StreamReader(ms))
-                {
-                    string cache = reader.ReadToEnd();
-                }
-            }*/
         }
 
         private async Task TraverseFolder(StorageFolder folder)
         {
+            string imageUrl = "";
+            StorageItemThumbnail thumbnail = await folder.GetThumbnailAsync(ThumbnailMode.SingleItem);
+            //if (thumbnail.Type == ThumbnailType.Image)
+            {
+                StorageFile file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(folder.Name, CreationCollisionOption.GenerateUniqueName);
+                using(Stream output = await file.OpenStreamForWriteAsync())
+                {
+                    using(Stream thumbStream = thumbnail.AsStreamForWrite())
+                    {
+                        thumbStream.CopyTo(output);
+                    }
+                }
+                imageUrl = file.Path;
+            }
+
             foreach (StorageFile file in await folder.GetFilesAsync())
             {
                 MusicProperties songProperties = await file.Properties.GetMusicPropertiesAsync();
@@ -185,31 +154,29 @@ namespace ModernMusic.Library
 
                 Artist artist = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist));
                 Album album = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album));
+                if (album != null && imageUrl != "")
+                album.ImagePath = imageUrl;
                 Song song = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album),
-                    songProperties.Title, file.Path, songProperties);
+                    FixSongName(songProperties.Title, file.DisplayName), file.Path, songProperties);
 
                 if (artist != null)
-                {
-                    Artists.Add(artist);
-
-                    string key = artist.ArtistName[0].ToString().ToLower();
-                    if (Char.IsDigit(key[0]) || Char.IsSymbol(key[0]))
-                        key = "#";
-                    else if (!Char.IsLetter(key[0]))
-                        key = "\uD83C\uDF10";
-
-                    GroupInfoList<Artist> list = ArtistGroupDictionary.First((g)=>g.Key.ToString() == key);
-                    list.Add(artist);
-                } 
+                    AddItemToGroup(ArtistGroupDictionary, artist, a => a.ArtistName[0]);
                 if (album != null)
-                    Albums.Add(album);
+                    AddItemToGroup(AlbumGroupDictionary, album, a => a.AlbumName[0]);
                 if (song != null)
-                    Songs.Add(song);
+                    AddItemToGroup(SongGroupDictionary, song, a => song.SongTitle[0]);
             }
             foreach (StorageFolder childFolder in await folder.GetFoldersAsync())
             {
                 await TraverseFolder(childFolder);
             }
+        }
+
+        private string FixSongName(string songTitle, string displayName)
+        {
+            if (songTitle == "")
+                return displayName;
+            return songTitle;
         }
 
         private string FixArtistName(string artist)
@@ -224,11 +191,6 @@ namespace ModernMusic.Library
             if (album == "")
                 return "Unknown Album";
             return album;
-        }
-
-        public void DownloadAlbumArt(Album album)
-        {
-
         }
 
         public async Task DownloadAlbumArt(Artist artist)
@@ -257,11 +219,13 @@ namespace ModernMusic.Library
 
         public async Task LoadAllArtwork()
         {
-            for (int i = 0; i < Artists.Count; i++)
+            for (int i = 0; i < ArtistGroupDictionary.Count; i++)
             {
-                Artist artist = Artists[i];
-                await DownloadAlbumArt(artist);
-                await Task.Yield();
+                foreach(Artist artist in ArtistGroupDictionary[i])
+                {
+                    await DownloadAlbumArt(artist);
+                    await Task.Yield();
+                }
             }
             await Task.Yield();
         }
@@ -286,9 +250,9 @@ namespace ModernMusic.Library
             return _cache.GetSongsForArtist(artist.ArtistName);
         }
 
-        public Artist GetArtist(string artistName)
+        public Artist GetArtist(Album album)
         {
-            return _cache.Get(FixArtistName(artistName));
+            return _cache.Get(album.Artist);
         }
     }
 
@@ -390,6 +354,7 @@ namespace ModernMusic.Library
             List<Song> song;
             if (!Songs.TryGetValue(artist.ToLower() + "--" + albumName.ToLower(), out song))
                 return null;
+            song.Sort((a,b) => a.TrackNumber.CompareTo(b.TrackNumber));
             return song;
         }
 
@@ -406,9 +371,10 @@ namespace ModernMusic.Library
             return songs;
         }
         
-        public async Task Deserialize()
+        public async Task Deserialize(StorageFile file)
         {
-            StorageFile file = await ApplicationData.Current.LocalFolder.GetFileAsync("cache");
+            if (file == null)
+                file = await ApplicationData.Current.LocalFolder.GetFileAsync("cache");
             if(Settings.Instance.ClearCacheOnNextStart)
             {
                 await file.DeleteAsync();

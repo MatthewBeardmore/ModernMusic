@@ -22,6 +22,11 @@ namespace ModernMusic.Library.Helpers
             CollectionChanged += new NotifyCollectionChangedEventHandler(TrulyObservableCollection_CollectionChanged);
         }
 
+        protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
+        {
+            //base.OnCollectionChanged(e);
+        }
+
         void TrulyObservableCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)

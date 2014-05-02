@@ -1,0 +1,63 @@
+﻿<UserControl
+    x:Class="ModernMusic.Controls.NowPlayingControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ModernMusic.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:data="using:ModernMusic.Library"
+    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
+    d:DataContext="{Binding Source={d:DesignData Source=../../ModernMusic.Library/Library/Samples/SampleSong.json}}">
+    <Grid x:Name="gridBackground" Background="{ThemeResource PageBackgroundThemeBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="0"/>
+            <ColumnDefinition Width="250*"/>
+            <ColumnDefinition Width="25"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="85"/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="100"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left" Margin="0,00,0,0" Text="{Binding Song.Artist}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="NoWrap" FontSize="32"/>
+        <TextBlock Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left" Margin="0,36,0,0" Text="{Binding Song.Album}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource SubheaderTextBlockStyle}" TextWrapping="NoWrap" FontSize="27"/>
+
+        <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Border BorderBrush="Black" BorderThickness="1" 
+                    Height="190" Width="190">
+                <Image x:Name="AlbumArtwork" Margin="0,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Image.Source>
+                        <BitmapImage x:Name="AlbumArtworkImage" 
+                        DecodePixelWidth="190" DecodePixelHeight="190"/>
+                    </Image.Source>
+                </Image>
+            </Border>
+            <Slider ValueChanged="positionSlider_ValueChanged" x:Name="positionSlider"
+                    Value="{Binding MediaPosition}"
+                    Margin="0,-10,0,0"
+                    Height="30" Orientation="Horizontal"
+                    Foreground="{ThemeResource PhoneAccentBrush}"/>
+        </StackPanel>
+        <TextBlock Grid.Column="1" Grid.Row="3" HorizontalAlignment="Left" Margin="0,6,0,0" Text="{Binding Song.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource SubheaderTextBlockStyle}" TextWrapping="NoWrap" FontSize="27"/>
+        <TextBlock Grid.Column="1" Grid.Row="3" HorizontalAlignment="Left" Margin="0,36,0,0" Text="{Binding NextSong.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}" TextWrapping="NoWrap"/>
+        <TextBlock Grid.Column="1" Grid.Row="3" HorizontalAlignment="Left" Margin="0,52,0,0" Text="{Binding SubsequentSong.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}" TextWrapping="NoWrap"/>
+        <Grid Grid.Column="1" Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <AppBarButton x:Name="previousButton" HorizontalAlignment="Left" Icon="Previous" Label="appbarbutton" Margin="-10,0,0,0" VerticalAlignment="Center" Height="60" Width="60" IsCompact="True" Click="previousButton_Click"/>
+            <AppBarButton x:Name="playButton" HorizontalAlignment="Left" Icon="Pause" Label="appbarbutton" Margin="70,0,0,0" VerticalAlignment="Center" Height="60" Width="60" IsCompact="True" Click="playButton_Click"/>
+            <AppBarButton x:Name="nextButton" HorizontalAlignment="Left" Icon="Next" Label="appbarbutton" Margin="150,0,0,0" VerticalAlignment="Center" Height="60" Width="60" IsCompact="True" Click="nextButton_Click"/>
+        </Grid>
+        <StackPanel Grid.Column="1" HorizontalAlignment="Left" Margin="200,0,0,0" Grid.Row="2" VerticalAlignment="Top">
+            <SymbolIcon Tapped="repeatButton_Tapped" Symbol="RepeatAll" Width="40" Height="40"/>
+            <SymbolIcon Tapped="shuffleButton_Tapped" x:Name="shuffleButton" Symbol="Shuffle" Width="40" Height="40"/>
+            <SymbolIcon Tapped="playlistButton_Tapped" x:Name="playlistButton" Symbol="AllApps" Width="40" Height="40"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

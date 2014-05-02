@@ -1,0 +1,22 @@
+﻿<Page
+    x:Class="ModernMusic.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ModernMusic"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource PageBackgroundThemeBrush}">
+
+    <Pivot Title="MODERN MUSIC"
+               x:Name="pivot"
+               CommonNavigationTransitionInfo.IsStaggerElement="True"
+               Margin="0">
+        <PivotItem x:Name="songsPivot" Header="settings" CommonNavigationTransitionInfo.IsStaggerElement="True">
+            <StackPanel Orientation="Vertical">
+                <ToggleSwitch x:Name="clearCacheOnNextStart" Header="Clear cache on next start" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" IsOn="{Binding Settings.ClearCacheOnNextStart}"/>
+                <ToggleSwitch x:Name="alwaysStartRepeat" Header="Enable repeat by default" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" IsOn="{Binding Settings.RepeatAsDefault}"/>
+            </StackPanel>
+        </PivotItem>
+    </Pivot>
+</Page>

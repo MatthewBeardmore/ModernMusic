@@ -13,6 +13,8 @@ namespace ModernMusic.Library
     [DataContract]
     public class Song : INotifyPropertyChanged
     {
+        public delegate void SongTappedHandler(Song song);
+
         [DataMember]
         public string FilePath { get; private set; }
         [DataMember]
@@ -21,6 +23,8 @@ namespace ModernMusic.Library
         public string Album { get; set; }
         [DataMember]
         public string Artist { get; set; }
+        [DataMember]
+        public uint TrackNumber { get; set; }
 
         public Song Self { get { return this; } }
 
@@ -30,6 +34,7 @@ namespace ModernMusic.Library
             this.SongTitle = songTitle;
             this.Artist = artist;
             this.Album = albumName;
+            this.TrackNumber = songProperties.TrackNumber;
         }
 
         public override string ToString()

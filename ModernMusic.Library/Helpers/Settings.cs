@@ -24,6 +24,12 @@ namespace ModernMusic.Helpers
         [DataMember]
         public bool ClearCacheOnNextStart { get; set; }
 
+        [DataMember]
+        public bool RepeatAsDefault { get; set; }
+
+        [DataMember]
+        public bool AllowXboxMusicIntegration { get; set; }
+
         public static Settings Load()
         {
             if(!Windows.Storage.ApplicationData.Current.LocalSettings.Values.ContainsKey("Settings"))

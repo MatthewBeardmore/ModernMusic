@@ -6,9 +6,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    d:DesignHeight="70"
+    d:DesignHeight="60"
     d:DesignWidth="400">
-    <StackPanel Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Tapped="ArtistItem_Tapped" Height="70" Width="400">
+    <StackPanel Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Tapped="ArtistItem_Tapped" Height="60" Width="400">
         <AppBarButton VerticalAlignment="Top" Padding="0" Margin="-20,0,0,0" Width="75" Icon="Play" Tapped="ArtistPlay_Tapped"/>
         <TextBlock VerticalAlignment="Top" Style="{StaticResource SubheaderTextBlockStyle}" FontSize="26" Margin="0,10,0,0"
                                            Text="{Binding ArtistName}" TextWrapping="NoWrap"

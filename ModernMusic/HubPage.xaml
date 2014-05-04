@@ -7,12 +7,24 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     Background="{ThemeResource PageBackgroundThemeBrush}">
+    <Page.Resources>
+        <MenuFlyout x:Key="PlaylistFlyout">
+            <MenuFlyout.MenuFlyoutPresenterStyle>
+                <Style TargetType="MenuFlyoutPresenter">
+                    <Setter Property="BorderBrush" Value="CornflowerBlue"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+            </MenuFlyout.MenuFlyoutPresenterStyle>
+            <MenuFlyoutItem Text="remove playlist" DataContext="{Binding}" Click="removePlaylist_Click"/>
+        </MenuFlyout>
+    </Page.Resources>
     <Page.Transitions>
         <TransitionCollection>
             <NavigationThemeTransition>
                 <NavigationThemeTransition.DefaultNavigationTransitionInfo>
-                    <ContinuumNavigationTransitionInfo/>
+                    <CommonNavigationTransitionInfo/>
                 </NavigationThemeTransition.DefaultNavigationTransitionInfo>
             </NavigationThemeTransition>
         </TransitionCollection>
@@ -35,9 +47,6 @@
                x:Name="pivot"
                CommonNavigationTransitionInfo.IsStaggerElement="True"
                Margin="0">
-            <PivotItem x:Name="nowPlayingPivot" Header="now playing" CommonNavigationTransitionInfo.IsStaggerElement="True">
-                <controls:NowPlayingControl x:Name="nowPlayingControl" Margin="0,-10,0,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-            </PivotItem>
             <PivotItem x:Name="artistsPivot" Header="collection" CommonNavigationTransitionInfo.IsStaggerElement="True">
                 <Grid Margin="0,-10,0,0">
                     <Grid.RowDefinitions>
@@ -52,17 +61,26 @@
                 </Grid>
             </PivotItem>
             <PivotItem x:Name="playlistsPivot" Header="playlists" CommonNavigationTransitionInfo.IsStaggerElement="True">
-                <Grid Margin="0,-10,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="60"/>
-                        <RowDefinition Height="60"/>
-                        <RowDefinition Height="60"/>
-                        <RowDefinition Height="320*"/>
-                    </Grid.RowDefinitions>
-                    <TextBlock Padding="0,15" Grid.Row="0" Text="A" FontSize="20" FontWeight="SemiBold" FontFamily="Segoe WP"/>
-                    <TextBlock Padding="0,15" Grid.Row="1" Text="B" FontSize="20" FontWeight="SemiBold" FontFamily="Segoe WP"/>
-                    <TextBlock Padding="0,15" Grid.Row="2" Text="C" FontSize="20" FontWeight="SemiBold" FontFamily="Segoe WP"/>
-                </Grid>
+                <ListView x:Name="lvPlaylists" 
+                            ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
+                            ScrollViewer.IsVerticalScrollChainingEnabled="False" 
+                            ItemsSource="{Binding PlaylistManager.Playlists}"
+                            FlyoutBase.AttachedFlyout="{StaticResource PlaylistFlyout}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <controls:PlaylistItemControl OnItemTapped="playlistItem_Tapped"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.GroupStyle>
+                        <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
+                                        HidesIfEmpty="True" />
+                    </ListView.GroupStyle>
+                    <ListView.FooterTemplate>
+                        <DataTemplate>
+                            <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
+                        </DataTemplate>
+                    </ListView.FooterTemplate>
+                </ListView>
             </PivotItem>
         </Pivot>
     </Grid>

@@ -258,7 +258,7 @@ namespace BackgroundAudioTask
         /// </summary>
         private void SkipToPrevious()
         {
-            systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Changing;
+            //systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.;
             ValueSet message = new ValueSet();
             message.Add(Constants.SkipPrevious, null);
             BackgroundMediaPlayer.SendMessageToForeground(message);
@@ -269,7 +269,7 @@ namespace BackgroundAudioTask
         /// </summary>
         private void SkipToNext()
         {
-            systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Changing;
+            //systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Changing;
             ValueSet message = new ValueSet();
             message.Add(Constants.SkipNext, null);
             BackgroundMediaPlayer.SendMessageToForeground(message);

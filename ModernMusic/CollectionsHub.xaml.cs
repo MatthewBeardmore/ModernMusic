@@ -41,7 +41,7 @@ namespace ModernMusic
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
-            MusicLibrary.Instance.LoadLibrary();
+            var t = MusicLibrary.Instance.LoadLibrary();
         }
 
         /// <summary>
@@ -163,6 +163,16 @@ namespace ModernMusic
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
                 throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
             }
+        }
+
+        private async void SemanticZoom_ViewChangeStarted(object sender, SemanticZoomViewChangedEventArgs e)
+        {
+            await Windows.UI.ViewManagement.StatusBar.GetForCurrentView().HideAsync();
+        }
+
+        private async void SemanticZoom_ViewChangeCompleted(object sender, SemanticZoomViewChangedEventArgs e)
+        {
+            await Windows.UI.ViewManagement.StatusBar.GetForCurrentView().ShowAsync();
         }
     }
 }

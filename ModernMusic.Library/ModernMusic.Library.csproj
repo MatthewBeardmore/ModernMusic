@@ -50,6 +50,7 @@
     <Compile Include="Library\MusicLibrary.cs" />
     <Compile Include="Library\NowPlayingManager.cs" />
     <Compile Include="Library\Playlist.cs" />
+    <Compile Include="Library\PlaylistManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Library\Song.cs" />
     <Compile Include="Library\XboxMusicConnection.cs" />

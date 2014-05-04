@@ -15,6 +15,8 @@ namespace ModernMusic.Library
     {
         #region Public properties, events and handlers
 
+        public delegate void PlaylistTappedHandler(Playlist playlist);
+
         [DataMember]
         public List<Song> Songs
         {
@@ -23,7 +25,7 @@ namespace ModernMusic.Library
         }
 
         [DataMember]
-        public Guid ID = Guid.NewGuid();
+        public string Name { get; set; }
 
         #endregion
 

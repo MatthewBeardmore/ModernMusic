@@ -27,6 +27,7 @@ namespace ModernMusic.Library
         public uint TrackNumber { get; set; }
 
         public Song Self { get { return this; } }
+        public bool Selected { get; private set; }
 
         public Song(string artist, string albumName, String filePath, String songTitle, MusicProperties songProperties)
         {
@@ -53,6 +54,19 @@ namespace ModernMusic.Library
             {
                 handler(this, new PropertyChangedEventArgs(caller));
             }
+        }
+
+        public void ClearSelection(bool fireProperty = true)
+        {
+            Selected = false;
+            if (fireProperty)
+                this.OnPropertyChanged<bool>();
+        }
+
+        public void Select()
+        {
+            Selected = true;
+            this.OnPropertyChanged<bool>();
         }
     }
 }

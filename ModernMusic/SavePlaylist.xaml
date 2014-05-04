@@ -1,0 +1,17 @@
+﻿<Page
+    x:Class="ModernMusic.SavePlaylist"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ModernMusic"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource PageBackgroundThemeBrush}">
+    <Grid>
+        <StackPanel Margin="10,0,0,0">
+            <TextBlock Text="SAVE PLAYLIST" Typography.Capitals="AllSmallCaps" FontSize="20"/>
+            <TextBlock Margin="0,10,0,0" Text="Playlist name" Style="{ThemeResource ListViewItemSubheaderTextBlockStyle}"/>
+            <TextBox x:Name="playlistName" PlaceholderText="Name your playlist" AcceptsReturn="True" KeyDown="playlistName_KeyDown"/>
+        </StackPanel>
+    </Grid>
+</Page>

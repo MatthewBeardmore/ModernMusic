@@ -1,7 +1,9 @@
-﻿using ModernMusic.Library;
+﻿using ModernMusic.Controls;
+using ModernMusic.Library;
 using ModernMusic.Library.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -30,13 +32,20 @@ namespace ModernMusic
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private Playlist _currentPlaylist = null;
+        private Song _currentSong;
+        private ObservableCollection<Song> Songs { get; set; }
 
         public PlaylistView()
         {
             this.InitializeComponent();
 
+            NowPlayingManager.OnChangedTrack += nowPlayingManger_onChangedTrack;
+
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
+
+            Songs = new ObservableCollection<Song>();
+            this.DefaultViewModel["Songs"] = Songs;
         }
 
         /// <summary>
@@ -69,16 +78,43 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            _currentPlaylist = (Playlist)e.NavigationParameter;
+            KeyValuePair<Playlist, Song> playlist;
+            if (e.NavigationParameter is Playlist)
+                playlist = new KeyValuePair<Playlist, Song>((Playlist)e.NavigationParameter, null);
+            else
+                playlist = (KeyValuePair<Playlist, Song>)e.NavigationParameter;
+            _currentPlaylist = playlist.Key;
+            _currentSong = playlist.Value;
+            foreach(Song song in _currentPlaylist.Songs)
+                Songs.Add(song);
 
-            this.DefaultViewModel["Songs"] = _currentPlaylist.Songs;
+            ResetCommandBarVisibility();
         }
 
-        private void songView_ItemClick(object sender, ItemClickEventArgs e)
+        private void songView_Loaded(object sender, RoutedEventArgs e)
+        {
+            songView.ScrollIntoView(_currentPlaylist.Songs[Math.Max(0, _currentPlaylist.Songs.IndexOf(_currentSong) - 1)], ScrollIntoViewAlignment.Leading);
+        }
+
+        private void nowPlayingManger_onChangedTrack(Song arg1, Song arg2, Song arg3)
+        {
+        }
+
+        private void songItem_Tapped(Song song)
         {
             KeyValuePair<Playlist, int> kvp = new KeyValuePair<Playlist, int>(_currentPlaylist,
-                _currentPlaylist.Songs.IndexOf(((Song)e.ClickedItem)));
+                _currentPlaylist.Songs.IndexOf(song));
             if (!Frame.Navigate(typeof(NowPlaying), kvp))
+            {
+                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
+            }
+        }
+
+        private void savePlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            songView.ReorderMode = ListViewReorderMode.Disabled;
+            if (!Frame.Navigate(typeof(SavePlaylist), _currentPlaylist))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
                 throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
@@ -110,5 +146,75 @@ namespace ModernMusic
         }
 
         #endregion
+
+        private void SongItemControl_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            FrameworkElement senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+
+            flyoutBase.ShowAt(senderElement);
+        }
+
+        private async void removeSong_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Song song = item.DataContext as Song;
+
+                if (song != null)
+                {
+                    _currentPlaylist.Songs.Remove(song);
+                    Songs.Remove(song);
+
+                    await PlaylistManager.Instance.Serialize();
+                }
+            }
+        }
+
+        private async void removeSelectedSong_Click(object sender, RoutedEventArgs e)
+        {
+            List<object> songs = new List<object>(songView.SelectedItems);
+            foreach (object song in songs)
+            {
+                _currentPlaylist.Songs.Remove((Song)song);
+                Songs.Remove((Song)song);
+            }
+
+            await PlaylistManager.Instance.Serialize();
+        }
+
+        private void reorder_Click(object sender, RoutedEventArgs e)
+        {
+            if (songView.ReorderMode == ListViewReorderMode.Disabled)
+                songView.ReorderMode = ListViewReorderMode.Enabled;
+            else
+                songView.ReorderMode = ListViewReorderMode.Disabled;
+        }
+
+        private void selectSongs_Click(object sender, RoutedEventArgs e)
+        {
+            songView.ReorderMode = ListViewReorderMode.Disabled;
+            if (songView.SelectionMode == ListViewSelectionMode.Multiple)
+            {
+                navigationHelper.BlockBackStateTemporarily = null;
+                songView.SelectionMode = ListViewSelectionMode.Single;
+                ResetCommandBarVisibility();
+            }
+            else
+            {
+                navigationHelper.BlockBackStateTemporarily = new Action(() => selectSongs_Click(null, null));
+                songView.SelectionMode = ListViewSelectionMode.Multiple;
+                savePlaylist.Visibility = reorderSongs.Visibility = selectSongs.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+                removeSong.Visibility = Windows.UI.Xaml.Visibility.Visible;
+            }
+        }
+
+        private void ResetCommandBarVisibility()
+        {
+            savePlaylist.Visibility = string.IsNullOrEmpty(_currentPlaylist.Name) ? Visibility.Visible : Visibility.Collapsed;
+            reorderSongs.Visibility = selectSongs.Visibility = Windows.UI.Xaml.Visibility.Visible;
+            removeSong.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+        }
     }
 }

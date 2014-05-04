@@ -26,15 +26,17 @@
         </TransitionCollection>
     </Page.Transitions>
 
-    <Pivot Title="MODERN MUSIC"
+    <Pivot Title="MODERN MUSIC" 
                x:Name="pivot"
                DataContext="{Binding MusicLibrary}">
         <PivotItem x:Name="artistsPivot" Header="artists">
-            <SemanticZoom Margin="0,0,0,0" Padding="0">
+            <SemanticZoom Margin="0,0,0,0" Padding="0" ViewChangeCompleted="SemanticZoom_ViewChangeCompleted" ViewChangeStarted="SemanticZoom_ViewChangeStarted">
                 <SemanticZoom.ZoomedInView>
                     <ListView x:Name="lvArtists" 
                             ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
                             ScrollViewer.IsVerticalScrollChainingEnabled="False" 
+                            IsSwipeEnabled="False"
+                            IncrementalLoadingThreshold="10"
                             ItemsSource="{Binding ArtistsCollection.View}">
                         <ListView.ItemTemplate>
                             <DataTemplate>
@@ -47,6 +49,11 @@
                             <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
                                         HidesIfEmpty="True" />
                         </ListView.GroupStyle>
+                        <ListView.FooterTemplate>
+                            <DataTemplate>
+                                <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
+                            </DataTemplate>
+                        </ListView.FooterTemplate>
                     </ListView>
                 </SemanticZoom.ZoomedInView>
                 <SemanticZoom.ZoomedOutView>
@@ -62,6 +69,8 @@
                     <ListView x:Name="lvAlbums"
                             ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
                             ScrollViewer.IsVerticalScrollChainingEnabled="False" 
+                            IsSwipeEnabled="False"
+                            IncrementalLoadingThreshold="10"
                             ItemsSource="{Binding AlbumsCollection.View}">
                         <ListView.ItemTemplate>
                             <DataTemplate>
@@ -74,6 +83,11 @@
                             <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
                                                 HidesIfEmpty="True" />
                         </ListView.GroupStyle>
+                        <ListView.FooterTemplate>
+                            <DataTemplate>
+                                <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
+                            </DataTemplate>
+                        </ListView.FooterTemplate>
                     </ListView>
                 </SemanticZoom.ZoomedInView>
                 <SemanticZoom.ZoomedOutView>
@@ -89,6 +103,8 @@
                     <ListView x:Name="lvSongs"
                             ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
                             ScrollViewer.IsVerticalScrollChainingEnabled="False" 
+                            IsSwipeEnabled="False"
+                            IncrementalLoadingThreshold="10"
                             ItemsSource="{Binding SongsCollection.View}">
                         <ListView.ItemTemplate>
                             <DataTemplate>
@@ -99,6 +115,11 @@
                             <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
                                                         HidesIfEmpty="True" />
                         </ListView.GroupStyle>
+                        <ListView.FooterTemplate>
+                            <DataTemplate>
+                                <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
+                            </DataTemplate>
+                        </ListView.FooterTemplate>
                     </ListView>
                 </SemanticZoom.ZoomedInView>
                 <SemanticZoom.ZoomedOutView>

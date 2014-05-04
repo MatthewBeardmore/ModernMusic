@@ -62,6 +62,7 @@ namespace ModernMusic
         private Page Page { get; set; }
         private Frame Frame { get { return this.Page.Frame; } }
         public bool OnBackClearState { private get; set; }
+        public Action BlockBackStateTemporarily { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NavigationHelper"/> class.
@@ -78,33 +79,13 @@ namespace ModernMusic
             // 2) Handle hardware navigation requests
             this.Page.Loaded += (sender, e) =>
             {
-#if WINDOWS_PHONE_APP
                 Windows.Phone.UI.Input.HardwareButtons.BackPressed += HardwareButtons_BackPressed;
-#else
-                // Keyboard and mouse navigation only apply when occupying the entire window
-                if (this.Page.ActualHeight == Window.Current.Bounds.Height &&
-                    this.Page.ActualWidth == Window.Current.Bounds.Width)
-                {
-                    // Listen to the window directly so focus isn't required
-                    Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated +=
-                        CoreDispatcher_AcceleratorKeyActivated;
-                    Window.Current.CoreWindow.PointerPressed +=
-                        this.CoreWindow_PointerPressed;
-                }
-#endif
             };
 
             // Undo the same changes when the page is no longer visible
             this.Page.Unloaded += (sender, e) =>
             {
-#if WINDOWS_PHONE_APP
                 Windows.Phone.UI.Input.HardwareButtons.BackPressed -= HardwareButtons_BackPressed;
-#else
-                Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated -=
-                    CoreDispatcher_AcceleratorKeyActivated;
-                Window.Current.CoreWindow.PointerPressed -=
-                    this.CoreWindow_PointerPressed;
-#endif
             };
         }
 
@@ -201,7 +182,6 @@ namespace ModernMusic
             if (this.Frame != null && this.Frame.CanGoForward) this.Frame.GoForward();
         }
 
-#if WINDOWS_PHONE_APP
         /// <summary>
         /// Invoked when the hardware back button is pressed. For Windows Phone only.
         /// </summary>
@@ -212,81 +192,15 @@ namespace ModernMusic
             if (this.GoBackCommand.CanExecute(null))
             {
                 e.Handled = true;
-                this.GoBackCommand.Execute(null);
-            }
-        }
-#else
-        /// <summary>
-        /// Invoked on every keystroke, including system keys such as Alt key combinations, when
-        /// this page is active and occupies the entire window.  Used to detect keyboard navigation
-        /// between pages even when the page itself doesn't have focus.
-        /// </summary>
-        /// <param name="sender">Instance that triggered the event.</param>
-        /// <param name="e">Event data describing the conditions that led to the event.</param>
-        private void CoreDispatcher_AcceleratorKeyActivated(CoreDispatcher sender,
-            AcceleratorKeyEventArgs e)
-        {
-            var virtualKey = e.VirtualKey;
-
-            // Only investigate further when Left, Right, or the dedicated Previous or Next keys
-            // are pressed
-            if ((e.EventType == CoreAcceleratorKeyEventType.SystemKeyDown ||
-                e.EventType == CoreAcceleratorKeyEventType.KeyDown) &&
-                (virtualKey == VirtualKey.Left || virtualKey == VirtualKey.Right ||
-                (int)virtualKey == 166 || (int)virtualKey == 167))
-            {
-                var coreWindow = Window.Current.CoreWindow;
-                var downState = CoreVirtualKeyStates.Down;
-                bool menuKey = (coreWindow.GetKeyState(VirtualKey.Menu) & downState) == downState;
-                bool controlKey = (coreWindow.GetKeyState(VirtualKey.Control) & downState) == downState;
-                bool shiftKey = (coreWindow.GetKeyState(VirtualKey.Shift) & downState) == downState;
-                bool noModifiers = !menuKey && !controlKey && !shiftKey;
-                bool onlyAlt = menuKey && !controlKey && !shiftKey;
-
-                if (((int)virtualKey == 166 && noModifiers) ||
-                    (virtualKey == VirtualKey.Left && onlyAlt))
+                if (BlockBackStateTemporarily != null)
                 {
-                    // When the previous key or Alt+Left are pressed navigate back
-                    e.Handled = true;
+                    BlockBackStateTemporarily();
+                    BlockBackStateTemporarily = null;
+                }
+                else
                     this.GoBackCommand.Execute(null);
-                }
-                else if (((int)virtualKey == 167 && noModifiers) ||
-                    (virtualKey == VirtualKey.Right && onlyAlt))
-                {
-                    // When the next key or Alt+Right are pressed navigate forward
-                    e.Handled = true;
-                    this.GoForwardCommand.Execute(null);
-                }
             }
         }
-
-        /// <summary>
-        /// Invoked on every mouse click, touch screen tap, or equivalent interaction when this
-        /// page is active and occupies the entire window.  Used to detect browser-style next and
-        /// previous mouse button clicks to navigate between pages.
-        /// </summary>
-        /// <param name="sender">Instance that triggered the event.</param>
-        /// <param name="e">Event data describing the conditions that led to the event.</param>
-        private void CoreWindow_PointerPressed(CoreWindow sender,
-            PointerEventArgs e)
-        {
-            var properties = e.CurrentPoint.Properties;
-
-            // Ignore button chords with the left, right, and middle buttons
-            if (properties.IsLeftButtonPressed || properties.IsRightButtonPressed ||
-                properties.IsMiddleButtonPressed) return;
-
-            // If back or foward are pressed (but not both) navigate appropriately
-            bool backPressed = properties.IsXButton1Pressed;
-            bool forwardPressed = properties.IsXButton2Pressed;
-            if (backPressed ^ forwardPressed)
-            {
-                e.Handled = true;
-                if (backPressed) this.GoBackCommand.Execute(null);
-                if (forwardPressed) this.GoForwardCommand.Execute(null);
-            }
-        }
-#endif
 
         #endregion
 

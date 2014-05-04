@@ -30,7 +30,7 @@ namespace ModernMusic.Library
                 if (_instance == null)
                 {
                     _instance = new MusicLibrary();
-                    _instance.LoadLibrary();
+                    var t = _instance.LoadLibrary();
                 }
                 return _instance;
             }
@@ -88,6 +88,7 @@ namespace ModernMusic.Library
 
             SongGroupDictionary = CreateObservableGroupDictionary<Song>();
             SongsCollection = new CollectionViewSource() { IsSourceGrouped = true, Source = SongGroupDictionary };
+
             _cache = new MusicLibraryCache();
         }
 
@@ -130,21 +131,6 @@ namespace ModernMusic.Library
 
         private async Task TraverseFolder(StorageFolder folder)
         {
-            string imageUrl = "";
-            StorageItemThumbnail thumbnail = await folder.GetThumbnailAsync(ThumbnailMode.SingleItem);
-            //if (thumbnail.Type == ThumbnailType.Image)
-            {
-                StorageFile file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(folder.Name, CreationCollisionOption.GenerateUniqueName);
-                using(Stream output = await file.OpenStreamForWriteAsync())
-                {
-                    using(Stream thumbStream = thumbnail.AsStreamForWrite())
-                    {
-                        thumbStream.CopyTo(output);
-                    }
-                }
-                imageUrl = file.Path;
-            }
-
             foreach (StorageFile file in await folder.GetFilesAsync())
             {
                 MusicProperties songProperties = await file.Properties.GetMusicPropertiesAsync();
@@ -154,8 +140,6 @@ namespace ModernMusic.Library
 
                 Artist artist = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist));
                 Album album = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album));
-                if (album != null && imageUrl != "")
-                album.ImagePath = imageUrl;
                 Song song = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album),
                     FixSongName(songProperties.Title, file.DisplayName), file.Path, songProperties);
 

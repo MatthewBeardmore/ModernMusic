@@ -7,18 +7,18 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     d:DataContext="{Binding Source={d:DesignData Source=../../ModernMusic.Library/Library/Samples/SampleSongView.json}}"
-    d:DesignHeight="70"
-    d:DesignWidth="400">
-    <StackPanel Tapped="StackPanel_Tapped" Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Height="70" Width="400">
-        <Border VerticalAlignment="Top" Margin="0,10,0,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90" Width="38" Height="38">
-            <SymbolIcon Symbol="Play" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    d:DesignHeight="60"
+    d:DesignWidth="400" Loaded="UserControl_Loaded">
+    <StackPanel Tapped="StackPanel_Tapped" Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Height="60" Width="400">
+        <Border x:Name="border" VerticalAlignment="Top" Margin="0,10,0,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90" Width="38" Height="38">
+            <SymbolIcon PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerReleased" PointerExited="icon_PointerExited" PointerCaptureLost="icon_PointerCaptureLost" x:Name="icon" Symbol="Play" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
-        <StackPanel Margin="20,0,0,0" Height="70" Background="{ThemeResource PageBackgroundThemeBrush}">
-            <TextBlock Style="{StaticResource ListViewItemTextBlockStyle}"
+        <StackPanel Margin="20,0,0,0" Height="60" Background="{ThemeResource PageBackgroundThemeBrush}" Width="340">
+            <TextBlock x:Name="songText" Style="{StaticResource ListViewItemTextBlockStyle}"
                                            Text="{Binding SongTitle}"
                                            Padding="0,0,0,0" TextWrapping="WrapWholeWords" MaxHeight="40"
                                            CommonNavigationTransitionInfo.IsStaggerElement="True"/>
-            <TextBlock Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"
+            <TextBlock x:Name="artistText" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"
                                            Text="{Binding Artist}"
                                            Padding="0,0,0,0" TextWrapping="NoWrap"
                                            CommonNavigationTransitionInfo.IsStaggerElement="True"/>

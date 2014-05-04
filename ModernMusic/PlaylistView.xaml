@@ -9,11 +9,30 @@
     xmlns:controls="using:ModernMusic.Controls"
     DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     Background="{ThemeResource PageBackgroundThemeBrush}">
+    <Page.Resources>
+        <MenuFlyout x:Key="PlaylistFlyout">
+            <MenuFlyout.MenuFlyoutPresenterStyle>
+                <Style TargetType="MenuFlyoutPresenter">
+                    <Setter Property="BorderBrush" Value="CornflowerBlue"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+            </MenuFlyout.MenuFlyoutPresenterStyle>
+            <MenuFlyoutItem Text="remove song" DataContext="{Binding}" Click="removeSong_Click"/>
+        </MenuFlyout>
+    </Page.Resources>
+    <Page.BottomAppBar>
+        <CommandBar x:Name="commandBar">
+            <AppBarButton x:Name="reorderSongs" Icon="Sort" Label="reorder" Click="reorder_Click"/>
+            <AppBarButton x:Name="selectSongs" Icon="Bullets" Label="select" Click="selectSongs_Click"/>
+            <AppBarButton x:Name="savePlaylist" Icon="Save" Label="save playlist" Click="savePlaylist_Click"/>
+            <AppBarButton x:Name="removeSong" Icon="Delete" Label="remove" Click="removeSelectedSong_Click"/>
+        </CommandBar>
+    </Page.BottomAppBar>
     <Page.Transitions>
         <TransitionCollection>
             <NavigationThemeTransition>
                 <NavigationThemeTransition.DefaultNavigationTransitionInfo>
-                    <ContinuumNavigationTransitionInfo/>
+                    <CommonNavigationTransitionInfo/>
                 </NavigationThemeTransition.DefaultNavigationTransitionInfo>
             </NavigationThemeTransition>
         </TransitionCollection>
@@ -24,20 +43,16 @@
                CommonNavigationTransitionInfo.IsStaggerElement="True"
                Margin="0">
         <PivotItem x:Name="songsPivot" Header="playlist" CommonNavigationTransitionInfo.IsStaggerElement="True">
-            <ListView
-                x:Name="songView"
-                AutomationProperties.AutomationId="ItemListView"
-                AutomationProperties.Name="Items In Group"
-                TabIndex="1"
+            <ListView x:Name="songView"
                 ItemsSource="{Binding Songs}"
-                IsItemClickEnabled="True"
-                ItemClick="songView_ItemClick"
-                SelectionMode="None"
-                IsSwipeEnabled="false"
-                Grid.Row="1" Grid.ColumnSpan="2">
+                SelectionMode="Extended"
+                Loaded="songView_Loaded">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <controls:SongItemControl/>
+                        <controls:SongItemControl
+                            OnItemTapped="songItem_Tapped"
+                            Holding="SongItemControl_Holding"
+                            FlyoutBase.AttachedFlyout="{StaticResource PlaylistFlyout}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

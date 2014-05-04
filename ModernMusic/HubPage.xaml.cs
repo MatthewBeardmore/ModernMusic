@@ -1,4 +1,5 @@
 ﻿using ModernMusic.Library;
+using ModernMusic.Library.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -33,6 +34,7 @@ namespace ModernMusic
     public sealed partial class HubPage : Page, ILaunchable
     {
         private readonly NavigationHelper navigationHelper;
+        private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private readonly ResourceLoader resourceLoader = ResourceLoader.GetForCurrentView("Resources");
         public const string appbarTileId = "SecondaryTile.ModernMusic.Hub";
 
@@ -42,9 +44,6 @@ namespace ModernMusic
 
             // Hub is only supported in Portrait orientation
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Portrait;
-
-            NowPlayingManager.OnMediaPlayerStateChanged += mediaPlayerStateChanged;
-            nowPlayingControl.SetupPage(this);
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
 
@@ -62,6 +61,15 @@ namespace ModernMusic
         }
 
         /// <summary>
+        /// Gets the view model for this <see cref="Page"/>.
+        /// This can be changed to a strongly typed view model.
+        /// </summary>
+        public ObservableDictionary DefaultViewModel
+        {
+            get { return this.defaultViewModel; }
+        }
+
+        /// <summary>
         /// Populates the page with content passed during navigation.  Any saved state is also
         /// provided when recreating a page from a prior session.
         /// </summary>
@@ -72,29 +80,16 @@ namespace ModernMusic
         /// <see cref="Frame.Navigate(Type, object)"/> when this page was initially requested and
         /// a dictionary of state preserved by this page during an earlier
         /// session.  The state will be null the first time a page is visited.</param>
-        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
+        private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            mediaPlayerStateChanged(null, null);
-        }
+            DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
+            await PlaylistManager.Instance.LoadPlaylists();
+            DefaultViewModel["PlaylistManager"] = PlaylistManager.Instance;
 
-        private async void mediaPlayerStateChanged(Windows.Media.Playback.MediaPlayer sender, object args)
-        {
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            if(e.NavigationParameter is Playlist)
             {
-                var library = MusicLibrary.Instance;
-                bool showNowPlaying = NowPlayingManager.IsAudioOpen;
-                if (showNowPlaying)
-                {
-                    if (!pivot.Items.Contains(nowPlayingPivot))
-                        pivot.Items.Insert(0, nowPlayingPivot);
-
-                    pivot.SelectedIndex = 1;
-                    pivot.SelectedIndex = 0;
-                    pivot.UpdateLayout();
-                }
-                else if (pivot.Items.Contains(nowPlayingPivot))
-                    pivot.Items.Remove(nowPlayingPivot);
-            });
+                pivot.SelectedIndex = 1;
+            }
         }
 
         /// <summary>
@@ -107,6 +102,14 @@ namespace ModernMusic
         /// serializable state.</param>
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
+        }
+
+        private void playlistItem_Tapped(Playlist playlist)
+        {
+            if (!Frame.Navigate(typeof(PlaylistView), playlist))
+            {
+                throw new Exception(this.resourceLoader.GetString("NavigationFailedExceptionMessage"));
+            }
         }
 
         #region NavigationHelper registration
@@ -194,6 +197,21 @@ namespace ModernMusic
         public void OnLaunched(Windows.ApplicationModel.Activation.LaunchActivatedEventArgs e)
         {
             ToggleAppBarButton(!SecondaryTileManager.TileExists(appbarTileId));
+        }
+
+        private async void removePlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Playlist playlist = item.DataContext as Playlist;
+
+                if (playlist != null)
+                {
+                    PlaylistManager.Instance.RemovePlaylist(playlist);
+                    await PlaylistManager.Instance.Serialize();
+                }
+            }
         }
     }
 }

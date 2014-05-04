@@ -164,7 +164,8 @@ namespace ModernMusic.Controls
         
         private void playlistButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (!Page.Frame.Navigate(typeof(PlaylistView), NowPlayingManager.CurrentPlaylist))
+            if (!Page.Frame.Navigate(typeof(PlaylistView), new KeyValuePair<Playlist, Song>(
+                NowPlayingManager.CurrentPlaylist, NowPlayingManager.CurrentSong)))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
                 throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));

@@ -5,20 +5,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
+using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.Media;
-using Windows.Media.Playback;
-using Windows.Storage;
-using Windows.Storage.FileProperties;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
@@ -28,65 +23,26 @@ namespace ModernMusic
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class NowPlaying : Page
+    public sealed partial class SavePlaylist : Page
     {
+        private Playlist _currentPlaylist;
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
 
-        public NowPlaying()
+        public SavePlaylist()
         {
             this.InitializeComponent();
 
-            nowPlayingControl.SetupPage(this);
-
-            this.navigationHelper = new NavigationHelper(this) { OnBackClearState = true };
+            this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
-            //this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
         }
 
-        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
+        /// <summary>
+        /// Gets the <see cref="NavigationHelper"/> associated with this <see cref="Page"/>.
+        /// </summary>
+        public NavigationHelper NavigationHelper
         {
-            if (e.NavigationParameter == null)
-            {
-                nowPlayingControl.ResumeLayout();
-                return;
-            }
-
-            Playlist playlist = new Playlist();
-            int currentSongIndex = 0;
-
-            if (e.NavigationParameter is Artist)
-            {
-                Artist artist = (Artist)e.NavigationParameter;
-                playlist.Songs = MusicLibrary.Instance.GetSongs(artist);
-            }
-            else if (e.NavigationParameter is Album)
-            {
-                Album album = (Album)e.NavigationParameter;
-                playlist.Songs = MusicLibrary.Instance.GetSongs(album);
-            }
-            else if (e.NavigationParameter is Song)
-            {
-                Song song = (Song)e.NavigationParameter;
-
-                playlist.Songs.Add(song);
-            }
-            else if (e.NavigationParameter is KeyValuePair<Album, int>)
-            {
-                KeyValuePair<Album, int> kvp = ((KeyValuePair<Album, int>)e.NavigationParameter);
-                playlist.Songs = MusicLibrary.Instance.GetSongs(kvp.Key);
-                currentSongIndex = kvp.Value;
-            }
-            else if (e.NavigationParameter is KeyValuePair<Playlist, int>)
-            {
-                KeyValuePair<Playlist, int> kvp = ((KeyValuePair<Playlist, int>)e.NavigationParameter);
-                playlist = kvp.Key;
-                currentSongIndex = kvp.Value;
-            }
-
-            NowPlayingManager.SetPlaylist(playlist, currentSongIndex);
-            nowPlayingControl.ResumeLayout();
-            NowPlayingManager.StartAudio(Dispatcher);
+            get { return this.navigationHelper; }
         }
 
         /// <summary>
@@ -96,6 +52,38 @@ namespace ModernMusic
         public ObservableDictionary DefaultViewModel
         {
             get { return this.defaultViewModel; }
+        }
+
+        /// <summary>
+        /// Populates the page with content passed during navigation.  Any saved state is also
+        /// provided when recreating a page from a prior session.
+        /// </summary>
+        /// <param name="sender">
+        /// The source of the event; typically <see cref="NavigationHelper"/>
+        /// </param>
+        /// <param name="e">Event data that provides both the navigation parameter passed to
+        /// <see cref="Frame.Navigate(Type, object)"/> when this page was initially requested and
+        /// a dictionary of state preserved by this page during an earlier
+        /// session.  The state will be null the first time a page is visited.</param>
+        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
+        {
+            _currentPlaylist = (Playlist)e.NavigationParameter;
+        }
+
+        private async void playlistName_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if(e.Key == Windows.System.VirtualKey.Enter && !string.IsNullOrEmpty(playlistName.Text))
+            {
+                _currentPlaylist.Name = playlistName.Text;
+                PlaylistManager.Instance.AddPlaylist(_currentPlaylist);
+                await PlaylistManager.Instance.Serialize();
+
+                if (!Frame.Navigate(typeof(HubPage), _currentPlaylist))
+                {
+                    var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+                    throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
+                }
+            }
         }
 
         #region NavigationHelper registration

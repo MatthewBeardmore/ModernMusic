@@ -1,5 +1,5 @@
 ﻿using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
+using ModernMusic.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +26,6 @@ namespace ModernMusic.Controls
     public sealed partial class NowPlayingControl : UserControl
     {
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
-        private bool _updatingPositionSlider = false;
         private Page Page;
 
         public NowPlayingControl()
@@ -38,12 +37,7 @@ namespace ModernMusic.Controls
                 gridBackground.Background = new SolidColorBrush(Colors.Transparent);
             }
 
-            DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromSeconds(0.5);
-            timer.Start();
-            timer.Tick += timer_Tick;
-
-            NowPlayingManager.OnChangedTrack += NowPlayingManager_OnTrackChanged;
+            NowPlayingManager.OnChangedTrack += ResumeLayout;
             NowPlayingManager.OnMediaPlayerStateChanged += NowPlayingManager_OnMediaPlayerStateChanged;
         }
 
@@ -54,20 +48,18 @@ namespace ModernMusic.Controls
 
         public void ResumeLayout()
         {
-            Song nextSong, subsequentSong;
-            NowPlayingManager.GetSubsequentSongs(out nextSong, out subsequentSong);
-            this.DefaultViewModel["Song"] = NowPlayingManager.CurrentSong;
-            this.DefaultViewModel["NextSong"] = nextSong;
-            this.DefaultViewModel["SubsequentSong"] = subsequentSong;
-            LoadSongArtwork(NowPlayingManager.CurrentSong);
-        }
+            Song previousSong, currentSong, nextSong, subsequentSong;
+            NowPlayingManager.GetNowPlaying(out previousSong, out currentSong, out nextSong, out subsequentSong);
 
-        private void NowPlayingManager_OnTrackChanged(Song song, Song nextSong, Song subsequentSong)
-        {
-            this.DefaultViewModel["Song"] = song;
+            if (currentSong == null)
+                return;
+            
+            this.DefaultViewModel["PreviousSong"] = previousSong;
+            this.DefaultViewModel["Song"] = currentSong;
             this.DefaultViewModel["NextSong"] = nextSong;
             this.DefaultViewModel["SubsequentSong"] = subsequentSong;
-            LoadSongArtwork(song);
+
+            LoadSongArtwork(currentSong);
         }
 
         private void NowPlayingManager_OnMediaPlayerStateChanged(MediaPlayer sender, object args)
@@ -76,11 +68,17 @@ namespace ModernMusic.Controls
             {
                 if (NowPlayingManager.IsAudioPlaying)
                 {
-                    playButton.Icon = new SymbolIcon(Symbol.Pause);
+                    playButton.Symbol = Symbol.Pause;
                 }
                 else
-                    playButton.Icon = new SymbolIcon(Symbol.Play);
+                    playButton.Symbol = Symbol.Play;
             });
+        }
+
+        private void nowPlayingControl_loaded(object sender, RoutedEventArgs e)
+        {
+            AlbumArtwork.Width = this.ActualWidth - 20 - 60;
+            AlbumArtwork.Height = AlbumArtwork.Width;
         }
 
         private void LoadSongArtwork(Song song)
@@ -97,24 +95,6 @@ namespace ModernMusic.Controls
             }
         }
 
-        void timer_Tick(object sender, object e)
-        {
-            _updatingPositionSlider = true;
-            if (NowPlayingManager.IsAudioOpen)
-            {
-                positionSlider.Value = BackgroundMediaPlayer.Current.Position.TotalSeconds;
-                positionSlider.Maximum = BackgroundMediaPlayer.Current.NaturalDuration.TotalSeconds;
-                if (positionSlider.Maximum < 1.0f)
-                    positionSlider.Maximum = 100f;
-            }
-            else
-            {
-                positionSlider.Value = 0;
-                positionSlider.Maximum = 100;
-            }
-            _updatingPositionSlider = false;
-        }
-
         /// <summary>
         /// Gets the view model for this <see cref="Page"/>.
         /// This can be changed to a strongly typed view model.
@@ -124,60 +104,90 @@ namespace ModernMusic.Controls
             get { return this.defaultViewModel; }
         }
 
-        private void playButton_Click(object sender, RoutedEventArgs e)
+        public void EnsurePlayback()
         {
-            if (NowPlayingManager.CurrentState == MediaPlayerState.Paused)
+            if (!NowPlayingManager.IsAudioPlaying)
             {
-                NowPlayingManager.Play();
+                if (NowPlayingManager.PlayCurrentSong(Dispatcher))
+                    ResumeLayout();
+            }
+        }
+
+        private void playButton_Click(object sender, TappedRoutedEventArgs e)
+        {
+            if (!NowPlayingManager.IsAudioPlaying)
+            {
+                if (NowPlayingManager.PlayCurrentSong(Dispatcher))
+                    ResumeLayout();
             }
             else
             {
-                NowPlayingManager.Pause();
+                NowPlayingManager.PauseCurrentSong();
             }
         }
 
         private void nextButton_Click(object sender, RoutedEventArgs e)
         {
-            NowPlayingManager.SkipNext();
+            NowPlayingManager.SkipToNextSong(Dispatcher);
             ResumeLayout();
         }
 
         private void previousButton_Click(object sender, RoutedEventArgs e)
         {
-            NowPlayingManager.SkipPrevious();
-            ResumeLayout();
-        }
-
-        private void positionSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-        {
-            if (!_updatingPositionSlider)
-                NowPlayingManager.Seek(positionSlider.Value);
+            if (NowPlayingManager.SkipToPreviousSong(Dispatcher))
+                ResumeLayout();
         }
 
         private void repeatButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            NowPlayingManager.RepeatEnabled = !NowPlayingManager.RepeatEnabled;
+            NowPlayingInformation.RepeatEnabled = !NowPlayingInformation.RepeatEnabled;
             SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
-            ((SymbolIcon)sender).Foreground = 
-                NowPlayingManager.RepeatEnabled ? accentBrush : new SolidColorBrush(Colors.White);
+            ((SymbolIcon)sender).Foreground =
+                NowPlayingInformation.RepeatEnabled ? accentBrush : new SolidColorBrush(Colors.White);
+
+            ResumeLayout();
+        }
+
+        private void shuffleButton_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            NowPlayingInformation.ShuffleEnabled = !NowPlayingInformation.ShuffleEnabled;
+            SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
+            ((SymbolIcon)sender).Foreground =
+                NowPlayingInformation.ShuffleEnabled ? accentBrush : new SolidColorBrush(Colors.White);
+
+            ResumeLayout();
         }
         
         private void playlistButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (!Page.Frame.Navigate(typeof(PlaylistView), new KeyValuePair<Playlist, Song>(
-                NowPlayingManager.CurrentPlaylist, NowPlayingManager.CurrentSong)))
+            if (!Page.Frame.Navigate(typeof(PlaylistView), new KeyValuePair<Playlist, int>(
+                NowPlayingInformation.CurrentPlaylist, NowPlayingInformation.CurrentIndex)))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
                 throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
             }
         }
-        
-        private void shuffleButton_Tapped(object sender, TappedRoutedEventArgs e)
+
+        private void icon_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            NowPlayingManager.ShuffleEnabled = !NowPlayingManager.ShuffleEnabled;
-            SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
-            ((SymbolIcon)sender).Foreground =
-                NowPlayingManager.ShuffleEnabled ? accentBrush : new SolidColorBrush(Colors.White);
+            Grid grid = (Grid)sender;
+            Border border = (Border)grid.Children[0];
+            SymbolIcon symbol = (SymbolIcon)border.Child;
+
+            symbol.Foreground = new SolidColorBrush(Colors.Black);
+            border.BorderThickness = new Thickness(0);
+            border.Background = new SolidColorBrush(Colors.White);
+        }
+
+        private void icon_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        {
+            Grid grid = (Grid)sender;
+            Border border = (Border)grid.Children[0];
+            SymbolIcon symbol = (SymbolIcon)border.Child;
+
+            symbol.Foreground = new SolidColorBrush(Colors.White);
+            border.BorderThickness = new Thickness(3);
+            border.Background = new SolidColorBrush(Colors.Transparent);
         }
     }
 }

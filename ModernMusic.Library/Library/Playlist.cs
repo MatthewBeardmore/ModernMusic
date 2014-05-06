@@ -27,6 +27,9 @@ namespace ModernMusic.Library
         [DataMember]
         public string Name { get; set; }
 
+        [DataMember]
+        public Guid ID = Guid.NewGuid();
+
         #endregion
 
         public Playlist()

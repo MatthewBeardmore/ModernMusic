@@ -6,7 +6,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ModernMusic.Library.Helpers
+namespace ModernMusic.Helpers
 {
     public static class JsonSerialization
     {

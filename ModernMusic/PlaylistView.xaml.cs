@@ -1,6 +1,6 @@
 ﻿using ModernMusic.Controls;
 using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
+using ModernMusic.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,7 +32,7 @@ namespace ModernMusic
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private Playlist _currentPlaylist = null;
-        private Song _currentSong;
+        private int _currentSongIndex;
         private ObservableCollection<Song> Songs { get; set; }
 
         public PlaylistView()
@@ -78,13 +78,13 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            KeyValuePair<Playlist, Song> playlist;
+            KeyValuePair<Playlist, int> playlist;
             if (e.NavigationParameter is Playlist)
-                playlist = new KeyValuePair<Playlist, Song>((Playlist)e.NavigationParameter, null);
+                playlist = new KeyValuePair<Playlist, int>((Playlist)e.NavigationParameter, 0);
             else
-                playlist = (KeyValuePair<Playlist, Song>)e.NavigationParameter;
+                playlist = (KeyValuePair<Playlist, int>)e.NavigationParameter;
             _currentPlaylist = playlist.Key;
-            _currentSong = playlist.Value;
+            _currentSongIndex = playlist.Value;
             foreach(Song song in _currentPlaylist.Songs)
                 Songs.Add(song);
 
@@ -93,10 +93,10 @@ namespace ModernMusic
 
         private void songView_Loaded(object sender, RoutedEventArgs e)
         {
-            songView.ScrollIntoView(_currentPlaylist.Songs[Math.Max(0, _currentPlaylist.Songs.IndexOf(_currentSong) - 1)], ScrollIntoViewAlignment.Leading);
+            songView.ScrollIntoView(_currentPlaylist.Songs[Math.Max(0, _currentSongIndex - 1)], ScrollIntoViewAlignment.Leading);
         }
 
-        private void nowPlayingManger_onChangedTrack(Song arg1, Song arg2, Song arg3)
+        private void nowPlayingManger_onChangedTrack()
         {
         }
 

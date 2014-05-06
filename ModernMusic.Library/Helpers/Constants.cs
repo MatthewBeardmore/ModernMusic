@@ -16,15 +16,22 @@ namespace ModernMusic.Library
     /// </summary>
     public class Constants
     {
+        /// 
+        /// Foreground -> Background
+        ///  
+
+        public const string BackgroundTaskQuery = "BackgroundTaskQuery";
+        public const string StartPlaying = "StartPlaying";
         public const string PlayTrack = "PlayTrack";
         public const string PauseTrack = "PauseTrack";
-        public const string StartPlayback = "StartPlayback";
-        public const string Seek = "Seek";
         public const string StopPlayback = "StopPlayback";
-        public const string SkipNext = "SkipNext";
-        public const string SkipPrevious = "SkipPrevious";
-        public const string BackgroundTaskQuery = "BackgroundTaskQuery";
+
+        /// 
+        /// Background -> Foreground
+        ///  
+
+        public const string ChangedTrack = "ChangedTrack";
         public const string BackgroundTaskIsRunning = "BackgroundTaskIsRunning";
-        public const string KillBackgroundTask = "KillBackgroundTask";
+        public const string BackgroundTaskIsStopping = "BackgroundTaskIsStopping";
     }
 }

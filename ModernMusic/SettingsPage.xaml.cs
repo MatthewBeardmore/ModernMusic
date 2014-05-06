@@ -73,6 +73,7 @@ namespace ModernMusic
         {
             Settings.ClearCacheOnNextStart = clearCacheOnNextStart.IsOn;
             Settings.RepeatAsDefault = alwaysStartRepeat.IsOn;
+            Settings.AllowXboxMusicIntegration = xboxIntegration.IsOn; 
             Settings.Save();
 
             Application.Current.Exit();

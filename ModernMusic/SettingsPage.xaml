@@ -16,6 +16,7 @@
             <StackPanel Orientation="Vertical">
                 <ToggleSwitch x:Name="clearCacheOnNextStart" Header="Clear cache on next start" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" IsOn="{Binding Settings.ClearCacheOnNextStart}"/>
                 <ToggleSwitch x:Name="alwaysStartRepeat" Header="Enable repeat by default" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" IsOn="{Binding Settings.RepeatAsDefault}"/>
+                <ToggleSwitch x:Name="xboxIntegration" Header="Enable Xbox Music Integration" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" IsOn="{Binding Settings.AllowXboxMusicIntegration}"/>
             </StackPanel>
         </PivotItem>
     </Pivot>

@@ -38,6 +38,7 @@
     <Content Include="Library\Samples\SampleSong.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\AsyncHelpers.cs" />
     <Compile Include="Helpers\GroupInfoList.cs" />
     <Compile Include="Helpers\JsonSerialization.cs" />
     <Compile Include="Helpers\ObservableDictionary.cs" />

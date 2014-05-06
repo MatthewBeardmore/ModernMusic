@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using ModernMusic.Helpers;
 
 namespace ModernMusic.Library
 {
@@ -21,7 +22,10 @@ namespace ModernMusic.Library
             get
             {
                 if (_instance == null)
+                {
                     _instance = new PlaylistManager();
+                    AsyncInline.Run(new Func<Task>(() => _instance.LoadPlaylists()));
+                }
                 return _instance;
             }
         }
@@ -64,7 +68,7 @@ namespace ModernMusic.Library
             catch { }
         }
 
-        public async Task Deserialize(StorageFile file)
+        private async Task Deserialize(StorageFile file)
         {
             if (file == null)
                 file = await ApplicationData.Current.LocalFolder.GetFileAsync("playlistcache");
@@ -74,8 +78,11 @@ namespace ModernMusic.Library
                 var serializer = new DataContractJsonSerializer(typeof(PlaylistManager));
                 var cache = (PlaylistManager)serializer.ReadObject(inStream.AsStreamForRead());
 
-                foreach (var playlist in cache.PlaylistDataMember)
-                    this.AddPlaylist(playlist);
+                if (cache != null)
+                {
+                    foreach (var playlist in cache.PlaylistDataMember)
+                        this.AddPlaylist(playlist);
+                }
             }
         }
 

@@ -78,20 +78,6 @@ namespace ModernMusic.Controls
             border.Background = new SolidColorBrush(Colors.White);
         }
 
-        private void icon_PointerReleased(object sender, PointerRoutedEventArgs e)
-        {
-            icon.Foreground = new SolidColorBrush(Colors.White);
-            border.BorderThickness = new Thickness(2.5);
-            border.Background = new SolidColorBrush(Colors.Transparent);
-        }
-
-        private void icon_PointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            icon.Foreground = new SolidColorBrush(Colors.White);
-            border.BorderThickness = new Thickness(2.5);
-            border.Background = new SolidColorBrush(Colors.Transparent);
-        }
-
         private void icon_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
         {
             icon.Foreground = new SolidColorBrush(Colors.White);

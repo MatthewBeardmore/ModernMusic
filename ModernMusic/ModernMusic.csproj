@@ -112,6 +112,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Controls\TimeSliderControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="HubPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -167,6 +171,9 @@
     <Compile Include="Controls\SongItemControl.xaml.cs">
       <DependentUpon>SongItemControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TimeSliderControl.xaml.cs">
+      <DependentUpon>TimeSliderControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DataModel\SampleDataSource.cs" />
     <Compile Include="HubPage.xaml.cs">
       <DependentUpon>HubPage.xaml</DependentUpon>
@@ -197,6 +204,7 @@
     </ApplicationDefinition>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\DarkGray.png" />
     <Content Include="Assets\headphones.scale-240.png" />
     <Content Include="Assets\headphones_106.scale-240.png" />
     <Content Include="Assets\headphones_120.scale-240.png" />

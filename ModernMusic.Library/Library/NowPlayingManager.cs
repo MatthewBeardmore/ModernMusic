@@ -1,5 +1,5 @@
 ﻿using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
+using ModernMusic.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Media.Playback;
+using Windows.Storage;
 using Windows.UI.Core;
 
 namespace ModernMusic.Library
@@ -17,18 +18,8 @@ namespace ModernMusic.Library
     {
         #region Public Properties
 
-        public static Action<Song, Song, Song> OnChangedTrack;
+        public static Action OnChangedTrack;
         public static TypedEventHandler<MediaPlayer, object> OnMediaPlayerStateChanged;
-
-        public static Playlist CurrentPlaylist { get; private set; }
-
-        public static Song CurrentSong { get { if (CurrentSongIndex >= 0) return CurrentPlaylist.Songs[CurrentSongIndex]; return null; } }
-
-        public static int CurrentSongIndex { get; private set; }
-
-        public static bool RepeatEnabled { get; set; }
-
-        public static bool ShuffleEnabled { get; set; }
 
         public static MediaPlayerState CurrentState
         {
@@ -68,167 +59,171 @@ namespace ModernMusic.Library
 
         #region Public Methods
 
-        public static void SetPlaylist(Playlist playlist, int index = 0)
+        #region New Background Management Methods
+
+        public static void BeginPlaylist(CoreDispatcher dispatcher, Playlist playlist, int index = 0)
         {
-            CurrentPlaylist = playlist;
-            CurrentSongIndex = index;
+            NowPlayingInformation.CurrentPlaylist = playlist;
+            NowPlayingInformation.CurrentIndex = index;
+
+            var t = Task.Run(new Action(() =>
+            {
+                StartBackgroundAudioTask(dispatcher);
+
+                ValueSet message = new ValueSet();
+                message.Add(Constants.StartPlaying, null);
+                BackgroundMediaPlayer.SendMessageToBackground(message);
+            }));
         }
 
-        public static async void StartAudio(CoreDispatcher dispatcher)
+        public static bool PlayCurrentSong(CoreDispatcher dispatcher)
         {
-            StartBackgroundAudioTask(dispatcher);
+            bool needsUpdated = true;
+            if (ServerInitialized.WaitOne(0))
+            {
+                ValueSet message = new ValueSet();
+                if (NowPlayingInformation.CurrentIndex == -1)
+                {
+                    NowPlayingInformation.CurrentIndex = 0;
+                    message.Add(Constants.StartPlaying, null);
+                }
+                else
+                {
+                    message.Add(Constants.PlayTrack, null);
+                    needsUpdated = false;
+                }
+                BackgroundMediaPlayer.SendMessageToBackground(message);
+            }
+            else
+            {
+                if (NowPlayingInformation.CurrentIndex == -1)
+                    NowPlayingInformation.CurrentIndex = 0;
 
-            await PlaySong();
+                //TODO: Keep audio position when the background task is killed
+                StartBackgroundAudioTask(dispatcher);
+
+                ValueSet message = new ValueSet();
+                message.Add(Constants.StartPlaying, null);
+                BackgroundMediaPlayer.SendMessageToBackground(message);
+            }
+            return needsUpdated;
         }
 
-        public static void Play()
-        {
-            ValueSet message = new ValueSet();
-            message.Add(Constants.PlayTrack, null);
-            BackgroundMediaPlayer.SendMessageToBackground(message);
-        }
-
-        public static void Pause()
+        public static void PauseCurrentSong()
         {
             ValueSet message = new ValueSet();
             message.Add(Constants.PauseTrack, null);
             BackgroundMediaPlayer.SendMessageToBackground(message);
         }
 
-        public static async void SkipNext()
-        {
-            int nextIndex, subsequentIndex;
-            GetSubsequentIndices(out nextIndex, out subsequentIndex);
-
-            if (nextIndex == -1)
-                StopMusic();
-            else
-            {
-                CurrentSongIndex = nextIndex;
-                await PlaySong();
-            }
-        }
-
-        public static async void SkipPrevious()
-        {
-            int previousIndex;
-            GetPreviousIndices(out previousIndex);
-
-            if (previousIndex == -1)
-                StopMusic();
-            else
-            {
-                CurrentSongIndex = previousIndex;
-                await PlaySong();
-            }
-        }
-
         public static void Seek(double time)
         {
-            ValueSet message = new ValueSet();
-            message.Add(Constants.Seek, time);
-            BackgroundMediaPlayer.SendMessageToBackground(message);
+            BackgroundMediaPlayer.Current.Position = TimeSpan.FromSeconds(time);
         }
 
         public static void AddToNowPlaying(Song song)
         {
-            if (CurrentPlaylist != null)
-                CurrentPlaylist.Songs.Add(song);
+            Playlist currentPlaylist = NowPlayingInformation.CurrentPlaylist;
+            if (currentPlaylist != null)
+            {
+                currentPlaylist.Songs.Add(song);
+                NowPlayingInformation.CurrentPlaylist = currentPlaylist;
+            }
         }
 
         public static void AddToNowPlaying(Album album)
         {
-            if (CurrentPlaylist != null)
+            Playlist currentPlaylist = NowPlayingInformation.CurrentPlaylist;
+            if (currentPlaylist != null)
             {
                 foreach (Song song in MusicLibrary.Instance.GetSongs(album))
-                    CurrentPlaylist.Songs.Add(song);
+                    currentPlaylist.Songs.Add(song);
+                NowPlayingInformation.CurrentPlaylist = currentPlaylist;
             }
         }
 
         public static void AddToNowPlaying(Artist artist)
         {
-            if (CurrentPlaylist != null)
+            Playlist currentPlaylist = NowPlayingInformation.CurrentPlaylist;
+            if (currentPlaylist != null)
             {
                 foreach (Song song in MusicLibrary.Instance.GetSongs(artist))
-                    CurrentPlaylist.Songs.Add(song);
+                    currentPlaylist.Songs.Add(song);
+                NowPlayingInformation.CurrentPlaylist = currentPlaylist;
             }
         }
 
-        #endregion
-
-        #region Private Methods
-
-        private static async Task PlaySong()
-        {
-            await Task.Run(new Action(() =>
-            {
-                ValueSet message = new ValueSet();
-                message.Add(Constants.StartPlayback, JsonSerialization.Serialize(CurrentPlaylist.Songs[CurrentSongIndex]));
-                BackgroundMediaPlayer.SendMessageToBackground(message);
-
-                if (OnChangedTrack != null)
-                {
-                    Song nextSong, subsequentSong;
-                    GetSubsequentSongs(out nextSong, out subsequentSong);
-
-                    OnChangedTrack(CurrentPlaylist.Songs[CurrentSongIndex], nextSong, subsequentSong);
-                }
-            }));
-        }
-
-        private static void StopMusic()
+        public static void StopPlayback()
         {
             ValueSet message = new ValueSet();
             message.Add(Constants.StopPlayback, null);
             BackgroundMediaPlayer.SendMessageToBackground(message);
         }
 
-        private static void GetPreviousIndices(out int previousIndex)
+        public static void SkipToNextSong(CoreDispatcher dispatcher)
         {
-            previousIndex = CurrentSongIndex - 1;
-            if (previousIndex >= CurrentPlaylist.Songs.Count)
+            NowPlayingInformation.SkipToNextSong(true);
+
+            var t = Task.Run(new Action(() =>
             {
-                if (RepeatEnabled)
-                    previousIndex += CurrentPlaylist.Songs.Count;
-                else
-                    previousIndex = -1;
-            }
+                if (!ServerInitialized.WaitOne(0))
+                    StartBackgroundAudioTask(dispatcher);
+
+                ValueSet message = new ValueSet();
+                message.Add(Constants.StartPlaying, null);
+                BackgroundMediaPlayer.SendMessageToBackground(message);
+            }));
         }
 
-        public static void GetSubsequentIndices(out int nextIndex, out int subsequentIndex)
+        public static bool SkipToPreviousSong(CoreDispatcher dispatcher)
         {
-            nextIndex = CurrentSongIndex + 1;
-            if (nextIndex >= CurrentPlaylist.Songs.Count)
+            if(BackgroundMediaPlayer.Current.Position.TotalSeconds > 5)
             {
-                if (RepeatEnabled)
-                    nextIndex -= CurrentPlaylist.Songs.Count;
-                else
-                    nextIndex = -1;
+                BackgroundMediaPlayer.Current.Position = TimeSpan.FromSeconds(0);
+                //Just restart the song if it is more than 5 seconds into the song
+                return false;
             }
-            subsequentIndex = CurrentSongIndex + 2;
-            if (subsequentIndex >= CurrentPlaylist.Songs.Count)
+            NowPlayingInformation.SkipToPreviousSong(true);
+
+            var t = Task.Run(new Action(() =>
             {
-                if (RepeatEnabled)
-                    subsequentIndex -= CurrentPlaylist.Songs.Count;
-                else
-                    subsequentIndex = -1;
-            }
+                if (!ServerInitialized.WaitOne(0))
+                    StartBackgroundAudioTask(dispatcher);
+
+                ValueSet message = new ValueSet();
+                message.Add(Constants.StartPlaying, null);
+                BackgroundMediaPlayer.SendMessageToBackground(message);
+            }));
+            return true;
         }
 
-        public static void GetSubsequentSongs(out Song nextSong, out Song subsequentSong)
+        public static void GetNowPlaying(out Song previousSong, out Song currentSong, out Song nextSong, out Song subsequentSong)
         {
-            int nextIndex, subsequentIndex;
-            GetSubsequentIndices(out nextIndex, out subsequentIndex);
+            Playlist playlist = NowPlayingInformation.CurrentPlaylist;
 
-            nextSong = nextIndex == -1 ? null : CurrentPlaylist.Songs[nextIndex];
-            subsequentSong = subsequentIndex == -1 ? null : CurrentPlaylist.Songs[subsequentIndex];
+            int previousIndex, currentIndex, nextIndex, subsequentIndex;
+            NowPlayingInformation.GetNowPlayingIndices(out previousIndex, out currentIndex, out nextIndex, out subsequentIndex, playlist);
+
+            previousSong = previousIndex == -1 ? null : playlist.Songs[previousIndex];
+            currentSong = currentIndex == -1 ? null : playlist.Songs[currentIndex];
+            nextSong = nextIndex == -1 ? null : playlist.Songs[nextIndex];
+            subsequentSong = subsequentIndex == -1 ? null : playlist.Songs[subsequentIndex];
         }
+
+        #endregion
+
+        #endregion
+
+        #region Private Methods
 
         /// <summary>
         /// Initialize Background Media Player Handlers and starts playback
         /// </summary>
         private static void StartBackgroundAudioTask(CoreDispatcher dispatcher)
         {
+            if (ServerInitialized.WaitOne(0))
+                return;
+
             RemoveMediaPlayerEventHandlers();
             AddMediaPlayerEventHandlers();
             QueryForBackgroundTask();
@@ -265,18 +260,6 @@ namespace ModernMusic.Library
             BackgroundMediaPlayer.MessageReceivedFromBackground += BackgroundMediaPlayer_MessageReceivedFromBackground;
         }
 
-        private static void BackgroundTaskInitializationCompleted(IAsyncAction action, AsyncStatus status)
-        {
-            if (status == AsyncStatus.Completed)
-            {
-                Debug.WriteLine("Background Audio Task initialized");
-            }
-            else if (status == AsyncStatus.Error)
-            {
-                Debug.WriteLine("Background Audio Task could not initialized due to an error ::" + action.ErrorCode.ToString());
-            }
-        }
-
         #region Background MediaPlayer Event handlers
 
         /// <summary>
@@ -305,25 +288,219 @@ namespace ModernMusic.Library
                         Debug.WriteLine("Background Task Is Running");
                         ServerInitialized.Set();
                         break;
-                    case Constants.SkipNext:
-                        SkipNext();
+                    case Constants.BackgroundTaskIsStopping:
+                        Debug.WriteLine("Background Task Is Stopping");
+
+                        ServerInitialized.Reset();
+                        if (OnMediaPlayerStateChanged != null)
+                            OnMediaPlayerStateChanged(null, null);
                         break;
-                    case Constants.SkipPrevious:
-                        SkipPrevious();
+                    case Constants.ChangedTrack:
+                        FireOnChangedTrack();
                         break;
                 }
             }
         }
 
-        #endregion
-
-        #endregion
-
-        public static void KillBackgroundTask()
+        private static void FireOnChangedTrack()
         {
-            ValueSet message = new ValueSet();
-            message.Add(Constants.KillBackgroundTask, null);
-            BackgroundMediaPlayer.SendMessageToBackground(message);
+            if (OnChangedTrack != null)
+                OnChangedTrack();
+        }
+
+        #endregion
+
+        #endregion
+    }
+
+    public static class NowPlayingInformation
+    {
+        public static Playlist CurrentPlaylist
+        {
+            get
+            {
+                string val = AsyncInline.Run<string>(new Func<Task<string>>(() => GetFile("CurrentPlaylist")));
+                if (val == null)
+                    return null;
+                return JsonSerialization.Deserialize<Playlist>(val);
+            }
+            set
+            {
+                AsyncInline.Run(new Func<Task>(() => SetFile("CurrentPlaylist", value == null ? null : JsonSerialization.Serialize(value))));
+            }
+        }
+
+        public static int CurrentIndex
+        {
+            get
+            {
+                string val = GetSetting("CurrentIndex");
+                if (val == null)
+                    return -1;
+                return int.Parse(val);
+            }
+            set
+            {
+                SetSetting("CurrentIndex", value.ToString());
+            }
+        }
+
+        public static bool RepeatEnabled
+        {
+            get
+            {
+                string val = GetSetting("RepeatEnabled");
+                if (val == null)
+                    return false;
+                return bool.Parse(val);
+            }
+            set
+            {
+                SetSetting("RepeatEnabled", value.ToString());
+            }
+        }
+
+        public static bool ShuffleEnabled
+        {
+            get
+            {
+                string val = GetSetting("ShuffleEnabled");
+                if (val == null)
+                    return false;
+                return bool.Parse(val);
+            }
+            set
+            {
+                SetSetting("ShuffleEnabled", value.ToString());
+            }
+        }
+
+        public static Song CurrentSong
+        {
+            get
+            {
+                int index = CurrentIndex;
+                Playlist playlist = CurrentPlaylist;
+                if(index < 0 || playlist == null)
+                    return null;
+
+                return playlist.Songs[index];
+            }
+        }
+
+        public static void GetNowPlayingIndices(out int previousIndex, out int currentIndex, out int nextIndex, out int subsequentIndex, Playlist playlist = null)
+        {
+            currentIndex = NowPlayingInformation.CurrentIndex;
+            if (playlist == null)
+                playlist = NowPlayingInformation.CurrentPlaylist;
+
+            if (playlist == null)
+            {
+                previousIndex = currentIndex = nextIndex = subsequentIndex = -1;
+                return;
+            }
+
+
+            previousIndex = currentIndex - 1;
+            if (previousIndex < 0)
+            {
+                if (RepeatEnabled)
+                    previousIndex += playlist.Songs.Count;
+                else
+                    previousIndex = -1;
+            }
+            nextIndex = currentIndex + 1;
+            if (nextIndex >= playlist.Songs.Count)
+            {
+                if (RepeatEnabled)
+                    nextIndex -= playlist.Songs.Count;
+                else
+                    nextIndex = -1;
+            }
+            subsequentIndex = currentIndex + 2;
+            if (subsequentIndex >= playlist.Songs.Count)
+            {
+                if (RepeatEnabled)
+                    subsequentIndex -= playlist.Songs.Count;
+                else
+                    subsequentIndex = -1;
+            }
+        }
+
+        private static void SetSetting(string key, object val)
+        {
+            if (val == null)
+                ApplicationData.Current.LocalSettings.Values.Remove("CurrentPlaylist");
+            else
+                ApplicationData.Current.LocalSettings.Values[key] = val;
+        }
+
+        private static async Task<string> GetFile(string key)
+        {
+            StorageFile file = await ApplicationData.Current.LocalCacheFolder.GetFileAsync(key);
+            if (file == null)
+                return null;
+            else
+            {
+                return await Windows.Storage.FileIO.ReadTextAsync(file);
+            }
+        }
+
+        private static async Task SetFile(string key, string val)
+        {
+            StorageFile file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(key, CreationCollisionOption.ReplaceExisting);
+            if (val == null)
+                await file.DeleteAsync();
+            else
+            {
+                await Windows.Storage.FileIO.WriteTextAsync(file, val);
+            }
+        }
+
+        private static string GetSetting(string key)
+        {
+            object var;
+            if (ApplicationData.Current.LocalSettings.Values.TryGetValue(key, out var))
+                return var.ToString();
+            return null;
+        }
+
+        public static int SkipToNextSong(bool force = false)
+        {
+            int currentIndex = NowPlayingInformation.CurrentIndex;
+            Playlist playlist = NowPlayingInformation.CurrentPlaylist;
+
+            int nextIndex = currentIndex + 1;
+            if (nextIndex >= playlist.Songs.Count)
+            {
+                if (RepeatEnabled || force)
+                    nextIndex = 0;
+                else
+                    nextIndex = -1;
+            }
+
+            NowPlayingInformation.CurrentIndex = nextIndex;
+
+            return nextIndex;
+        }
+
+        public static int SkipToPreviousSong(bool force = false)
+        {
+            int currentIndex = NowPlayingInformation.CurrentIndex;
+            Playlist playlist = NowPlayingInformation.CurrentPlaylist;
+
+            int previousIndex = currentIndex - 1;
+            if (previousIndex < 0)
+            {
+                if (RepeatEnabled || force)
+                    previousIndex = playlist.Songs.Count - 1;
+                else
+                    previousIndex = -1;
+            }
+
+            NowPlayingInformation.CurrentIndex = previousIndex;
+
+            return previousIndex;
         }
     }
 }

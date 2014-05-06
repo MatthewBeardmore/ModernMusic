@@ -1,5 +1,5 @@
 ﻿using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
+using ModernMusic.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

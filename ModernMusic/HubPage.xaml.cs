@@ -1,5 +1,5 @@
 ﻿using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
+using ModernMusic.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -45,7 +45,7 @@ namespace ModernMusic
             // Hub is only supported in Portrait orientation
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Portrait;
 
-            this.NavigationCacheMode = NavigationCacheMode.Required;
+            this.NavigationCacheMode = NavigationCacheMode.Disabled;
 
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
@@ -83,13 +83,31 @@ namespace ModernMusic
         private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
             DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
-            await PlaylistManager.Instance.LoadPlaylists();
             DefaultViewModel["PlaylistManager"] = PlaylistManager.Instance;
 
             if(e.NavigationParameter is Playlist)
             {
                 pivot.SelectedIndex = 1;
             }
+
+            Song currentSong = NowPlayingInformation.CurrentSong;
+            if (currentSong != null)
+            {
+                nowPlayingRow.Height = new GridLength(180);
+
+                string imagePath = MusicLibrary.Instance.GetAlbum(currentSong).ImagePath;
+                Uri uri;
+                if (Uri.TryCreate(imagePath, UriKind.RelativeOrAbsolute, out uri))
+                {
+                    var t = Dispatcher.RunIdleAsync((ee) =>
+                    {
+                        try { nowPlayingArt.UriSource = uri; }
+                        catch { nowPlayingArt.UriSource = null; }
+                    });
+                }
+            }
+            else
+                nowPlayingRow.Height = new GridLength(0);
         }
 
         /// <summary>
@@ -211,6 +229,14 @@ namespace ModernMusic
                     PlaylistManager.Instance.RemovePlaylist(playlist);
                     await PlaylistManager.Instance.Serialize();
                 }
+            }
+        }
+
+        private void nowPlayingArt_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (!Frame.Navigate(typeof(NowPlaying), null))
+            {
+                throw new Exception(this.resourceLoader.GetString("NavigationFailedExceptionMessage"));
             }
         }
     }

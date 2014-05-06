@@ -19,9 +19,5 @@
         </TransitionCollection>
     </Page.Transitions>
     
-    <Pivot Title="MODERN MUSIC" Margin="0" CommonNavigationTransitionInfo.IsStaggerElement="True">
-        <PivotItem Header="now playing" CommonNavigationTransitionInfo.IsStaggerElement="True">
-            <controls:NowPlayingControl x:Name="nowPlayingControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-        </PivotItem>
-    </Pivot>
+    <controls:NowPlayingControl Margin="20,0,20,0" x:Name="nowPlayingControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 </Page>

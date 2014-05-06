@@ -1,5 +1,5 @@
 ﻿using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
+using ModernMusic.Helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -48,6 +48,7 @@ namespace ModernMusic
         {
             if (e.NavigationParameter == null)
             {
+                nowPlayingControl.EnsurePlayback();
                 nowPlayingControl.ResumeLayout();
                 return;
             }
@@ -84,9 +85,8 @@ namespace ModernMusic
                 currentSongIndex = kvp.Value;
             }
 
-            NowPlayingManager.SetPlaylist(playlist, currentSongIndex);
+            NowPlayingManager.BeginPlaylist(Dispatcher, playlist, currentSongIndex);
             nowPlayingControl.ResumeLayout();
-            NowPlayingManager.StartAudio(Dispatcher);
         }
 
         /// <summary>

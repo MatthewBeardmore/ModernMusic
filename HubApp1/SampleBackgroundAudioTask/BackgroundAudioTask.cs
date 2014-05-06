@@ -12,7 +12,7 @@ using Windows.Media.Playback;
 using Windows.Foundation.Collections;
 using Windows.Storage;
 using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
+using System.Threading.Tasks;
 
 /* This is the Sample background task that will start running the first time 
  * MediaPlayer singleton instance is accessed from foreground. When a new audio 
@@ -52,8 +52,7 @@ namespace BackgroundAudioTask
         private BackgroundTaskDeferral deferral; // Used to keep task alive
         private AutoResetEvent BackgroundTaskStarted = new AutoResetEvent(false);
         private bool backgroundtaskrunning = false;
-        private Song _currentSong;
-
+        
         #endregion
 
         #region IBackgroundTask and IBackgroundTaskInstance Interface Members and handlers
@@ -104,6 +103,11 @@ namespace BackgroundAudioTask
         /// </summary>       
         void Taskcompleted(BackgroundTaskRegistration sender, BackgroundTaskCompletedEventArgs args)
         {
+            SendBackgroundTaskIsStopping();
+
+            NowPlayingInformation.CurrentIndex = -1;
+            NowPlayingInformation.CurrentPlaylist = null;
+
             Debug.WriteLine("MyBackgroundAudioTask " + sender.TaskId + " Completed...");
             deferral.Complete();
         }
@@ -116,10 +120,13 @@ namespace BackgroundAudioTask
         /// </summary>
         private void OnCanceled(IBackgroundTaskInstance sender, BackgroundTaskCancellationReason reason)
         {
-            // You get some time here to save your state before process and resources are reclaimed
-            Debug.WriteLine("MyBackgroundAudioTask " + (sender == null ? "null" : sender.Task.TaskId.ToString()) + " Cancel Requested...");
+            SendBackgroundTaskIsStopping();
+
             try
             {
+                NowPlayingInformation.CurrentIndex = -1;
+                NowPlayingInformation.CurrentPlaylist = null;
+
                 backgroundtaskrunning = false;
                 //unsubscribe event handlers
                 systemmediatransportcontrol.ButtonPressed -= systemmediatransportcontrol_ButtonPressed;
@@ -133,6 +140,13 @@ namespace BackgroundAudioTask
             }
             deferral.Complete(); // signals task completion. 
             Debug.WriteLine("MyBackgroundAudioTask Cancel complete...");
+        }
+
+        private void SendBackgroundTaskIsStopping()
+        {
+            ValueSet message = new ValueSet();
+            message.Add(Constants.BackgroundTaskIsStopping, "");
+            BackgroundMediaPlayer.SendMessageToForeground(message);
         }
 
         #endregion
@@ -170,6 +184,8 @@ namespace BackgroundAudioTask
         /// <param name="args"></param>
         private void systemmediatransportcontrol_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
         {
+            int index;
+
             switch (args.Button)
             {
                 case SystemMediaTransportControlsButton.Play: 
@@ -184,7 +200,7 @@ namespace BackgroundAudioTask
                         if (!result)
                             throw new Exception("Background Task didnt initialize in time");
                     }
-                    StartPlayback(null);
+                    BackgroundMediaPlayer.Current.Play();
                     break;
                 case SystemMediaTransportControlsButton.Pause: 
                     Debug.WriteLine("UVC pause button pressed");
@@ -199,100 +215,49 @@ namespace BackgroundAudioTask
                     break;
                 case SystemMediaTransportControlsButton.Next:
                     Debug.WriteLine("UVC next button pressed");
-                    SkipToNext();
+
+                    index = NowPlayingInformation.SkipToNextSong(true);
+                    if (index < 0)
+                        StopPlayback();
+                    else
+                    {
+                        Task.Run(new Action(FireOnChangedTrack));
+                        BeginPlaying();
+                    }
                     break;
                 case SystemMediaTransportControlsButton.Previous:
                     Debug.WriteLine("UVC previous button pressed");
-                    SkipToPrevious();
+                    
+                    index = NowPlayingInformation.SkipToPreviousSong(true);
+                    if (index < 0)
+                        StopPlayback();
+                    else
+                    {
+                        Task.Run(new Action(FireOnChangedTrack));
+                        BeginPlaying();
+                    }
                     break;
             }
-        }
-
-        #endregion
-
-        #region Playlist management functions and handlers
-
-        private void Play()
-        {
-            BackgroundMediaPlayer.Current.Play();
-        }
-
-        private void Pause()
-        {
-            BackgroundMediaPlayer.Current.Pause();
-        }
-
-        private void StopPlayback()
-        {
-            BackgroundMediaPlayer.Current.Pause();
-        }
-
-        /// <summary>
-        /// Start playlist and change UVC state
-        /// </summary>
-
-        private async void StartPlayback(Song song)
-        {
-            try
-            {
-                if (song != null)
-                {
-                    _currentSong = song;
-                    BackgroundMediaPlayer.Current.AutoPlay = true;
-                    BackgroundMediaPlayer.Current.SetFileSource(await StorageFile.GetFileFromPathAsync(song.FilePath));
-                    UpdateUVCOnNewTrack(song);
-                }
-                else
-                {
-                    BackgroundMediaPlayer.Current.Play();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Skip track and update UVC via SMTC
-        /// </summary>
-        private void SkipToPrevious()
-        {
-            //systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.;
-            ValueSet message = new ValueSet();
-            message.Add(Constants.SkipPrevious, null);
-            BackgroundMediaPlayer.SendMessageToForeground(message);
-        }
-
-        /// <summary>
-        /// Skip track and update UVC via SMTC
-        /// </summary>
-        private void SkipToNext()
-        {
-            //systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Changing;
-            ValueSet message = new ValueSet();
-            message.Add(Constants.SkipNext, null);
-            BackgroundMediaPlayer.SendMessageToForeground(message);
-        }
-
-        private void Seek(double position)
-        {
-            BackgroundMediaPlayer.Current.Position = TimeSpan.FromSeconds(position);
         }
 
         #endregion
 
         #region Background Media Player Handlers
+
         void Current_CurrentStateChanged(MediaPlayer sender, object args)
         {
-            if (sender.CurrentState == MediaPlayerState.Playing)
+            try
             {
-                systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Playing;
+                if (sender.CurrentState == MediaPlayerState.Playing)
+                {
+                    systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Playing;
+                }
+                else if (sender.CurrentState == MediaPlayerState.Paused)
+                {
+                    systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Paused;
+                }
             }
-            else if (sender.CurrentState == MediaPlayerState.Paused)
-            {
-                systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Paused;
-            }
+            catch { }
         }
 
         private void mediaPlayer_MediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
@@ -305,7 +270,9 @@ namespace BackgroundAudioTask
         /// </summary>
         private void MediaPlayer_MediaEnded(MediaPlayer sender, object args)
         {
-            SkipToNext();
+            NowPlayingInformation.SkipToNextSong();
+            Task.Run(new Action(FireOnChangedTrack));
+            BeginPlaying();
         }
 
         /// <summary>
@@ -319,37 +286,73 @@ namespace BackgroundAudioTask
             {
                 switch (key)
                 {
+                    //New management
                     case Constants.BackgroundTaskQuery:
                         //Basically a ping to make sure that the background task is running
                         ValueSet message = new ValueSet();
                         message.Add(Constants.BackgroundTaskIsRunning, "");
                         BackgroundMediaPlayer.SendMessageToForeground(message);
                         break;
-                    case Constants.KillBackgroundTask:
-                        OnCanceled(null, BackgroundTaskCancellationReason.Abort);
-                        break;
-                    case Constants.StartPlayback: //Foreground App process has signalled that it is ready for playback
-                        Debug.WriteLine("Starting to play a track");
-                        Song song = JsonSerialization.Deserialize<Song>(e.Data[key].ToString());
-                        StartPlayback(song);
+                    case Constants.StartPlaying:
+                        BeginPlaying();
                         break;
                     case Constants.PlayTrack:
-                        Debug.WriteLine("Play");
                         Play();
                         break;
                     case Constants.PauseTrack:
-                        Debug.WriteLine("Paused");
                         Pause();
                         break;
                     case Constants.StopPlayback:
                         StopPlayback();
                         break;
-                    case Constants.Seek:
-                        Seek((double)e.Data[key]);
-                        break;
                 }
             }
         }
+
+        #region New Background Manager Methods
+
+        private void FireOnChangedTrack()
+        {
+            ValueSet value = new ValueSet();
+            value.Add(Constants.ChangedTrack, null);
+            BackgroundMediaPlayer.SendMessageToForeground(value);
+        }
+
+        private async void BeginPlaying()
+        {
+            Song currentSong = NowPlayingInformation.CurrentSong;
+
+            if (currentSong == null)
+            {
+                StopPlayback();
+                return;
+            }
+
+            UpdateUVCOnNewTrack(currentSong);
+
+            BackgroundMediaPlayer.Current.PlaybackRate = 1;
+            BackgroundMediaPlayer.Current.AutoPlay = true;
+            BackgroundMediaPlayer.Current.SetFileSource(await StorageFile.GetFileFromPathAsync(currentSong.FilePath));
+        }
+
+        private void Play()
+        {
+            BackgroundMediaPlayer.Current.Play();
+        }
+
+        private void Pause()
+        {
+            BackgroundMediaPlayer.Current.Pause();
+        }
+
+        private void StopPlayback()
+        {
+            BackgroundMediaPlayer.Current.PlaybackRate = 0;
+            BackgroundMediaPlayer.Current.Position = TimeSpan.FromSeconds(0);
+            systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Closed;
+        }
+
+        #endregion
 
         #endregion
 

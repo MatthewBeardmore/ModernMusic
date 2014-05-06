@@ -1,5 +1,4 @@
 ﻿using ModernMusic.Helpers;
-using ModernMusic.Library.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -97,6 +96,17 @@ namespace ModernMusic.Library
             if (Interlocked.CompareExchange(ref _hasLoadedArtists, 1, 0) == 1)
                 return;
 
+            AsyncInline.Run(new Func<Task>(LoadCache));
+
+            await TraverseFolder(KnownFolders.MusicLibrary);
+
+            await LoadAllArtwork();
+
+            await _cache.Serialize();
+        }
+
+        private async Task LoadCache()
+        {
             try
             {
                 StorageFile cacheFile = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("cache");
@@ -121,12 +131,6 @@ namespace ModernMusic.Library
                 }
             }
             catch { }
-
-            await TraverseFolder(KnownFolders.MusicLibrary);
-
-            await LoadAllArtwork();
-
-            await _cache.Serialize();
         }
 
         private async Task TraverseFolder(StorageFolder folder)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 using ModernMusic.Library;
-using ModernMusic.Library.Helpers;
 
 namespace ModernMusic.Helpers
 {

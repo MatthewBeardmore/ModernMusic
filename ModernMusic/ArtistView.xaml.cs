@@ -134,5 +134,15 @@ namespace ModernMusic
         {
             NowPlayingManager.AddToNowPlaying(_currentArtist);
         }
+
+        private async void pin_Click(object sender, RoutedEventArgs e)
+        {
+            string activationArguments = "Artist:" + _currentArtist.ID.ToString();
+            string appbarTileId = "ModernMusic." + activationArguments.Replace(':', '.');
+
+            Uri square150x150Logo = await Utilities.ResizeImage(new Uri(_currentArtist.ImagePath), 150);
+
+            SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo, activationArguments);
+        }
     }
 }

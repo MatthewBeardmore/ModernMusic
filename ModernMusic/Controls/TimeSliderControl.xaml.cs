@@ -24,7 +24,6 @@ namespace ModernMusic.Controls
     {
         private bool _updatingPositionSlider = false;
         private bool _userScanning = false;
-        private IAsyncAction _moveAction = null;
 
         public TimeSliderControl()
         {

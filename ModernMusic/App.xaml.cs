@@ -27,6 +27,8 @@ namespace ModernMusic
     {
         private TransitionCollection transitions;
 
+        public event Action<string> OnLaunchArgument;
+
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -34,7 +36,6 @@ namespace ModernMusic
         public App()
         {
             this.InitializeComponent();
-            this.Resuming += App_Resuming;
             this.Suspending += this.OnSuspending;
         }
 
@@ -118,6 +119,13 @@ namespace ModernMusic
             if (rootFrame.Content is ILaunchable)
                 ((ILaunchable)rootFrame.Content).OnLaunched(e);
 
+            if (e.Arguments is string)
+            {
+                string parameter = e.Arguments.ToString();
+                if (!string.IsNullOrEmpty(parameter) && OnLaunchArgument != null)
+                    OnLaunchArgument(parameter);
+            }
+
             // Ensure the current window is active.
             Window.Current.Activate();
         }
@@ -130,11 +138,6 @@ namespace ModernMusic
             var rootFrame = sender as Frame;
             rootFrame.ContentTransitions = this.transitions ?? new TransitionCollection() { new NavigationThemeTransition() };
             rootFrame.Navigated -= this.RootFrame_FirstNavigated;
-        }
-
-        void App_Resuming(object sender, object e)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>

@@ -24,7 +24,8 @@ namespace ModernMusic
             return await secondaryTile.RequestDeleteAsync();
         }
 
-        public static async void PinSecondaryTile(string appbarTileId, string tileName, Uri squareLogo, string tileActivationArguments = "")
+        public static async void PinSecondaryTile(string appbarTileId, string tileName, Uri squareLogo, 
+            string tileActivationArguments = "", bool showName = false)
         {
             SecondaryTile secondaryTile = new SecondaryTile(appbarTileId,
                                                             tileName,
@@ -33,7 +34,7 @@ namespace ModernMusic
                                                             TileSize.Square150x150);
 
             secondaryTile.VisualElements.BackgroundColor = Colors.Transparent;
-            secondaryTile.VisualElements.ShowNameOnSquare150x150Logo = true;
+            secondaryTile.VisualElements.ShowNameOnSquare150x150Logo = showName;
 
             await secondaryTile.RequestCreateAsync();
         }

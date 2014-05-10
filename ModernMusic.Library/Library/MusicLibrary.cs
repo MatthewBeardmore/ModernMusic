@@ -98,7 +98,7 @@ namespace ModernMusic.Library
 
             AsyncInline.Run(new Func<Task>(LoadCache));
 
-            await TraverseFolder(KnownFolders.MusicLibrary);
+            //await TraverseFolder(KnownFolders.MusicLibrary);
 
             await LoadAllArtwork();
 
@@ -228,6 +228,16 @@ namespace ModernMusic.Library
             return _cache.Get(song.Artist, song.Album);
         }
 
+        public Artist GetArtist(Guid id)
+        {
+            return _cache.GetArtist(id);
+        }
+
+        public Album GetAlbum(Guid id)
+        {
+            return _cache.GetAlbum(id);
+        }
+
         public List<Song> GetSongs(Album album)
         {
             return _cache.GetSongs(album.Artist, album.AlbumName);
@@ -327,6 +337,30 @@ namespace ModernMusic.Library
             if (!Albums.TryGetValue(artistName.ToLower(), out albums))
                 return null;
             return albums.FirstOrDefault((a) => a.AlbumName.ToLower().Replace(" ", "") == albumName.ToLower().Replace(" ", ""));
+        }
+
+        public Album GetAlbum(Guid id)
+        {
+            foreach(List<Album> albums in Albums.Values)
+            {
+                foreach(Album album in albums)
+                {
+                    if (album.ID == id)
+                        return album;
+                }
+            }
+
+            return null;
+        }
+
+        public Artist GetArtist(Guid id)
+        {
+            foreach (Artist artist in Artists.Values)
+            {
+                if (artist.ID == id)
+                    return artist;
+            }
+            return null;
         }
 
         public List<Album> GetAlbums(string artistName)

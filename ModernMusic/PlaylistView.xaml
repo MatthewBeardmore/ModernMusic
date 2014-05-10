@@ -32,7 +32,7 @@
         <TransitionCollection>
             <NavigationThemeTransition>
                 <NavigationThemeTransition.DefaultNavigationTransitionInfo>
-                    <CommonNavigationTransitionInfo/>
+                    <ContinuumNavigationTransitionInfo/>
                 </NavigationThemeTransition.DefaultNavigationTransitionInfo>
             </NavigationThemeTransition>
         </TransitionCollection>
@@ -42,7 +42,8 @@
                x:Name="pivot"
                CommonNavigationTransitionInfo.IsStaggerElement="True"
                Margin="0">
-        <PivotItem x:Name="songsPivot" Header="playlist" CommonNavigationTransitionInfo.IsStaggerElement="True">
+        <PivotItem x:Name="songsPivot" Header="playlist" 
+                   CommonNavigationTransitionInfo.IsStaggerElement="True">
             <ListView x:Name="songView"
                 ItemsSource="{Binding Songs}"
                 SelectionMode="Extended"

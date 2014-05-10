@@ -23,6 +23,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Media.Animation;
 
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
@@ -50,6 +51,8 @@ namespace ModernMusic
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
+
+            ((App)App.Current).OnLaunchArgument += app_onLaunchArgument;
         }
 
         /// <summary>
@@ -80,34 +83,37 @@ namespace ModernMusic
         /// <see cref="Frame.Navigate(Type, object)"/> when this page was initially requested and
         /// a dictionary of state preserved by this page during an earlier
         /// session.  The state will be null the first time a page is visited.</param>
-        private async void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
+        private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
-            DefaultViewModel["PlaylistManager"] = PlaylistManager.Instance;
-
             if(e.NavigationParameter is Playlist)
             {
                 pivot.SelectedIndex = 1;
             }
 
-            Song currentSong = NowPlayingInformation.CurrentSong;
-            if (currentSong != null)
+            var a = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
             {
-                nowPlayingRow.Height = new GridLength(180);
+                DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
+                DefaultViewModel["PlaylistManager"] = PlaylistManager.Instance;
 
-                string imagePath = MusicLibrary.Instance.GetAlbum(currentSong).ImagePath;
-                Uri uri;
-                if (Uri.TryCreate(imagePath, UriKind.RelativeOrAbsolute, out uri))
+                Song currentSong = NowPlayingInformation.CurrentSong;
+                if (currentSong != null)
                 {
-                    var t = Dispatcher.RunIdleAsync((ee) =>
+                    nowPlayingRow.Height = new GridLength(180);
+
+                    string imagePath = MusicLibrary.Instance.GetAlbum(currentSong).ImagePath;
+                    Uri uri;
+                    if (Uri.TryCreate(imagePath, UriKind.RelativeOrAbsolute, out uri))
                     {
-                        try { nowPlayingArt.UriSource = uri; }
-                        catch { nowPlayingArt.UriSource = null; }
-                    });
+                        var t = Dispatcher.RunIdleAsync((ee) =>
+                        {
+                            try { nowPlayingArt.UriSource = uri; }
+                            catch { nowPlayingArt.UriSource = null; }
+                        });
+                    }
                 }
-            }
-            else
-                nowPlayingRow.Height = new GridLength(0);
+                else
+                    nowPlayingRow.Height = new GridLength(0);
+            });
         }
 
         /// <summary>
@@ -215,6 +221,35 @@ namespace ModernMusic
         public void OnLaunched(Windows.ApplicationModel.Activation.LaunchActivatedEventArgs e)
         {
             ToggleAppBarButton(!SecondaryTileManager.TileExists(appbarTileId));
+        }
+
+        private void app_onLaunchArgument(string arg)
+        {
+            string[] param = arg.Split(':');
+
+            string type = param[0];
+            string guid = param[1];
+
+            object kvp = null;
+
+            if(type == "Artist")
+            {
+                Artist artist = MusicLibrary.Instance.GetArtist(new Guid(guid));
+
+                kvp = artist;
+            }
+            else if(type == "Album")
+            {
+                Album album = MusicLibrary.Instance.GetAlbum(new Guid(guid));
+
+                kvp = album;
+            }
+
+            if (!Frame.Navigate(typeof(NowPlaying), kvp))
+            {
+                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
+            }
         }
 
         private async void removePlaylist_Click(object sender, RoutedEventArgs e)

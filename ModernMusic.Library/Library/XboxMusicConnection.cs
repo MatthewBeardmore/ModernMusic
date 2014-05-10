@@ -107,6 +107,7 @@ namespace ModernMusic.Library
 
             if (jsonData.ContainsKey("Albums"))
             {
+                artist.ImagePath = jsonData["ImageUrl"].GetString();
                 JsonObject artistItems = jsonData["Albums"].GetObject();
                 return artistItems["Items"].GetArray();
             }

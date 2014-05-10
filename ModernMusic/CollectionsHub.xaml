@@ -30,7 +30,7 @@
                x:Name="pivot"
                DataContext="{Binding MusicLibrary}">
         <PivotItem x:Name="artistsPivot" Header="artists">
-            <SemanticZoom Margin="0,0,0,0" Padding="0" ViewChangeCompleted="SemanticZoom_ViewChangeCompleted" ViewChangeStarted="SemanticZoom_ViewChangeStarted">
+            <SemanticZoom>
                 <SemanticZoom.ZoomedInView>
                     <ListView x:Name="lvArtists" 
                             ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
@@ -64,7 +64,7 @@
             </SemanticZoom>
         </PivotItem>
         <PivotItem x:Name="albumPivot" Header="albums">
-            <SemanticZoom Margin="0,0,0,0" Padding="0">
+            <SemanticZoom>
                 <SemanticZoom.ZoomedInView>
                     <ListView x:Name="lvAlbums"
                             ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
@@ -98,7 +98,7 @@
             </SemanticZoom>
         </PivotItem>
         <PivotItem x:Name="songsPivot" Header="songs">
-            <SemanticZoom Margin="0,0,0,0" Padding="0">
+            <SemanticZoom>
                 <SemanticZoom.ZoomedInView>
                     <ListView x:Name="lvSongs"
                             ScrollViewer.IsHorizontalScrollChainingEnabled="False" 

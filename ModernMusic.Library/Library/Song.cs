@@ -13,6 +13,9 @@ namespace ModernMusic.Library
     [DataContract]
     public class Song : INotifyPropertyChanged
     {
+        [DataMember]
+        public Guid ID = Guid.NewGuid();
+
         public delegate void SongTappedHandler(Song song);
 
         [DataMember]
@@ -28,6 +31,8 @@ namespace ModernMusic.Library
 
         public Song Self { get { return this; } }
         public bool Selected { get; private set; }
+        public string ArtistCaps { get { return Artist.ToUpper(); } }
+        public string AlbumLower { get { return Album.ToLower(); } }
 
         public Song(string artist, string albumName, String filePath, String songTitle, MusicProperties songProperties)
         {

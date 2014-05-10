@@ -18,6 +18,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Threading;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -34,7 +35,7 @@ namespace ModernMusic.Controls
 
             if (!Windows.ApplicationModel.DesignMode.DesignModeEnabled)
             {
-                gridBackground.Background = new SolidColorBrush(Colors.Transparent);
+                pivot.Background = new SolidColorBrush(Colors.Transparent);
             }
 
             NowPlayingManager.OnChangedTrack += ResumeLayout;
@@ -77,8 +78,6 @@ namespace ModernMusic.Controls
 
         private void nowPlayingControl_loaded(object sender, RoutedEventArgs e)
         {
-            AlbumArtwork.Width = this.ActualWidth - 20 - 60;
-            AlbumArtwork.Height = AlbumArtwork.Width;
         }
 
         private void LoadSongArtwork(Song song)
@@ -89,7 +88,7 @@ namespace ModernMusic.Controls
             {
                 var t = Dispatcher.RunIdleAsync((e) => 
                 {
-                    try { AlbumArtworkImage.UriSource = uri; } 
+                    try { AlbumArtworkImage.UriSource = uri; }
                     catch { AlbumArtworkImage.UriSource = null; } 
                 });
             }

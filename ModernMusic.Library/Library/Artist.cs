@@ -14,13 +14,24 @@ namespace ModernMusic.Library
     [DataContract]
     public class Artist : INotifyPropertyChanged
     {
+        [DataMember]
+        public Guid ID = Guid.NewGuid();
+
         public delegate void ArtistTappedHandler(Artist artist);
+
+        private string _imagePath = "ms-appx:///Assets/MediumGray.png";
 
         [DataMember]
         public string ArtistName { get; private set; }
         public string ArtistNameCaps { get { return ArtistName.ToUpper(); } }
         [DataMember]
         public bool HasDownloadedArtistData { get; set; }
+        [DataMember]
+        public string ImagePath
+        {
+            get { return _imagePath; }
+            set { _imagePath = value; OnPropertyChanged<string>(); }
+        }
 
         public Artist Self { get { return this; } }
 

@@ -119,13 +119,14 @@ namespace ModernMusic
             NowPlayingManager.AddToNowPlaying(_currentAlbum);
         }
 
-        private void pin_Click(object sender, RoutedEventArgs e)
+        private async void pin_Click(object sender, RoutedEventArgs e)
         {
-            const string appbarTileId = "SecondaryTile.ModernMusic.Album";
+            string activationArguments = "Album:" + _currentAlbum.ID.ToString();
+            string appbarTileId = "ModernMusic." + activationArguments.Replace(':','.');
 
-            Uri square150x150Logo = new Uri("ms-appx:///Assets/headphones_120.scale-240.png");
+            Uri square150x150Logo = await Utilities.ResizeImage(new Uri(_currentAlbum.ImagePath), 150);
 
-            SecondaryTileManager.PinSecondaryTile(appbarTileId, _currentAlbum.AlbumName, square150x150Logo, _currentAlbum.AlbumName);
+            SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo, activationArguments);
         }
     }
 }

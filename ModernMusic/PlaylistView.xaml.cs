@@ -43,9 +43,15 @@ namespace ModernMusic
 
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
+            this.navigationHelper.SaveState += navigationHelper_SaveState;
 
             Songs = new ObservableCollection<Song>();
             this.DefaultViewModel["Songs"] = Songs;
+        }
+
+        void navigationHelper_SaveState(object sender, SaveStateEventArgs e)
+        {
+            commandBar.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
         }
 
         /// <summary>
@@ -215,6 +221,7 @@ namespace ModernMusic
             savePlaylist.Visibility = string.IsNullOrEmpty(_currentPlaylist.Name) ? Visibility.Visible : Visibility.Collapsed;
             reorderSongs.Visibility = selectSongs.Visibility = Windows.UI.Xaml.Visibility.Visible;
             removeSong.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
         }
     }
 }

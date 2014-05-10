@@ -16,8 +16,11 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="ModernMusic.App">
-      <m3:VisualElements DisplayName="Modern Music" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\headphones.png" Description="Modern Music" ForegroundText="light" BackgroundColor="transparent">
+      <m3:VisualElements DisplayName="Modern Music" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Modern Music" ForegroundText="light" BackgroundColor="transparent">
         <m3:DefaultTile Square71x71Logo="Assets\Square71x71Logo.png" ShortName="Modern Music" DefaultSize="square150x150Logo">
+          <m3:ShowNameOnTiles>
+            <m3:ShowOn Tile="square150x150Logo" />
+          </m3:ShowNameOnTiles>
         </m3:DefaultTile>
         <m3:ApplicationView MinWidth="width320" />
         <!--Used in XAML Designer. DO NOT REMOVE-->

@@ -14,6 +14,9 @@ namespace ModernMusic.Library
     [DataContract]
     public class Album : INotifyPropertyChanged
     {
+        [DataMember]
+        public Guid ID = Guid.NewGuid();
+
         public delegate void AlbumTappedHandler(Album album);
 
         private string _imagePath = "ms-appx:///Assets/MediumGray.png";

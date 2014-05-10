@@ -11,7 +11,7 @@
     Background="{ThemeResource PageBackgroundThemeBrush}">
     <Page.BottomAppBar>
         <CommandBar>
-            <AppBarButton Icon="Pin" Label="pin"/>
+            <AppBarButton Icon="Pin" Label="pin" Click="pin_Click"/>
             <CommandBar.SecondaryCommands>
                 <AppBarButton Label="add to now playing" Click="addToNowPlaying_Click"/>
             </CommandBar.SecondaryCommands>

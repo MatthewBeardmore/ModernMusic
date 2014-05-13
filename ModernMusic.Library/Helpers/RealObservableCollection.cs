@@ -10,6 +10,7 @@ namespace ModernMusic.Helpers
     public class RealObservableCollection<T> : ObservableCollection<T>
         where T : INotifyPropertyChanged
     {
+
         public RealObservableCollection()
             : base()
         {

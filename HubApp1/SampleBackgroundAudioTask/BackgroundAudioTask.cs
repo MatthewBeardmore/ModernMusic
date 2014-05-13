@@ -52,6 +52,7 @@ namespace BackgroundAudioTask
         private BackgroundTaskDeferral deferral; // Used to keep task alive
         private AutoResetEvent BackgroundTaskStarted = new AutoResetEvent(false);
         private bool backgroundtaskrunning = false;
+        private Playlist _currentCachedPlaylist = null;
         
         #endregion
 
@@ -62,6 +63,8 @@ namespace BackgroundAudioTask
         /// <param name="taskInstance"></param>
         public void Run(IBackgroundTaskInstance taskInstance)
         {
+            NowPlayingInformation.DisableCaching = true;
+
             Debug.WriteLine("Background Audio Task " + taskInstance.Task.Name + " starting...");
             // Initialize SMTC object to talk with UVC. 
             //Note that, this is intended to run after app is paused and 
@@ -74,6 +77,8 @@ namespace BackgroundAudioTask
             systemmediatransportcontrol.IsPlayEnabled = true;
             systemmediatransportcontrol.IsNextEnabled = true;
             systemmediatransportcontrol.IsPreviousEnabled = true;
+            systemmediatransportcontrol.IsRewindEnabled = true;
+            systemmediatransportcontrol.IsFastForwardEnabled = true;
 
             // Associate a cancellation and completed handlers with the background task.
             taskInstance.Canceled += new BackgroundTaskCanceledEventHandler(OnCanceled);
@@ -155,14 +160,15 @@ namespace BackgroundAudioTask
         /// <summary>
         /// Update UVC using SystemMediaTransPortControl apis
         /// </summary>
-        private async void UpdateUVCOnNewTrack(Song song)
+        private async void UpdateUVCOnNewTrack(Song song, StorageFile file)
         {
+            if(file == null)
+                file = await StorageFile.GetFileFromPathAsync(song.FilePath);
             systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Playing;
             /*systemmediatransportcontrol.DisplayUpdater.Type = MediaPlaybackType.Music;
             systemmediatransportcontrol.DisplayUpdater.MusicProperties.Title = song.SongTitle;
             systemmediatransportcontrol.DisplayUpdater.MusicProperties.Artist = song.Artist;*/
-            await systemmediatransportcontrol.DisplayUpdater.CopyFromFileAsync(MediaPlaybackType.Music,
-                await StorageFile.GetFileFromPathAsync(song.FilePath));
+            await systemmediatransportcontrol.DisplayUpdater.CopyFromFileAsync(MediaPlaybackType.Music, file);
             systemmediatransportcontrol.DisplayUpdater.Update();
         }
 
@@ -188,6 +194,10 @@ namespace BackgroundAudioTask
 
             switch (args.Button)
             {
+                case SystemMediaTransportControlsButton.FastForward:
+                    BackgroundMediaPlayer.Current.Position = 
+                        BackgroundMediaPlayer.Current.Position.Add(TimeSpan.FromSeconds(5));
+                    break;
                 case SystemMediaTransportControlsButton.Play: 
                     Debug.WriteLine("UVC play button pressed");
                     // If music is in paused state, for a period of more than 5 minutes, 
@@ -294,6 +304,11 @@ namespace BackgroundAudioTask
                         BackgroundMediaPlayer.SendMessageToForeground(message);
                         break;
                     case Constants.StartPlaying:
+                        if(e.Data[key] != null)
+                        {
+                            //If it's not null, then the playlist changed and we need to recache it
+                            _currentCachedPlaylist = null;
+                        }
                         BeginPlaying();
                         break;
                     case Constants.PlayTrack:
@@ -320,7 +335,9 @@ namespace BackgroundAudioTask
 
         private async void BeginPlaying()
         {
-            Song currentSong = NowPlayingInformation.CurrentSong;
+            if (_currentCachedPlaylist == null)
+                _currentCachedPlaylist = NowPlayingInformation.CurrentPlaylist;
+            Song currentSong = NowPlayingInformation.GetCurrentSong(_currentCachedPlaylist);
 
             if (currentSong == null)
             {
@@ -328,11 +345,12 @@ namespace BackgroundAudioTask
                 return;
             }
 
-            UpdateUVCOnNewTrack(currentSong);
+            StorageFile file = await StorageFile.GetFileFromPathAsync(currentSong.FilePath);
+            UpdateUVCOnNewTrack(currentSong, file);
 
             BackgroundMediaPlayer.Current.PlaybackRate = 1;
             BackgroundMediaPlayer.Current.AutoPlay = true;
-            BackgroundMediaPlayer.Current.SetFileSource(await StorageFile.GetFileFromPathAsync(currentSong.FilePath));
+            BackgroundMediaPlayer.Current.SetFileSource(file);
         }
 
         private void Play()

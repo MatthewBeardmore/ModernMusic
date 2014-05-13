@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -11,22 +12,22 @@ using Windows.Storage;
 
 namespace ModernMusic.Library
 {
-    [DataContract]
+    [ProtoContract]
     public class Artist : INotifyPropertyChanged
     {
-        [DataMember]
+        [ProtoMember(1)]
         public Guid ID = Guid.NewGuid();
 
         public delegate void ArtistTappedHandler(Artist artist);
 
-        private string _imagePath = "ms-appx:///Assets/MediumGray.png";
+        private string _imagePath = "ms-appx:///Assets/DarkGray.png";
 
-        [DataMember]
-        public string ArtistName { get; private set; }
+        [ProtoMember(2)]
+        public string ArtistName { get; set; }
         public string ArtistNameCaps { get { return ArtistName.ToUpper(); } }
-        [DataMember]
+        [ProtoMember(3)]
         public bool HasDownloadedArtistData { get; set; }
-        [DataMember]
+        [ProtoMember(4)]
         public string ImagePath
         {
             get { return _imagePath; }
@@ -34,6 +35,8 @@ namespace ModernMusic.Library
         }
 
         public Artist Self { get { return this; } }
+
+        public Artist() { }
 
         public Artist(String artistName)
         {

@@ -8,7 +8,7 @@
     mc:Ignorable="d"
     d:DataContext="{Binding Source={d:DesignData Source=../../ModernMusic.Library/Library/Samples/SampleSongView.json}}"
     d:DesignHeight="60"
-    d:DesignWidth="400" Loaded="UserControl_Loaded">
+    d:DesignWidth="400">
     <StackPanel Tapped="StackPanel_Tapped" Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Height="60" Width="400">
         <Border x:Name="border" VerticalAlignment="Top" Margin="0,10,0,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90" Width="38" Height="38">
             <SymbolIcon PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost" x:Name="icon" Symbol="Play" HorizontalAlignment="Center" VerticalAlignment="Center"/>

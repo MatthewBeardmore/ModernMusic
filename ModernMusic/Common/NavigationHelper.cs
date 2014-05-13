@@ -262,7 +262,7 @@ namespace ModernMusic
                     if (!OnBackClearState)
                         this.LoadState(this, new LoadStateEventArgs(e.Parameter, (Dictionary<String, Object>)frameState[this._pageKey]));
                     else
-                        this.LoadState(this, new LoadStateEventArgs(null, null));
+                        this.LoadState(this, new LoadStateEventArgs(null, null) { IsNavigatingBack = true });
                 }
             }
         }
@@ -312,6 +312,8 @@ namespace ModernMusic
         /// session.  This will be null the first time a page is visited.
         /// </summary>
         public Dictionary<string, Object> PageState { get; private set; }
+
+        public bool IsNavigatingBack { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LoadStateEventArgs"/> class.

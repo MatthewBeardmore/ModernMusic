@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     d:DesignHeight="60"
-    d:DesignWidth="400">
-    <StackPanel Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Tapped="ArtistItem_Tapped" Height="60" Width="400">
+    d:DesignWidth="360">
+    <StackPanel Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Tapped="ArtistItem_Tapped" Height="60" Width="360">
         <AppBarButton VerticalAlignment="Top" Padding="0" Margin="-20,0,0,0" Width="75" Icon="Play" Tapped="ArtistPlay_Tapped"/>
         <TextBlock VerticalAlignment="Top" Style="{StaticResource SubheaderTextBlockStyle}" FontSize="26" Margin="0,10,0,0"
                                            Text="{Binding ArtistName}" TextWrapping="NoWrap"

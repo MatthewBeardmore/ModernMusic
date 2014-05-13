@@ -7,7 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:controls="using:ModernMusic.Controls"
-    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     Background="{ThemeResource PageBackgroundThemeBrush}">
     <Page.Resources>
         <MenuFlyout x:Key="PlaylistFlyout">
@@ -21,7 +20,7 @@
         </MenuFlyout>
     </Page.Resources>
     <Page.BottomAppBar>
-        <CommandBar x:Name="commandBar">
+        <CommandBar x:Name="commandBar" Visibility="Collapsed">
             <AppBarButton x:Name="reorderSongs" Icon="Sort" Label="reorder" Click="reorder_Click"/>
             <AppBarButton x:Name="selectSongs" Icon="Bullets" Label="select" Click="selectSongs_Click"/>
             <AppBarButton x:Name="savePlaylist" Icon="Save" Label="save playlist" Click="savePlaylist_Click"/>
@@ -32,7 +31,7 @@
         <TransitionCollection>
             <NavigationThemeTransition>
                 <NavigationThemeTransition.DefaultNavigationTransitionInfo>
-                    <ContinuumNavigationTransitionInfo/>
+                    <SlideNavigationTransitionInfo />
                 </NavigationThemeTransition.DefaultNavigationTransitionInfo>
             </NavigationThemeTransition>
         </TransitionCollection>
@@ -45,18 +44,8 @@
         <PivotItem x:Name="songsPivot" Header="playlist" 
                    CommonNavigationTransitionInfo.IsStaggerElement="True">
             <ListView x:Name="songView"
-                ItemsSource="{Binding Songs}"
                 SelectionMode="Extended"
-                Loaded="songView_Loaded">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <controls:SongItemControl
-                            OnItemTapped="songItem_Tapped"
-                            Holding="SongItemControl_Holding"
-                            FlyoutBase.AttachedFlyout="{StaticResource PlaylistFlyout}"/>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+                Loaded="songView_Loaded"/>
         </PivotItem>
     </Pivot>
 </Page>

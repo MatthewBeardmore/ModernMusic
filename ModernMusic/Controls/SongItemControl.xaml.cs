@@ -30,9 +30,15 @@ namespace ModernMusic.Controls
             this.InitializeComponent();
         }
 
+        public SongItemControl(Song song)
+        {
+            this.InitializeComponent();
+            DataContext = song;
+        }
+
         public void Select()
         {
-            border.BorderBrush = songText.Foreground = artistText.Foreground = icon.Foreground =
+            songText.Foreground = artistText.Foreground =
                 (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
         }
 
@@ -49,26 +55,6 @@ namespace ModernMusic.Controls
                 e.Handled = true;
                 OnItemTapped((Song)DataContext);
             }
-        }
-
-        private void UserControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (DataContext != null && AllowSelection)
-            {
-                ((Song)DataContext).PropertyChanged += SongItemControl_PropertyChanged;
-                SongItemControl_PropertyChanged(null, null);
-            }
-        }
-
-        void SongItemControl_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (DataContext != null && ((Song)DataContext).Selected)
-            {
-                ((Song)DataContext).ClearSelection(false);
-                Select();
-            }
-            else
-                Deselect();
         }
 
         private void icon_PointerPressed(object sender, PointerRoutedEventArgs e)

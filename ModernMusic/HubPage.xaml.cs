@@ -24,6 +24,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Media.Animation;
+using Windows.Storage.Streams;
 
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
@@ -46,13 +47,9 @@ namespace ModernMusic
             // Hub is only supported in Portrait orientation
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Portrait;
 
-            this.NavigationCacheMode = NavigationCacheMode.Disabled;
-
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
-
-            ((App)App.Current).OnLaunchArgument += app_onLaunchArgument;
         }
 
         /// <summary>
@@ -85,35 +82,43 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
+            commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
+
             if(e.NavigationParameter is Playlist)
             {
                 pivot.SelectedIndex = 1;
             }
+            DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
+            DefaultViewModel["PlaylistManager"] = PlaylistManager.Instance;
 
-            var a = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+            var a = Task.Run(new Action(() =>
             {
-                DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
-                DefaultViewModel["PlaylistManager"] = PlaylistManager.Instance;
 
-                Song currentSong = NowPlayingInformation.CurrentSong;
-                if (currentSong != null)
+                try
                 {
-                    nowPlayingRow.Height = new GridLength(180);
-
-                    string imagePath = MusicLibrary.Instance.GetAlbum(currentSong).ImagePath;
-                    Uri uri;
-                    if (Uri.TryCreate(imagePath, UriKind.RelativeOrAbsolute, out uri))
+                    Song currentSong = NowPlayingInformation.CurrentSong;
+                    Album album = MusicLibrary.Instance.GetAlbum(currentSong);
+                    if (currentSong != null && album != null && !string.IsNullOrEmpty(album.CachedImagePath))
                     {
-                        var t = Dispatcher.RunIdleAsync((ee) =>
+                        Uri uri;
+                        if (Uri.TryCreate(album.CachedImagePath, UriKind.RelativeOrAbsolute, out uri))
                         {
-                            try { nowPlayingArt.UriSource = uri; }
-                            catch { nowPlayingArt.UriSource = null; }
-                        });
+                            IRandomAccessStream ras = AsyncInline.Run(new Func<Task<IRandomAccessStream>>(() =>
+                                Utilities.ResizeImageFile(uri, 180)));
+                            var b = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                            {
+                                nowPlayingArt.SetSource(ras);
+                                nowPlayingRow.Height = new GridLength(180);
+                            });
+                        }
+                    }
+                    else
+                    {
+                        var b = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => nowPlayingRow.Height = new GridLength(0));
                     }
                 }
-                else
-                    nowPlayingRow.Height = new GridLength(0);
-            });
+                catch { }
+            }));
         }
 
         /// <summary>
@@ -203,9 +208,9 @@ namespace ModernMusic
             else
             {
                 // Prepare package images for all four tile sizes in our tile to be pinned as well as for the square30x30 logo used in the Apps view.  
-                Uri square150x150Logo = new Uri("ms-appx:///Assets/headphones_120.scale-240.png");
+                Uri square150x150Logo = new Uri("ms-appx:///Assets/Square150x150Logo.scale-240.png");
 
-                SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo);
+                SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo, showName:true);
             }
         }
 
@@ -220,36 +225,10 @@ namespace ModernMusic
 
         public void OnLaunched(Windows.ApplicationModel.Activation.LaunchActivatedEventArgs e)
         {
-            ToggleAppBarButton(!SecondaryTileManager.TileExists(appbarTileId));
-        }
-
-        private void app_onLaunchArgument(string arg)
-        {
-            string[] param = arg.Split(':');
-
-            string type = param[0];
-            string guid = param[1];
-
-            object kvp = null;
-
-            if(type == "Artist")
+            var a = Dispatcher.RunIdleAsync((o) =>
             {
-                Artist artist = MusicLibrary.Instance.GetArtist(new Guid(guid));
-
-                kvp = artist;
-            }
-            else if(type == "Album")
-            {
-                Album album = MusicLibrary.Instance.GetAlbum(new Guid(guid));
-
-                kvp = album;
-            }
-
-            if (!Frame.Navigate(typeof(NowPlaying), kvp))
-            {
-                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
-            }
+                ToggleAppBarButton(!SecondaryTileManager.TileExists(appbarTileId));
+            });
         }
 
         private async void removePlaylist_Click(object sender, RoutedEventArgs e)

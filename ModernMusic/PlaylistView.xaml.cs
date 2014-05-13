@@ -18,6 +18,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Threading.Tasks;
 
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
@@ -33,7 +34,6 @@ namespace ModernMusic
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private Playlist _currentPlaylist = null;
         private int _currentSongIndex;
-        private ObservableCollection<Song> Songs { get; set; }
 
         public PlaylistView()
         {
@@ -44,9 +44,6 @@ namespace ModernMusic
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += navigationHelper_SaveState;
-
-            Songs = new ObservableCollection<Song>();
-            this.DefaultViewModel["Songs"] = Songs;
         }
 
         void navigationHelper_SaveState(object sender, SaveStateEventArgs e)
@@ -91,8 +88,18 @@ namespace ModernMusic
                 playlist = (KeyValuePair<Playlist, int>)e.NavigationParameter;
             _currentPlaylist = playlist.Key;
             _currentSongIndex = playlist.Value;
+
             foreach(Song song in _currentPlaylist.Songs)
-                Songs.Add(song);
+            {
+                SongItemControl playlistItem = new SongItemControl(song);
+                playlistItem.OnItemTapped += songItem_Tapped;
+                playlistItem.Holding += SongItemControl_Holding;
+                playlistItem.SetValue(FlyoutBase.AttachedFlyoutProperty, this.Resources["PlaylistFlyout"]);
+
+                songView.Items.Add(playlistItem);
+            }
+
+            ((SongItemControl)songView.Items[_currentSongIndex]).Select();
 
             ResetCommandBarVisibility();
         }
@@ -104,6 +111,12 @@ namespace ModernMusic
 
         private void nowPlayingManger_onChangedTrack()
         {
+            var a = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                ((SongItemControl)songView.Items[_currentSongIndex]).Deselect();
+                _currentSongIndex = NowPlayingInformation.CurrentIndex;
+                ((SongItemControl)songView.Items[_currentSongIndex]).Select();
+            });
         }
 
         private void songItem_Tapped(Song song)
@@ -171,7 +184,7 @@ namespace ModernMusic
                 if (song != null)
                 {
                     _currentPlaylist.Songs.Remove(song);
-                    Songs.Remove(song);
+                    //Songs.Remove(song);
 
                     await PlaylistManager.Instance.Serialize();
                 }
@@ -184,7 +197,7 @@ namespace ModernMusic
             foreach (object song in songs)
             {
                 _currentPlaylist.Songs.Remove((Song)song);
-                Songs.Remove((Song)song);
+                //Songs.Remove((Song)song);
             }
 
             await PlaylistManager.Instance.Serialize();
@@ -221,7 +234,16 @@ namespace ModernMusic
             savePlaylist.Visibility = string.IsNullOrEmpty(_currentPlaylist.Name) ? Visibility.Visible : Visibility.Collapsed;
             reorderSongs.Visibility = selectSongs.Visibility = Windows.UI.Xaml.Visibility.Visible;
             removeSong.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
-            commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
+            if(commandBar.Visibility != Windows.UI.Xaml.Visibility.Visible)
+            {
+                Task.Delay(250).ContinueWith((a) =>
+                {
+                    var b = Dispatcher.RunIdleAsync((o) =>
+                    {
+                        commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
+                    });
+                });
+            }
         }
     }
 }

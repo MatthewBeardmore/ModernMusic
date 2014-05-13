@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     d:DesignHeight="148"
-    d:DesignWidth="400">
-    <Grid Tapped="AlbumItem_Tapped" Height="148" Width="400" Background="{StaticResource PageBackgroundThemeBrush}">
+    d:DesignWidth="360">
+    <Grid Tapped="AlbumItem_Tapped" Height="148" Width="360" Background="{StaticResource PageBackgroundThemeBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0"/>
             <ColumnDefinition Width="128"/>
@@ -21,7 +21,11 @@
         </Grid.RowDefinitions>
 
         <Grid Tapped="AlbumArt_Tapped" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <Image Source="{Binding ImagePath}" Stretch="UniformToFill"/>
+            <Image Stretch="UniformToFill">
+                <Image.Source>
+                    <BitmapImage UriSource="{Binding CachedImagePath}" DecodePixelWidth="128" DecodePixelHeight="128"/>
+                </Image.Source>
+            </Image>
             <Border VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,5,5,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90"  Width="30" Height="30">
                 <SymbolIcon Symbol="Play" HorizontalAlignment="Center" VerticalAlignment="Center" Width="22" Margin="-3,0,0,0"/>
             </Border>

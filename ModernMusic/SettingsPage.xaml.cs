@@ -59,6 +59,8 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
+            clearCacheOnNextStart.IsOn = Settings.ClearCacheOnNextStart;
+            xboxIntegration.IsOn = Settings.AllowXboxMusicIntegration; 
         }
 
         /// <summary>
@@ -72,11 +74,11 @@ namespace ModernMusic
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
             Settings.ClearCacheOnNextStart = clearCacheOnNextStart.IsOn;
-            Settings.RepeatAsDefault = alwaysStartRepeat.IsOn;
             Settings.AllowXboxMusicIntegration = xboxIntegration.IsOn; 
             Settings.Save();
 
-            Application.Current.Exit();
+            if (Settings.ClearCacheOnNextStart)
+                Application.Current.Exit();
         }
 
         #region NavigationHelper registration
@@ -104,5 +106,13 @@ namespace ModernMusic
         }
 
         #endregion
+
+        private void loadFromDisk_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Frame.Navigate(typeof(LoadingScreen), null))
+            {
+                throw new Exception("Failed to create initial page");
+            }
+        }
     }
 }

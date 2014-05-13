@@ -27,6 +27,13 @@ namespace ModernMusic.Controls
         {
             this.InitializeComponent();
         }
+
+        public AlbumItemControl(Album album)
+        {
+            this.InitializeComponent();
+            DataContext = album;
+        }
+
         private void AlbumItem_Tapped(object sender, TappedRoutedEventArgs e)
         {
             if (OnItemTapped != null)

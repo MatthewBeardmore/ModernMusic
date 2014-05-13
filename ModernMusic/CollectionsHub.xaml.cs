@@ -36,9 +36,7 @@ namespace ModernMusic
         {
             this.InitializeComponent();
 
-            this.NavigationCacheMode = NavigationCacheMode.Disabled;
-
-            this.navigationHelper = new NavigationHelper(this);
+            this.navigationHelper = new NavigationHelper(this) { OnBackClearState = true };
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
         }
@@ -74,6 +72,9 @@ namespace ModernMusic
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
             this.DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
+
+            if (e.NavigationParameter == null)
+                return;
 
             if(e.NavigationParameter.ToString() == "Artists")
             {

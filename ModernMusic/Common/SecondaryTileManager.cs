@@ -25,7 +25,7 @@ namespace ModernMusic
         }
 
         public static async void PinSecondaryTile(string appbarTileId, string tileName, Uri squareLogo, 
-            string tileActivationArguments = "", bool showName = false)
+            string tileActivationArguments = "none", bool showName = false)
         {
             SecondaryTile secondaryTile = new SecondaryTile(appbarTileId,
                                                             tileName,

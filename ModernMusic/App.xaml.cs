@@ -1,12 +1,16 @@
-﻿using System;
+﻿using ModernMusic.Library;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -26,8 +30,6 @@ namespace ModernMusic
     public sealed partial class App : Application
     {
         private TransitionCollection transitions;
-
-        public event Action<string> OnLaunchArgument;
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -107,27 +109,87 @@ namespace ModernMusic
                 rootFrame.ContentTransitions = null;
                 rootFrame.Navigated += this.RootFrame_FirstNavigated;
 
-                // When the navigation stack isn't restored navigate to the first page,
-                // configuring the new page by passing required information as a navigation
-                // parameter.
-                if (!rootFrame.Navigate(typeof(HubPage), e.Arguments))
+                StorageFile file = await ModernMusic.Library.MusicLibrary.Instance.HasCache();
+                if (file != null)
                 {
-                    throw new Exception("Failed to create initial page");
+                    // When the navigation stack isn't restored navigate to the first page,
+                    // configuring the new page by passing required information as a navigation
+                    // parameter.
+                    if (!CommandArgumentsExist(e) || !(await ParseLaunchArgument(e)))
+                    {
+                        var a = MusicLibrary.Instance.LoadCache(Window.Current.Dispatcher, file);
+                        if (!rootFrame.Navigate(typeof(HubPage), e.Arguments))
+                        {
+                            throw new Exception("Failed to create initial page");
+                        }
+                    }
+                }
+                else
+                {
+                    if (!rootFrame.Navigate(typeof(LoadingScreen), e.Arguments))
+                    {
+                        throw new Exception("Failed to create initial page");
+                    }
+                }
+            }
+            else
+            {
+                if (CommandArgumentsExist(e))
+                {
+                    await ParseLaunchArgument(e);
                 }
             }
 
             if (rootFrame.Content is ILaunchable)
                 ((ILaunchable)rootFrame.Content).OnLaunched(e);
 
-            if (e.Arguments is string)
-            {
-                string parameter = e.Arguments.ToString();
-                if (!string.IsNullOrEmpty(parameter) && OnLaunchArgument != null)
-                    OnLaunchArgument(parameter);
-            }
-
             // Ensure the current window is active.
             Window.Current.Activate();
+        }
+
+        private bool CommandArgumentsExist(LaunchActivatedEventArgs e)
+        {
+            return !string.IsNullOrEmpty(e.Arguments) && e.Arguments != "none";
+        }
+
+        private async Task<bool> ParseLaunchArgument(LaunchActivatedEventArgs e)
+        {
+            if(e.PreviousExecutionState == ApplicationExecutionState.Running)
+            {
+                Window.Current.Content = null;
+            }
+
+            string[] param = e.Arguments.Split(':');
+
+            string type = param[0];
+            string guid = param[1];
+
+            object kvp = null;
+
+            await MusicLibrary.Instance.LoadCache(Window.Current.Dispatcher);
+
+            if (type == "Artist")
+            {
+                Artist artist = MusicLibrary.Instance.GetArtist(new Guid(guid));
+
+                kvp = artist;
+            }
+            else if (type == "Album")
+            {
+                Album album = MusicLibrary.Instance.GetAlbum(new Guid(guid));
+
+                kvp = album;
+            }
+
+            if (kvp == null)
+                return false;
+
+            Frame rootFrame = new Frame();
+            Window.Current.Content = rootFrame;
+            if (!rootFrame.Navigate(typeof(NowPlaying), kvp))
+                return false;
+
+            return true;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using ModernMusic.Helpers;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,6 +15,8 @@ using Windows.Data.Json;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Data;
 
 namespace ModernMusic.Library
@@ -29,13 +32,15 @@ namespace ModernMusic.Library
                 if (_instance == null)
                 {
                     _instance = new MusicLibrary();
-                    var t = _instance.LoadLibrary();
                 }
                 return _instance;
             }
         }
 
         private int _hasLoadedArtists;
+
+        private string _lastLoadedArtist = "";
+        public event Action<string> OnLoadLibraryFromDiskProgress;
 
         [DataMember]
         public CollectionViewSource ArtistsCollection { get; private set; }
@@ -72,7 +77,8 @@ namespace ModernMusic.Library
                 key = "\uD83C\uDF10";
                 list = group.First((g) => g.Key.ToString() == key);
             }
-            list.Add(addition);
+            if (list.FirstOrDefault((a)=>((dynamic)a).ID == ((dynamic)addition).ID) == null)
+                list.Add(addition);
         }
 
         private MusicLibraryCache _cache;
@@ -91,46 +97,69 @@ namespace ModernMusic.Library
             _cache = new MusicLibraryCache();
         }
 
-        public async Task LoadLibrary()
+        public async Task<StorageFile> HasCache()
+        {
+            try
+            {
+                var cacheFile = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("cache");
+                if (Settings.Instance.ClearCacheOnNextStart)
+                {
+                    await cacheFile.DeleteAsync();
+                    Settings.Instance.ClearCacheOnNextStart = false;
+                    Settings.Instance.Save();
+                    return null;
+                }
+                return cacheFile;
+            }
+            catch
+            {
+                if (Settings.Instance.ClearCacheOnNextStart)
+                {
+                    Settings.Instance.ClearCacheOnNextStart = false;
+                    Settings.Instance.Save();
+                }
+                return null;
+            }
+        }
+
+        public async Task LoadLibraryFromDisk()
         {
             if (Interlocked.CompareExchange(ref _hasLoadedArtists, 1, 0) == 1)
                 return;
 
-            AsyncInline.Run(new Func<Task>(LoadCache));
-
-            //await TraverseFolder(KnownFolders.MusicLibrary);
-
+            await TraverseFolder(KnownFolders.MusicLibrary);
             await LoadAllArtwork();
-
             await _cache.Serialize();
         }
 
-        private async Task LoadCache()
+        public Task LoadCache(CoreDispatcher dispatcher, StorageFile cacheFile = null)
         {
-            try
-            {
-                StorageFile cacheFile = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("cache");
-
+            return Task.Run(new Action(() =>
                 {
-                    await _cache.Deserialize(cacheFile);
-
-                    foreach (Artist artist in _cache.Artists.Values)
+                    try
                     {
-                        AddItemToGroup(ArtistGroupDictionary, artist, a => a.ArtistName[0]);
+                        _cache = AsyncInline.Run(new Func<Task<MusicLibraryCache>>(() => MusicLibraryCache.Deserialize(cacheFile)));
+                        var c = dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low,
+                                () =>
+                                {
+                                    foreach (Artist artist in _cache.Artists.Values)
+                                    {
+                                        AddItemToGroup(ArtistGroupDictionary, artist, a => a.ArtistName[0]);
+                                    }
+                                    foreach (List<Album> albums in _cache.Albums.Values)
+                                    {
+                                        foreach (Album album in albums)
+                                            AddItemToGroup(AlbumGroupDictionary, album, a => a.AlbumName[0]);
+                                    }
+                                    foreach (List<Song> songs in _cache.Songs.Values)
+                                    {
+                                        foreach (Song song in songs)
+                                            AddItemToGroup(SongGroupDictionary, song, a => song.SongTitle[0]);
+                                    }
+                                });
                     }
-                    foreach (List<Album> albums in _cache.Albums.Values)
-                    {
-                        foreach (Album album in albums)
-                            AddItemToGroup(AlbumGroupDictionary, album, a => a.AlbumName[0]);
-                    }
-                    foreach (List<Song> songs in _cache.Songs.Values)
-                    {
-                        foreach (Song song in songs)
-                            AddItemToGroup(SongGroupDictionary, song, a => song.SongTitle[0]);
-                    }
-                }
-            }
-            catch { }
+                    catch { }
+                }));
         }
 
         private async Task TraverseFolder(StorageFolder folder)
@@ -153,6 +182,13 @@ namespace ModernMusic.Library
                     AddItemToGroup(AlbumGroupDictionary, album, a => a.AlbumName[0]);
                 if (song != null)
                     AddItemToGroup(SongGroupDictionary, song, a => song.SongTitle[0]);
+
+                if(_lastLoadedArtist != songProperties.Artist)
+                {
+                    _lastLoadedArtist = songProperties.Artist;
+                    if (OnLoadLibraryFromDiskProgress != null)
+                        OnLoadLibraryFromDiskProgress(_lastLoadedArtist);
+                }
             }
             foreach (StorageFolder childFolder in await folder.GetFoldersAsync())
             {
@@ -183,9 +219,6 @@ namespace ModernMusic.Library
 
         public async Task DownloadAlbumArt(Artist artist)
         {
-            if (artist.HasDownloadedArtistData)
-                return;
-
             JsonArray array = await XboxMusicConnection.GetAllAlbumData(artist);
 
             if (array == null)
@@ -202,6 +235,27 @@ namespace ModernMusic.Library
                     continue;
 
                 album.ImagePath = imagePath;
+
+                Uri cachedUri = await Utilities.DownloadFile(new Uri(imagePath));
+                if (cachedUri != null)
+                    album.CachedImagePath = cachedUri.ToString();
+            }
+
+            foreach(Album album in _cache.GetAlbums(artist.ArtistName))
+            {
+                if(string.IsNullOrEmpty(album.ImagePath))
+                {
+                    JsonObject albumInfo = await XboxMusicConnection.GetAlbumData(album);
+                    if (albumInfo == null)
+                        continue;
+
+                    string imagePath = albumInfo["ImageUrl"].GetString();
+                    album.ImagePath = imagePath;
+
+                    Uri cachedUri = await Utilities.DownloadFile(new Uri(imagePath));
+                    if (cachedUri != null)
+                        album.CachedImagePath = cachedUri.ToString();
+                }
             }
         }
 
@@ -213,6 +267,8 @@ namespace ModernMusic.Library
                 {
                     await DownloadAlbumArt(artist);
                     await Task.Yield();
+                    if (OnLoadLibraryFromDiskProgress != null)
+                        OnLoadLibraryFromDiskProgress(artist.ArtistName);
                 }
             }
             await Task.Yield();
@@ -225,6 +281,9 @@ namespace ModernMusic.Library
 
         public Album GetAlbum(Song song)
         {
+            if (song == null)
+                return null;
+
             return _cache.Get(song.Artist, song.Album);
         }
 
@@ -254,14 +313,14 @@ namespace ModernMusic.Library
         }
     }
 
-    [DataContract]
+    [ProtoContract]
     public class MusicLibraryCache
     {
-        [DataMember]
+        [ProtoMember(1)]
         public Dictionary<string, Artist> Artists { get; private set; }
-        [DataMember]
+        [ProtoMember(2)]
         public Dictionary<string, List<Album>> Albums { get; private set; }
-        [DataMember]
+        [ProtoMember(3)]
         public Dictionary<string, List<Song>> Songs { get; private set; }
 
         public MusicLibraryCache()
@@ -308,7 +367,7 @@ namespace ModernMusic.Library
 
         public Song CreateIfNotExist(string artist, string albumName, string songName, string filePath, MusicProperties props)
         {
-            Song song = new Song(artist, albumName, filePath, songName, props);
+            Song song = new Song(artist, albumName, filePath, songName, props.TrackNumber);
             List<Song> songs;
             if (!Songs.TryGetValue(artist.ToLower() + "--" + albumName.ToLower(), out songs))
             {
@@ -388,36 +447,43 @@ namespace ModernMusic.Library
                 List<Song> song;
                 if (!Songs.TryGetValue(artist.ToLower() + "--" + album.AlbumName.ToLower(), out song))
                     continue;
+                song.Sort((a, b) => a.TrackNumber.CompareTo(b.TrackNumber));
                 songs.AddRange(song);
             }
             return songs;
         }
         
-        public async Task Deserialize(StorageFile file)
+        public async static Task<MusicLibraryCache> Deserialize(StorageFile file)
         {
-            if (file == null)
-                file = await ApplicationData.Current.LocalFolder.GetFileAsync("cache");
-            if(Settings.Instance.ClearCacheOnNextStart)
+            try
             {
-                await file.DeleteAsync();
-                Settings.Instance.ClearCacheOnNextStart = false;
-                Settings.Instance.Save();
-                return;
-            }
-            using (IInputStream inStream = await file.OpenSequentialReadAsync())
-            {
-                var serializer = new DataContractJsonSerializer(typeof(MusicLibraryCache));
-                var cache = (MusicLibraryCache)serializer.ReadObject(inStream.AsStreamForRead());
+                if (file == null)
+                    file = await ApplicationData.Current.LocalFolder.GetFileAsync("cache");
 
-                this.Artists = cache.Artists;
-                this.Albums = cache.Albums;
-                this.Songs = cache.Songs;
+                using (IInputStream inStream = await file.OpenSequentialReadAsync())
+                {
+                    return (MusicLibraryCache)LibrarySerializer.Create().Deserialize(inStream.AsStreamForRead(), 
+                        null, typeof(MusicLibraryCache));
+                }
+                /*using (IInputStream inStream = await file.OpenSequentialReadAsync())
+                {
+                    var serializer = new DataContractJsonSerializer(typeof(MusicLibraryCache));
+                    return (MusicLibraryCache)serializer.ReadObject(inStream.AsStreamForRead());
+                }*/
             }
+            catch { }
+            return new MusicLibraryCache();
         }
 
         public async Task Serialize()
         {
-            using (MemoryStream ms = new MemoryStream())
+            StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("cache", CreationCollisionOption.ReplaceExisting);
+            using (Stream fileStream = await file.OpenStreamForWriteAsync())
+            {
+                LibrarySerializer.Create().Serialize(fileStream, this);
+                //Serializer.Serialize(fileStream, this);
+            }
+            /*using (MemoryStream ms = new MemoryStream())
             {
                 var _Serializer = new DataContractJsonSerializer(GetType());
                 _Serializer.WriteObject(ms, this);
@@ -429,7 +495,7 @@ namespace ModernMusic.Library
                     await ms.CopyToAsync(fileStream);
                     await fileStream.FlushAsync();
                 }
-            }
+            }*/
         }
     }
 }

@@ -14,9 +14,9 @@
                Margin="0">
         <PivotItem x:Name="songsPivot" Header="settings" CommonNavigationTransitionInfo.IsStaggerElement="True">
             <StackPanel Orientation="Vertical">
-                <ToggleSwitch x:Name="clearCacheOnNextStart" Header="Clear cache on next start" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" IsOn="{Binding Settings.ClearCacheOnNextStart}"/>
-                <ToggleSwitch x:Name="alwaysStartRepeat" Header="Enable repeat by default" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" IsOn="{Binding Settings.RepeatAsDefault}"/>
-                <ToggleSwitch x:Name="xboxIntegration" Header="Enable Xbox Music Integration" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" IsOn="{Binding Settings.AllowXboxMusicIntegration}"/>
+                <ToggleSwitch x:Name="clearCacheOnNextStart" Header="Clear cache (will close the app)" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                <ToggleSwitch x:Name="xboxIntegration" Header="Enable Xbox Music Integration" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                <Button Content="Load Library from Disk" Click="loadFromDisk_Click"/>
             </StackPanel>
         </PivotItem>
     </Pivot>

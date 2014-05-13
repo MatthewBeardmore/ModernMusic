@@ -80,9 +80,10 @@ namespace ModernMusic.Library
             {
                 JsonObject artistItems = jsonData["Albums"].GetObject();
                 JsonArray artistsArray = artistItems["Items"].GetArray();
-                JsonObject albumInfo = artistsArray.GetObjectAt(0);
+                if (artistsArray.Count == 0)
+                    return null;
 
-                return albumInfo;
+                return artistsArray.GetObjectAt(0);
             }
             return null;
         }
@@ -105,9 +106,16 @@ namespace ModernMusic.Library
 
             JsonObject jsonData = JsonObject.Parse(responseString);
 
+            if (jsonData.ContainsKey("Artists"))
+            {
+                JsonObject artistItems = jsonData["Artists"].GetObject();
+                JsonArray artistsArray = artistItems["Items"].GetArray();
+                JsonObject artistInfo = artistsArray.GetObjectAt(0);
+                artist.ImagePath = artistInfo["ImageUrl"].GetString();
+            }
+
             if (jsonData.ContainsKey("Albums"))
             {
-                artist.ImagePath = jsonData["ImageUrl"].GetString();
                 JsonObject artistItems = jsonData["Albums"].GetObject();
                 return artistItems["Items"].GetArray();
             }

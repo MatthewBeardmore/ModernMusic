@@ -17,6 +17,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Media.Imaging;
 
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
@@ -74,7 +75,26 @@ namespace ModernMusic
             this.DefaultViewModel["Artist"] = _currentArtist;
             this.DefaultViewModel["Albums"] = MusicLibrary.Instance.GetAlbums(_currentArtist);
             this.DefaultViewModel["Songs"] = MusicLibrary.Instance.GetSongs(_currentArtist);
-            Task t = MusicLibrary.Instance.DownloadAlbumArt(_currentArtist);
+
+            /*Task.Run(new Action(() =>
+            {
+                Task t = MusicLibrary.Instance.DownloadAlbumArt(_currentArtist);
+                t.Wait();
+                if(_currentArtist.ImagePath == null)
+                    return;
+                Uri source = new Uri(_currentArtist.ImagePath);
+                if(!source.IsFile)
+                {
+                    var a = Dispatcher.RunIdleAsync((o) =>
+                    {
+                        this.Background = new ImageBrush
+                        {
+                            Stretch = Windows.UI.Xaml.Media.Stretch.UniformToFill,
+                            ImageSource = new BitmapImage { UriSource = source }
+                        };
+                    });
+                }
+            }));*/
         }
 
         #region NavigationHelper registration
@@ -140,7 +160,14 @@ namespace ModernMusic
             string activationArguments = "Artist:" + _currentArtist.ID.ToString();
             string appbarTileId = "ModernMusic." + activationArguments.Replace(':', '.');
 
-            Uri square150x150Logo = await Utilities.ResizeImage(new Uri(_currentArtist.ImagePath), 150);
+            await MusicLibrary.Instance.DownloadAlbumArt(_currentArtist);
+            Uri square150x150Logo = new Uri("ms-appx:///Assets/Square150x150Logo.scale-240.png");
+            if(_currentArtist.ImagePath != null)
+            {
+                Uri source = new Uri(_currentArtist.ImagePath);
+                if(!source.IsFile)
+                    square150x150Logo = await Utilities.ResizeImage(new Uri(_currentArtist.ImagePath), 150);
+            }
 
             SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo, activationArguments);
         }

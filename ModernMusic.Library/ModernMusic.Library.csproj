@@ -44,6 +44,7 @@
     <Compile Include="Helpers\ObservableDictionary.cs" />
     <Compile Include="Helpers\RealObservableCollection.cs" />
     <Compile Include="Helpers\Settings.cs" />
+    <Compile Include="Helpers\Utilities.cs" />
     <Compile Include="Library\Album.cs" />
     <Compile Include="Library\Artist.cs" />
     <Compile Include="Helpers\ApplicationSettingsHelper.cs" />
@@ -61,6 +62,14 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Library\Samples\SampleSongView.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="LibrarySerializer">
+      <HintPath>..\LibrarySerializer.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net">
+      <HintPath>..\protobuf-net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

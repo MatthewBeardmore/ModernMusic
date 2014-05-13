@@ -9,72 +9,84 @@
     d:DesignWidth="360"
     d:DesignHeight="614.5"
     xmlns:data="using:ModernMusic.Library"
-    Loaded="nowPlayingControl_loaded"
     xmlns:controls="using:ModernMusic.Controls"
     DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     d:DataContext="{Binding Source={d:DesignData Source=../../ModernMusic.Library/Library/Samples/SampleSong.json}}">
-    <Pivot Title="{Binding Song.ArtistCaps}"
-               x:Name="pivot"
-               Background="{ThemeResource PageBackgroundThemeBrush}"
-               CommonNavigationTransitionInfo.IsStaggerElement="True"
-               Margin="0">
-        <PivotItem Header="{Binding Song.AlbumLower}" CommonNavigationTransitionInfo.IsStaggerElement="True">
-            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="0"/>
-                    <RowDefinition Height="250*"/>
-                    <RowDefinition Height="110"/>
-                    <RowDefinition Height="52"/>
-                    <RowDefinition Height="30"/>
-                </Grid.RowDefinitions>
+    <UserControl.Resources>
+        <Style x:Key="ListViewItemSubheaderTextBlockStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{ThemeResource PhoneFontFamilySemiLight}" />
+            <Setter Property="FontSize" Value="{ThemeResource TextStyleMediumFontSize}" />
+            <Setter Property="TextLineBounds" Value="Full" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="LineHeight" Value="20" />
+            <Setter Property="Foreground" Value="{ThemeResource PhoneMidBrush}" />
+        </Style>
+        <Style x:Key="SubheaderTextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource BaseTextBlockStyle}">
+            <Setter Property="FontFamily" Value="{ThemeResource PhoneFontFamilySemiLight}"/>
+            <Setter Property="FontSize" Value="30"/>
+            <Setter Property="FontWeight" Value="SemiLight"/>
+            <Setter Property="LineHeight" Value="33"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid x:Name="grid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+            Background="{ThemeResource PageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="110"/>
+            <RowDefinition Height="283"/>
+            <RowDefinition Height="110*"/>
+            <RowDefinition Height="52"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="20"/>
+        </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Row="0" Margin="0,20,0,0" HorizontalAlignment="Left">
-                    <TextBlock Text="{Binding Song.Artist}" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="NoWrap" FontSize="32"/>
-                    <TextBlock Text="{Binding Song.Album}" Style="{StaticResource SubheaderTextBlockStyle}" TextWrapping="NoWrap" FontSize="27"/>
-                </StackPanel>
-                <Grid Grid.Row="1" Grid.Column="1" >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="0"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Vertical">
-                        <SymbolIcon Margin="0,0,0,60" Tapped="repeatButton_Tapped" Symbol="RepeatAll" Width="60" Height="40"/>
-                        <SymbolIcon Margin="0,0,0,60" Tapped="shuffleButton_Tapped" x:Name="shuffleButton" Symbol="Shuffle" Width="60" Height="40"/>
-                        <SymbolIcon Margin="0,0,0,0" Tapped="playlistButton_Tapped" x:Name="playlistButton" Symbol="AllApps" Width="60" Height="40"/>
-                    </StackPanel>
-                    <StackPanel Grid.Column="1" Margin="0,0,60,0" HorizontalAlignment="Stretch">
-                        <Image x:Name="AlbumArtwork" Stretch="Uniform">
-                            <Image.Source>
-                                <BitmapImage x:Name="AlbumArtworkImage" UriSource="ms-appx:///Assets/DarkGray.png"/>
-                            </Image.Source>
-                        </Image>
-                        <controls:TimeSliderControl Height="33"/>
-                    </StackPanel>
-                </Grid>
-                <StackPanel Grid.Row="2" Margin="00,5,0,0" HorizontalAlignment="Left">
-                    <TextBlock Margin="0,0,0,0" Text="{Binding PreviousSong.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}" TextWrapping="NoWrap"/>
-                    <TextBlock Margin="0,-8,0,0" Text="{Binding Song.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource SubheaderTextBlockStyle}" TextWrapping="NoWrap" FontSize="27"/>
-                    <TextBlock Margin="0,-2,0,0" Text="{Binding NextSong.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}" TextWrapping="NoWrap"/>
-                    <TextBlock Margin="0,-5,0,0" Text="{Binding SubsequentSong.SongTitle}" VerticalAlignment="Top" Width="Auto" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}" TextWrapping="NoWrap"/>
-                </StackPanel>
+        <StackPanel Grid.Column="1" Margin="0,12.5,0,0" HorizontalAlignment="Left">
+            <TextBlock Text="{Binding Song.ArtistCaps}" HorizontalAlignment="Left" Style="{StaticResource TitleTextBlockStyle}" TextWrapping="NoWrap"/>
+            <TextBlock Text="{Binding Song.AlbumLower}" HorizontalAlignment="Left" CharacterSpacing="-25" FontSize="57" FontFamily="Segoe WP SemiLight" Padding="0,0,0,6.5" Margin="-3,-6.5,0,0" TextWrapping="NoWrap"/>
+        </StackPanel>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="70*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="33"/>
+            </Grid.RowDefinitions>
 
-                <Grid Grid.Row="3" Margin="20,0,0,0" HorizontalAlignment="Left" Width="80" Height="60" Tapped="previousButton_Click" PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost">
-                    <Border BorderThickness="3" BorderBrush="White" CornerRadius="90" Width="45" Height="45">
-                        <SymbolIcon x:Name="previousButton" Symbol="Previous" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </Grid>
-                <Grid Grid.Row="3" Margin="0,0,0,0" HorizontalAlignment="Center" Width="80" Height="60" Tapped="playButton_Click" PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost">
-                    <Border BorderThickness="3" BorderBrush="White" CornerRadius="90" Width="45" Height="45">
-                        <SymbolIcon x:Name="playButton" Symbol="Pause" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </Grid>
-                <Grid Grid.Row="3" Margin="0,0,20,0" HorizontalAlignment="Right" Width="80" Height="60" Tapped="nextButton_Click" PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost">
-                    <Border BorderThickness="3" BorderBrush="White" CornerRadius="90" Width="45" Height="45">
-                        <SymbolIcon x:Name="nextButton" Symbol="Next" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </Grid>
-            </Grid>
-        </PivotItem>
-    </Pivot>
+            <ScrollViewer Grid.Column="0" x:Name="albumArtScroller" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollMode="Disabled" HorizontalScrollMode="Enabled" HorizontalSnapPointsType="Mandatory" HorizontalScrollBarVisibility="Hidden" PointerEntered="albumArtScroller_PointerEntered" ViewChanged="albumArtScroller_ViewChanged">
+                <StackPanel x:Name="albumArt" Tapped="songList_tapped" Orientation="Horizontal"  ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Visible"/>
+            </ScrollViewer>
+            <StackPanel Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Orientation="Vertical">
+                <SymbolIcon Margin="0,0,0,60" Tapped="repeatButton_Tapped" x:Name="repeatButton" Symbol="RepeatAll" Width="60" Height="40"/>
+                <SymbolIcon Margin="0,0,0,60" Tapped="shuffleButton_Tapped" x:Name="shuffleButton" Symbol="Shuffle" Width="60" Height="40"/>
+                <SymbolIcon Margin="0,0,0,0" Tapped="playlistButton_Tapped" x:Name="playlistButton" Symbol="AllApps" Width="60" Height="40"/>
+            </StackPanel>
+            <controls:TimeSliderControl Grid.Row="1" Height="33"/>
+        </Grid>
+
+        <ScrollViewer x:Name="songListScroller" Grid.Row="2" Grid.Column="1" Margin="0,15,0,0" VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto"
+                        HorizontalAlignment="Stretch">
+            <VariableSizedWrapGrid x:Name="songList" Tapped="songList_tapped" ItemHeight="1"/>
+        </ScrollViewer>
+
+        <Grid Grid.Row="3" Grid.Column="1" Margin="20,0,0,0" HorizontalAlignment="Left" Width="80" Height="60" Tapped="previousButton_Click" PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost">
+            <Border BorderThickness="3" BorderBrush="White" CornerRadius="90" Width="45" Height="45">
+                <SymbolIcon x:Name="previousButton" Symbol="Previous" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+        </Grid>
+        <Grid Grid.Row="3" Grid.Column="1" Margin="0,0,0,0" HorizontalAlignment="Center" Width="80" Height="60" Tapped="playButton_Click" PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost">
+            <Border BorderThickness="3" BorderBrush="White" CornerRadius="90" Width="45" Height="45">
+                <SymbolIcon x:Name="playButton" Symbol="Pause" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+        </Grid>
+        <Grid Grid.Row="3" Grid.Column="1" Margin="0,0,20,0" HorizontalAlignment="Right" Width="80" Height="60" Tapped="nextButton_Click" PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost">
+            <Border BorderThickness="3" BorderBrush="White" CornerRadius="90" Width="45" Height="45">
+                <SymbolIcon x:Name="nextButton" Symbol="Next" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+        </Grid>
+    </Grid>
 </UserControl>

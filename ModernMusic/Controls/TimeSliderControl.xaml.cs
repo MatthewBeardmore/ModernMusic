@@ -22,7 +22,6 @@ namespace ModernMusic.Controls
 {
     public sealed partial class TimeSliderControl : UserControl
     {
-        private bool _updatingPositionSlider = false;
         private bool _userScanning = false;
 
         public TimeSliderControl()
@@ -45,7 +44,6 @@ namespace ModernMusic.Controls
             if (_userScanning)
                 return;
 
-            _updatingPositionSlider = true;
             try
             {
                 if (NowPlayingManager.IsAudioOpen)
@@ -55,18 +53,20 @@ namespace ModernMusic.Controls
                     TimeSpan durationLeft = duration - position;
 
                     positionSlider.Value = position.TotalSeconds;
-                    positionSlider.Maximum = duration.TotalSeconds;
-                    if (positionSlider.Maximum < 1.0f)
+                    if (duration.TotalSeconds < 1.0f)
                         positionSlider.Maximum = 100f;
+                    else if (positionSlider.Maximum != duration.TotalSeconds)
+                        positionSlider.Maximum = duration.TotalSeconds;
 
-                    currentTime.Text = position.Minutes.ToString("D2") + ":" + position.Seconds.ToString("D2");
+                    string currentTimeText = position.Minutes.ToString("D2") + ":" + position.Seconds.ToString("D2");
                     if (position.Hours > 0)
-                        currentTime.Text = position.Hours.ToString("D2") + ":" + currentTime.Text;
+                        currentTimeText = position.Hours.ToString("D2") + ":" + currentTimeText;
+                    currentTime.Text = currentTimeText;
 
-                    timeLeft.Text = durationLeft.Minutes.ToString("D2") + ":" + durationLeft.Seconds.ToString("D2");
+                    string timeLeftText = durationLeft.Minutes.ToString("D2") + ":" + durationLeft.Seconds.ToString("D2");
                     if (durationLeft.Hours > 0)
-                        timeLeft.Text = durationLeft.Hours.ToString("D2") + ":" + timeLeft.Text;
-                    timeLeft.Text += "-";
+                        timeLeftText = durationLeft.Hours.ToString("D2") + ":" + timeLeftText;
+                    timeLeft.Text = timeLeftText + "-";
                 }
                 else
                 {
@@ -85,16 +85,6 @@ namespace ModernMusic.Controls
                 currentTime.Text = "0:00";
                 timeLeft.Text = "0:00-";
             }
-            _updatingPositionSlider = false;
-        }
-
-        private void positionSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-        {
-            if (!_updatingPositionSlider)
-            {
-                timer_Tick(null, null); 
-                NowPlayingManager.Seek(positionSlider.Value);
-            }
         }
 
         private void positionSlider_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -105,6 +95,7 @@ namespace ModernMusic.Controls
         private void positionSlider_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             _userScanning = false;
+            NowPlayingManager.Seek(positionSlider.Value);
         }
     }
 }

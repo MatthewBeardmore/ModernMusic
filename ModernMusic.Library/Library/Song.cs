@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -6,27 +7,26 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Storage.FileProperties;
 
 namespace ModernMusic.Library
 {
-    [DataContract]
+    [ProtoContract]
     public class Song : INotifyPropertyChanged
     {
-        [DataMember]
+        [ProtoMember(1)]
         public Guid ID = Guid.NewGuid();
 
         public delegate void SongTappedHandler(Song song);
 
-        [DataMember]
-        public string FilePath { get; private set; }
-        [DataMember]
-        public string SongTitle { get; private set; }
-        [DataMember]
+        [ProtoMember(2)]
+        public string FilePath { get; set; }
+        [ProtoMember(3)]
+        public string SongTitle { get; set; }
+        [ProtoMember(4)]
         public string Album { get; set; }
-        [DataMember]
+        [ProtoMember(5)]
         public string Artist { get; set; }
-        [DataMember]
+        [ProtoMember(6)]
         public uint TrackNumber { get; set; }
 
         public Song Self { get { return this; } }
@@ -34,13 +34,15 @@ namespace ModernMusic.Library
         public string ArtistCaps { get { return Artist.ToUpper(); } }
         public string AlbumLower { get { return Album.ToLower(); } }
 
-        public Song(string artist, string albumName, String filePath, String songTitle, MusicProperties songProperties)
+        public Song() { }
+
+        public Song(string artist, string albumName, String filePath, String songTitle, uint trackNumber)
         {
             this.FilePath = filePath;
             this.SongTitle = songTitle;
             this.Artist = artist;
             this.Album = albumName;
-            this.TrackNumber = songProperties.TrackNumber;
+            this.TrackNumber = trackNumber;
         }
 
         public override string ToString()

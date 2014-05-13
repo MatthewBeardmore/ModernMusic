@@ -32,41 +32,14 @@
                CommonNavigationTransitionInfo.IsStaggerElement="True"
                Margin="0">
         <PivotItem x:Name="songsPivot" Header="songs" CommonNavigationTransitionInfo.IsStaggerElement="True">
-            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="120"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Border Background="{ThemeResource ListViewItemPlaceholderBackgroundThemeBrush}" Margin="0,0,0,0" Width="90" Height="90" VerticalAlignment="Top">
-                    <Image Source="{Binding Album.ImagePath}" Stretch="UniformToFill"/>
-                </Border>
-                <StackPanel Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,10,0,0">
-                    <TextBlock Text="{Binding Album.AlbumName}" Style="{ThemeResource ListViewItemTextBlockStyle}"/>
-                    <TextBlock Text="{Binding Album.Artist}" Style="{ThemeResource ListViewItemSubheaderTextBlockStyle}" FontSize="14"/>
-                </StackPanel>
-
-                <ListView
+            <ListView
                     x:Name="songView"
-                    AutomationProperties.AutomationId="ItemListView"
-                    AutomationProperties.Name="Items In Group"
-                    TabIndex="1"
-                    ItemsSource="{Binding Songs}"
                     IsItemClickEnabled="True"
                     ItemClick="songView_ItemClick"
                     SelectionMode="None"
                     IsSwipeEnabled="false"
                     Grid.Row="1" Grid.ColumnSpan="2">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <controls:SongItemControl/>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-            </Grid>
+            </ListView>
         </PivotItem>
     </Pivot>
 </Page>

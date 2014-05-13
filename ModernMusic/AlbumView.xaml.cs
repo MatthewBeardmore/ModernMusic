@@ -17,6 +17,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using ModernMusic.Controls;
 
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
@@ -74,13 +75,29 @@ namespace ModernMusic
 
             this.DefaultViewModel["Artist"] = MusicLibrary.Instance.GetArtist(_currentAlbum);
             this.DefaultViewModel["Album"] = _currentAlbum;
-            this.DefaultViewModel["Songs"] = MusicLibrary.Instance.GetSongs(_currentAlbum);
+
+            AlbumItemControl albumControl = new AlbumItemControl(_currentAlbum);
+            songView.Items.Add(albumControl);
+            foreach (Song song in MusicLibrary.Instance.GetSongs(_currentAlbum))
+            {
+                SongItemControl control = new SongItemControl(song);
+                songView.Items.Add(control);
+            }
         }
 
         private void songView_ItemClick(object sender, ItemClickEventArgs e)
         {
-            KeyValuePair<Album, int> kvp = new KeyValuePair<Album, int>(_currentAlbum,
-                MusicLibrary.Instance.GetSongs(_currentAlbum).IndexOf(((Song)e.ClickedItem)));
+            KeyValuePair<Album, int> kvp;
+            if (e.ClickedItem is AlbumItemControl)
+            {
+                kvp = new KeyValuePair<Album, int>(_currentAlbum, 0);
+            }
+            else
+            {
+                SongItemControl control = (SongItemControl)e.ClickedItem;
+                kvp = new KeyValuePair<Album, int>(_currentAlbum,
+                    MusicLibrary.Instance.GetSongs(_currentAlbum).IndexOf(((Song)control.DataContext)));
+            }
             if (!Frame.Navigate(typeof(NowPlaying), kvp))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
@@ -124,7 +141,7 @@ namespace ModernMusic
             string activationArguments = "Album:" + _currentAlbum.ID.ToString();
             string appbarTileId = "ModernMusic." + activationArguments.Replace(':','.');
 
-            Uri square150x150Logo = await Utilities.ResizeImage(new Uri(_currentAlbum.ImagePath), 150);
+            Uri square150x150Logo = await Utilities.ResizeImage(new Uri(_currentAlbum.CachedImagePath), 150);
 
             SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo, activationArguments);
         }

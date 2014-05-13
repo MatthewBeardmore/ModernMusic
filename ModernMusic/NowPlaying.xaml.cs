@@ -39,6 +39,8 @@ namespace ModernMusic
 
             nowPlayingControl.SetupPage(this);
 
+            NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Required;
+
             this.navigationHelper = new NavigationHelper(this) { OnBackClearState = true };
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
             //this.navigationHelper.SaveState += this.NavigationHelper_SaveState;
@@ -46,10 +48,12 @@ namespace ModernMusic
 
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            if (e.NavigationParameter == null)
+            if(e.NavigationParameter == null)
             {
+                //This signifies that we should play the current playlist
+                if (!e.IsNavigatingBack || NowPlayingInformation.CurrentPlaylist != nowPlayingControl._currentPlaylist)
+                    nowPlayingControl.NowPlayingInformation_OnCurrentPlaylistUpdated(NowPlayingInformation.CurrentPlaylist);
                 nowPlayingControl.EnsurePlayback();
-                nowPlayingControl.ResumeLayout();
                 return;
             }
 
@@ -86,7 +90,7 @@ namespace ModernMusic
             }
 
             NowPlayingManager.BeginPlaylist(Dispatcher, playlist, currentSongIndex);
-            nowPlayingControl.ResumeLayout();
+            nowPlayingControl.NowPlayingInformation_OnCurrentPlaylistUpdated(playlist);
         }
 
         /// <summary>

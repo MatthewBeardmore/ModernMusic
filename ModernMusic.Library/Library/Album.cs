@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -11,34 +12,43 @@ using Windows.Storage;
 
 namespace ModernMusic.Library
 {
-    [DataContract]
+    [ProtoContract]
     public class Album : INotifyPropertyChanged
     {
-        [DataMember]
+        [ProtoMember(1)]
         public Guid ID = Guid.NewGuid();
 
         public delegate void AlbumTappedHandler(Album album);
 
-        private string _imagePath = "ms-appx:///Assets/MediumGray.png";
+        private string _imagePath = null;
+        private string _cachedImagePath = "ms-appx:///Assets/DarkGray.png";
         
-        [DataMember]
-        public string AlbumName { get; private set; }
-        [DataMember]
-        public string Artist { get; private set; }
-        [DataMember]
+        [ProtoMember(2)]
+        public string AlbumName { get; set; }
+        [ProtoMember(3)]
+        public string Artist { get; set; }
+        [ProtoMember(4)]
         public string ImagePath
         {
             get { return _imagePath; }
-            set { _imagePath = value; OnPropertyChanged<string>(); }
+            set { _imagePath = value; /*OnPropertyChanged<string>();*/ }
+        }
+        [ProtoMember(5)]
+        public string CachedImagePath
+        {
+            get { return _cachedImagePath; }
+            set { _cachedImagePath = value; OnPropertyChanged<string>(); }
         }
 
         public Album Self { get { return this; } }
+
+        public Album() { }
 
         public Album(string artist, string albumName)
         {
             this.Artist = artist;
             this.AlbumName = albumName;
-            this.ImagePath = "ms-appx:///Assets/MediumGray.png";
+            this.CachedImagePath = "ms-appx:///Assets/DarkGray.png";
         }
 
         public override string ToString()

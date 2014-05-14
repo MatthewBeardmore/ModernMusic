@@ -33,6 +33,8 @@ namespace ModernMusic.Library
         public bool Selected { get; private set; }
         public string ArtistCaps { get { return Artist.ToUpper(); } }
         public string AlbumLower { get { return Album.ToLower(); } }
+        //Caches the property of Album
+        public string CachedImagePath { get; set; }
 
         public Song() { }
 

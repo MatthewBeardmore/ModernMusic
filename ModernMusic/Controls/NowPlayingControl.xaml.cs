@@ -102,7 +102,8 @@ namespace ModernMusic.Controls
         {
             //songList.ScrollIntoView(songList.Items[currentIndex - 1], ScrollIntoViewAlignment.Leading);
             songListScroller.ChangeView(null, Math.Max(0, (currentIndex - 1) * 21), null, disableAnimation);
-            albumArtScroller.ChangeView(currentIndex * SIZE_OF_ALBUM_ART, null, null, disableAnimation);
+            albumArtList.ScrollIntoView(albumArtList.Items[currentIndex], ScrollIntoViewAlignment.Leading);
+            //albumArtScroller.ChangeView(currentIndex * SIZE_OF_ALBUM_ART, null, null, disableAnimation);
         }
 
         internal void NowPlayingInformation_OnCurrentPlaylistUpdated(Playlist playlist)
@@ -155,30 +156,13 @@ namespace ModernMusic.Controls
                     songList.Children.Add(block);
                 }
 
-                albumArt.Children.Clear();
-                
+                albumArtList.Items.Clear();
+
                 foreach (Song song in _currentPlaylist.Songs)
                 {
-                    string imagePath = MusicLibrary.Instance.GetAlbum(song).CachedImagePath;
-                    Uri uri;
-                    if (Uri.TryCreate(imagePath, UriKind.RelativeOrAbsolute, out uri))
-                    {
-                        Border border = new Border()
-                        {
-                            Padding = new Thickness(0, 0, 200, 0),
-                            Child = new Image()
-                            {
-                                Stretch = Stretch.Uniform,
-                                Source = new BitmapImage(uri) 
-                                { 
-                                    DecodePixelHeight = 250, 
-                                    DecodePixelWidth = 250,
-                                    CreateOptions = BitmapCreateOptions.None
-                                }
-                            }
-                        };
-                        albumArt.Children.Add(border);
-                    }
+                    if (string.IsNullOrEmpty(song.CachedImagePath))
+                        song.CachedImagePath = MusicLibrary.Instance.GetAlbum(song).CachedImagePath;
+                    albumArtList.Items.Add(song);
                 }
 
                 var aa = Dispatcher.RunIdleAsync((o) =>

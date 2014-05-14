@@ -27,6 +27,71 @@
             <Setter Property="FontWeight" Value="SemiLight"/>
             <Setter Property="LineHeight" Value="33"/>
         </Style>
+        <Style TargetType="ListView">
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="TabNavigation" Value="Once" />
+            <Setter Property="IsSwipeEnabled" Value="True" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollMode" Value="Auto" />
+            <Setter Property="ScrollViewer.ZoomMode" Value="Disabled" />
+            <Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="False" />
+            <Setter Property="ScrollViewer.BringIntoViewOnFocusChange" Value="True" />
+            <Setter Property="ItemContainerTransitions">
+                <Setter.Value>
+                    <TransitionCollection>
+                        <AddDeleteThemeTransition />
+                        <ReorderThemeTransition />
+                    </TransitionCollection>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <ItemsStackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListView">
+                        <Border BorderBrush="{TemplateBinding BorderBrush}"
+                  Background="{TemplateBinding Background}"
+                  BorderThickness="{TemplateBinding BorderThickness}">
+                            <ScrollViewer x:Name="ScrollViewer" TabNavigation="{TemplateBinding TabNavigation}"
+                          HorizontalSnapPointsType="Mandatory"
+                          HorizontalScrollMode="{TemplateBinding ScrollViewer.HorizontalScrollMode}"
+                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                          IsHorizontalScrollChainingEnabled="{TemplateBinding ScrollViewer.IsHorizontalScrollChainingEnabled}"
+                          VerticalScrollMode="{TemplateBinding ScrollViewer.VerticalScrollMode}"
+                          VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                          IsVerticalScrollChainingEnabled="{TemplateBinding ScrollViewer.IsVerticalScrollChainingEnabled}"
+                          IsHorizontalRailEnabled="{TemplateBinding ScrollViewer.IsHorizontalRailEnabled}"
+                          IsVerticalRailEnabled="{TemplateBinding ScrollViewer.IsVerticalRailEnabled}"
+                          ZoomMode="{TemplateBinding ScrollViewer.ZoomMode}"
+                          IsDeferredScrollingEnabled="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
+                          BringIntoViewOnFocusChange="{TemplateBinding ScrollViewer.BringIntoViewOnFocusChange}"
+                          AutomationProperties.AccessibilityView="Raw" 
+                          ViewChanged="albumArtScroller_ViewChanged"
+                          PointerEntered="albumArtScroller_PointerEntered">
+                                <ItemsPresenter Header="{TemplateBinding Header}"
+                                  HeaderTemplate="{TemplateBinding HeaderTemplate}"
+                                  HeaderTransitions="{TemplateBinding HeaderTransitions}"
+                                  Footer="{TemplateBinding Footer}"
+                                  FooterTemplate="{TemplateBinding FooterTemplate}"
+                                  FooterTransitions="{TemplateBinding FooterTransitions}"
+                                  Padding="{TemplateBinding Padding}"
+                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <Grid x:Name="grid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
             Background="{ThemeResource PageBackgroundThemeBrush}">
@@ -57,9 +122,28 @@
                 <RowDefinition Height="33"/>
             </Grid.RowDefinitions>
 
-            <ScrollViewer Grid.Column="0" x:Name="albumArtScroller" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollMode="Disabled" HorizontalScrollMode="Enabled" HorizontalSnapPointsType="Mandatory" HorizontalScrollBarVisibility="Hidden" PointerEntered="albumArtScroller_PointerEntered" ViewChanged="albumArtScroller_ViewChanged">
+            <ListView x:Name="albumArtList" HorizontalAlignment="Stretch" 
+                      VerticalAlignment="Stretch" Grid.ColumnSpan="2"
+                      ScrollViewer.HorizontalScrollMode="Enabled"
+                      ScrollViewer.VerticalScrollMode="Disabled" 
+                      ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Width="450" Height="250" Padding="0,0,200,0">
+                            <Image Stretch="Uniform" Width="250" Height="250">
+                                <Image.Source>
+                                    <BitmapImage DecodePixelWidth="250" DecodePixelHeight="250" CreateOptions="None" UriSource="{Binding CachedImagePath}"/>
+                                </Image.Source>
+                            </Image>
+                        </Border>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <!--<ScrollViewer Grid.Column="0" x:Name="albumArtScroller" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollMode="Disabled" HorizontalScrollMode="Enabled" HorizontalSnapPointsType="Mandatory" HorizontalScrollBarVisibility="Hidden" PointerEntered="albumArtScroller_PointerEntered" ViewChanged="albumArtScroller_ViewChanged">
                 <StackPanel x:Name="albumArt" Tapped="songList_tapped" Orientation="Horizontal"  ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Visible"/>
-            </ScrollViewer>
+            </ScrollViewer>-->
             <StackPanel Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Orientation="Vertical">
                 <SymbolIcon Margin="0,0,0,60" Tapped="repeatButton_Tapped" x:Name="repeatButton" Symbol="RepeatAll" Width="60" Height="40"/>
                 <SymbolIcon Margin="0,0,0,60" Tapped="shuffleButton_Tapped" x:Name="shuffleButton" Symbol="Shuffle" Width="60" Height="40"/>

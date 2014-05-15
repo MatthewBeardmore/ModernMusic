@@ -33,6 +33,11 @@ namespace ModernMusic.Controls
             timer.Start();
             timer.Tick += timer_Tick;
 
+            NowPlayingManager.OnSeek += () =>
+            {
+                var a = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => timer_Tick(null, null));
+            };
+
             if (!Windows.ApplicationModel.DesignMode.DesignModeEnabled)
             {
                 grid.Background = new SolidColorBrush(Colors.Transparent);

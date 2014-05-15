@@ -37,7 +37,10 @@ namespace ModernMusic.Library
         //Caches the property of Album
         public string CachedImagePath { get; set; }
 
-        public Song() { }
+        public Song()
+        {
+            this._selected = false;
+        }
 
         public Song(string artist, string albumName, String filePath, String songTitle, uint trackNumber)
         {
@@ -46,6 +49,7 @@ namespace ModernMusic.Library
             this.Artist = artist;
             this.Album = albumName;
             this.TrackNumber = trackNumber;
+            this._selected = false;
         }
 
         public async Task<DeletionResult> Delete()
@@ -64,8 +68,14 @@ namespace ModernMusic.Library
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public bool Selected { get; set; }
-        public void FirePropertyChanged()
+        private bool _selected;
+        public bool Selected 
+        {
+            get { return _selected; }
+            set { _selected = value; FirePropertyChanged(); }
+        }
+
+        private void FirePropertyChanged()
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs("Selected"));

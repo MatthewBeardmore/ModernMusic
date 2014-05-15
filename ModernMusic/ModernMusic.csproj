@@ -112,6 +112,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Controls\SongTitleControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\TimeSliderControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -172,6 +176,9 @@
     </Compile>
     <Compile Include="Controls\SongItemControl.xaml.cs">
       <DependentUpon>SongItemControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SongTitleControl.xaml.cs">
+      <DependentUpon>SongTitleControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\TimeSliderControl.xaml.cs">
       <DependentUpon>TimeSliderControl.xaml</DependentUpon>

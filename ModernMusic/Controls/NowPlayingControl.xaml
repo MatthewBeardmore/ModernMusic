@@ -27,7 +27,89 @@
             <Setter Property="FontWeight" Value="SemiLight"/>
             <Setter Property="LineHeight" Value="33"/>
         </Style>
-        <Style TargetType="ListView">
+        <Style TargetType="ListBox">
+            <Setter Property="Foreground" Value="{ThemeResource ListBoxForegroundThemeBrush}" />
+            <Setter Property="Background" Value="{ThemeResource ListBoxBackgroundThemeBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ListBoxBorderThemeBrush}" />
+            <Setter Property="BorderThickness" Value="{ThemeResource ListBoxBorderThemeThickness}" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
+            <Setter Property="ScrollViewer.VerticalScrollMode" Value="Auto" />
+            <Setter Property="ScrollViewer.ZoomMode" Value="Disabled" />
+            <Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="False" />
+            <Setter Property="ScrollViewer.BringIntoViewOnFocusChange" Value="True" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="TabNavigation" Value="Once" />
+            <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
+            <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}" />
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBox">
+                        <Border x:Name="LayoutRoot" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="Disabled">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="Transparent" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="BorderBrush">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListBoxDisabledForegroundThemeBrush}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ScrollViewer x:Name="ScrollViewer" Padding="{TemplateBinding Padding}" TabNavigation="{TemplateBinding TabNavigation}"
+                          HorizontalScrollMode="{TemplateBinding ScrollViewer.HorizontalScrollMode}"
+                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                          VerticalScrollMode="{TemplateBinding ScrollViewer.VerticalScrollMode}"
+                          VerticalSnapPointsType="Mandatory"
+                          VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}"
+                          IsHorizontalRailEnabled="{TemplateBinding ScrollViewer.IsHorizontalRailEnabled}"
+                          IsVerticalRailEnabled="{TemplateBinding ScrollViewer.IsVerticalRailEnabled}" ZoomMode="{TemplateBinding ScrollViewer.ZoomMode}"
+                          IsDeferredScrollingEnabled="{TemplateBinding ScrollViewer.IsDeferredScrollingEnabled}"
+                          BringIntoViewOnFocusChange="{TemplateBinding ScrollViewer.BringIntoViewOnFocusChange}"
+                          AutomationProperties.AccessibilityView="Raw" Loaded="songListScroller_Loaded">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="TabNavigation" Value="Local" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="LayoutRoot" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}">
+                            <Grid x:Name="InnerGrid" Background="Transparent">
+                                <Rectangle x:Name="PressedBackground" Fill="{ThemeResource ListBoxItemPressedBackgroundThemeBrush}" Opacity="0" />
+                                <ContentPresenter x:Name="ContentPresenter" Content="{TemplateBinding Content}" ContentTransitions="{TemplateBinding ContentTransitions}"
+                                ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Margin="{TemplateBinding Padding}" />
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="HorizontalListView" TargetType="ListView">
             <Setter Property="IsTabStop" Value="False" />
             <Setter Property="TabNavigation" Value="Once" />
             <Setter Property="IsSwipeEnabled" Value="True" />
@@ -128,6 +210,7 @@
                       ScrollViewer.VerticalScrollMode="Disabled" 
                       ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                       HorizontalContentAlignment="Stretch"
+                      Style="{StaticResource HorizontalListView}"
                       VerticalContentAlignment="Stretch">
                 <ListView.ItemTemplate>
                     <DataTemplate>
@@ -141,9 +224,6 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-            <!--<ScrollViewer Grid.Column="0" x:Name="albumArtScroller" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" VerticalScrollMode="Disabled" HorizontalScrollMode="Enabled" HorizontalSnapPointsType="Mandatory" HorizontalScrollBarVisibility="Hidden" PointerEntered="albumArtScroller_PointerEntered" ViewChanged="albumArtScroller_ViewChanged">
-                <StackPanel x:Name="albumArt" Tapped="songList_tapped" Orientation="Horizontal"  ScrollViewer.VerticalScrollBarVisibility="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Visible"/>
-            </ScrollViewer>-->
             <StackPanel Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Stretch" Orientation="Vertical">
                 <SymbolIcon Margin="0,0,0,60" Tapped="repeatButton_Tapped" x:Name="repeatButton" Symbol="RepeatAll" Width="60" Height="40"/>
                 <SymbolIcon Margin="0,0,0,60" Tapped="shuffleButton_Tapped" x:Name="shuffleButton" Symbol="Shuffle" Width="60" Height="40"/>
@@ -152,10 +232,41 @@
             <controls:TimeSliderControl Grid.Row="1" Height="33"/>
         </Grid>
 
-        <ScrollViewer x:Name="songListScroller" Grid.Row="2" Grid.Column="1" Margin="0,15,0,0" VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto"
+        <ListBox Background="Transparent" x:Name="songList" Grid.Row="2" Grid.Column="1"
+                  Margin="0,15,0,0" Tapped="songList_tapped">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <controls:SongTitleControl/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <!--
+        <ScrollViewer x:Name="songListScroller" Grid.Row="2" Grid.Column="1"
+                  Margin="0,15,0,0">
+            <ItemsControl x:Name="songList"
+                  Tapped="songList_tapped" >
+                <ItemsControl.ItemContainerTransitions>
+                    <TransitionCollection>
+                        <AddDeleteThemeTransition />
+                        <ReorderThemeTransition />
+                    </TransitionCollection>
+                </ItemsControl.ItemContainerTransitions>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel Orientation="Vertical"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <controls:SongTitleControl/>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>-->
+        <!--<ScrollViewer x:Name="songListScroller" Grid.Row="2" Grid.Column="1" Margin="0,15,0,0" VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto"
                         HorizontalAlignment="Stretch" Loaded="songListScroller_Loaded">
             <VariableSizedWrapGrid x:Name="songList" Tapped="songList_tapped" ItemHeight="1"/>
-        </ScrollViewer>
+        </ScrollViewer>-->
 
         <Grid Grid.Row="3" Grid.Column="1" Margin="20,0,0,0" HorizontalAlignment="Left" Width="80" Height="60" Tapped="previousButton_Click" PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost">
             <Border BorderThickness="3" BorderBrush="White" CornerRadius="90" Width="45" Height="45">

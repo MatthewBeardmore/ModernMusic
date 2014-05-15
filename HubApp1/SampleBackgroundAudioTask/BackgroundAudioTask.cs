@@ -53,6 +53,7 @@ namespace BackgroundAudioTask
         private AutoResetEvent BackgroundTaskStarted = new AutoResetEvent(false);
         private bool backgroundtaskrunning = false;
         private Playlist _currentCachedPlaylist = null;
+        private CancellationTokenSource _cancellationToken = null;
         
         #endregion
 
@@ -195,10 +196,16 @@ namespace BackgroundAudioTask
             switch (args.Button)
             {
                 case SystemMediaTransportControlsButton.FastForward:
-                    BackgroundMediaPlayer.Current.PlaybackRate = 2.0;
+                    BackgroundMediaPlayer.Current.Pause();
+                    
+                    _cancellationToken = new CancellationTokenSource();
+                    CreateSeekingTask(1, _cancellationToken.Token);
                     break;
                 case SystemMediaTransportControlsButton.Rewind:
-                    BackgroundMediaPlayer.Current.PlaybackRate = -2.0;
+                    BackgroundMediaPlayer.Current.Pause();
+
+                    _cancellationToken = new CancellationTokenSource();
+                    CreateSeekingTask(-1, _cancellationToken.Token);
                     break;
                 case SystemMediaTransportControlsButton.Play: 
                     Debug.WriteLine("UVC play button pressed");
@@ -212,10 +219,13 @@ namespace BackgroundAudioTask
                         if (!result)
                             throw new Exception("Background Task didnt initialize in time");
                     }
-                    if (BackgroundMediaPlayer.Current.PlaybackRate != 1.0)
-                        BackgroundMediaPlayer.Current.PlaybackRate = 1.0;
-                    else
-                        BackgroundMediaPlayer.Current.Play();
+                    if (_cancellationToken != null)
+                    {
+                        _cancellationToken.Cancel();
+                        _cancellationToken = null;
+                    }
+                    
+                    BackgroundMediaPlayer.Current.Play();
                     break;
                 case SystemMediaTransportControlsButton.Pause: 
                     Debug.WriteLine("UVC pause button pressed");
@@ -253,6 +263,19 @@ namespace BackgroundAudioTask
                     }
                     break;
             }
+        }
+
+        private void CreateSeekingTask(double displacement, CancellationToken cancellationToken, int idx = 1)
+        {
+            Task.Delay(100, cancellationToken).ContinueWith(new Action<Task>((t) =>
+            {
+                double newDisplacement = idx < 60 ? (displacement * (1 + (idx / 10d))) : (7 * displacement);
+                BackgroundMediaPlayer.Current.Position =
+                    BackgroundMediaPlayer.Current.Position.Add(TimeSpan.FromSeconds(newDisplacement));
+                Task.Run(new Action(FireOnSeek));
+
+                CreateSeekingTask(displacement, cancellationToken, idx + 1);
+            }), cancellationToken);
         }
 
         #endregion
@@ -339,6 +362,13 @@ namespace BackgroundAudioTask
         {
             ValueSet value = new ValueSet();
             value.Add(Constants.ChangedTrack, null);
+            BackgroundMediaPlayer.SendMessageToForeground(value);
+        }
+
+        private void FireOnSeek()
+        {
+            ValueSet value = new ValueSet();
+            value.Add(Constants.Seek, null);
             BackgroundMediaPlayer.SendMessageToForeground(value);
         }
 

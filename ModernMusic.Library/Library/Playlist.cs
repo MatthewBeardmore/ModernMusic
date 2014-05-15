@@ -100,6 +100,15 @@ namespace ModernMusic.Library
             return Songs[index];
         }
 
+        public void ClearSelection()
+        {
+            foreach (Song song in Songs)
+            {
+                if (song.Selected)
+                    song.Selected = false;
+            }
+        }
+
         public static Playlist DeserializeFrom(IInputStream stream)
         {
             try

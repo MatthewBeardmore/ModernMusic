@@ -21,6 +21,7 @@ namespace ModernMusic.Library
         #region Public Properties
 
         public static Action OnChangedTrack;
+        public static Action OnSeek;
         public static TypedEventHandler<MediaPlayer, object> OnMediaPlayerStateChanged;
 
         public static MediaPlayerState CurrentState
@@ -364,6 +365,9 @@ namespace ModernMusic.Library
                     case Constants.ChangedTrack:
                         FireOnChangedTrack();
                         break;
+                    case Constants.Seek:
+                        FireOnSeek();
+                        break;
                 }
             }
         }
@@ -372,6 +376,12 @@ namespace ModernMusic.Library
         {
             if (OnChangedTrack != null)
                 OnChangedTrack();
+        }
+
+        private static void FireOnSeek()
+        {
+            if (OnSeek != null)
+                OnSeek();
         }
 
         #endregion
@@ -383,6 +393,7 @@ namespace ModernMusic.Library
     {
         public static event Action OnCurrentPlaylistUpdated;
         private static Playlist _cachedPlaylist = null;
+        private static int _lastIndex = -1;
 
         public static bool DisableCaching { get; set; }
 
@@ -398,9 +409,20 @@ namespace ModernMusic.Library
             }
             set
             {
-                if (value != null)
-                    value.GenerateShuffleList();
+                if (_cachedPlaylist != null)
+                    _cachedPlaylist.ClearSelection();
+
                 _cachedPlaylist = value;
+
+                if (value != null)
+                {
+                    value.GenerateShuffleList();
+                    value.ClearSelection();
+                    int idx = CurrentIndex;
+                    if (idx != -1)
+                        value.GetSong(idx).Selected = true;
+                }
+
                 AsyncInline.Run(new Func<Task>(() => SetPlaylist("CurrentPlaylist", value)));
                 if (OnCurrentPlaylistUpdated != null)
                     OnCurrentPlaylistUpdated();
@@ -414,11 +436,23 @@ namespace ModernMusic.Library
                 string val = GetSetting("CurrentIndex");
                 if (val == null)
                     return -1;
-                return int.Parse(val);
+                int retVal = int.Parse(val);
+                if (!DisableCaching && retVal != _lastIndex && _cachedPlaylist != null)
+                {
+                    _cachedPlaylist.ClearSelection();
+                    _cachedPlaylist.GetSong(retVal).Selected = true;
+                }
+                return _lastIndex = retVal;
             }
             set
             {
                 SetSetting("CurrentIndex", value.ToString());
+                if (!DisableCaching && _cachedPlaylist != null)
+                {
+                    _lastIndex = value;
+                    _cachedPlaylist.ClearSelection();
+                    _cachedPlaylist.GetSong(value).Selected = true;
+                }
             }
         }
 
@@ -462,9 +496,9 @@ namespace ModernMusic.Library
 
         public static Song GetCurrentSong(Playlist playlist = null)
         {
-            int index = CurrentIndex;
             if (playlist == null)
                 playlist = CurrentPlaylist;
+            int index = CurrentIndex;
             if (index < 0 || playlist == null || index >= playlist.Songs.Count)
                 return null;
 

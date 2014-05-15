@@ -29,7 +29,7 @@ namespace ModernMusic.Controls
         {
             get
             {
-                if (((Song)DataContext).Selected)
+                if (DataContext != null && ((Song)DataContext).Selected)
                     return (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
                 return new SolidColorBrush(Colors.White);
             }
@@ -48,16 +48,21 @@ namespace ModernMusic.Controls
 
         private void userControl_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
         {
-            ((Song)DataContext).PropertyChanged += SongItemControl_PropertyChanged;
+            if (DataContext != null)
+                ((Song)DataContext).PropertyChanged += SongItemControl_PropertyChanged;
         }
 
         private void userControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            ((Song)DataContext).PropertyChanged -= SongItemControl_PropertyChanged;
+            if (DataContext != null)
+                ((Song)DataContext).PropertyChanged -= SongItemControl_PropertyChanged;
         }
 
         void SongItemControl_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
+            if (DataContext == null)
+                return;
+
             songText.Foreground = ForegroundStyle;
             artistText.Foreground = ForegroundStyle;
         }

@@ -32,8 +32,8 @@ namespace ModernMusic.Controls
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private Page Page;
         private ManualResetEventSlim _programChangingScrollViewer = new ManualResetEventSlim();
-        private TextBlock _currentlyPlayingTextBlock;
         private const int SIZE_OF_ALBUM_ART = 450;
+        private ScrollViewer songListScroller;
 
         public NowPlayingControl()
         {
@@ -50,132 +50,69 @@ namespace ModernMusic.Controls
             Page = page;
 
             NowPlayingManager.OnChangedTrack += () =>
-                {
-                    var a = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, ResumeLayout);
-                };
+            {
+                var a = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, ResumeLayout);
+            };
             NowPlayingManager.OnMediaPlayerStateChanged += NowPlayingManager_OnMediaPlayerStateChanged;
             NowPlayingInformation.OnCurrentPlaylistUpdated += NowPlayingInformation_OnCurrentPlaylistUpdated;
-
-            SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
-            repeatButton.Foreground =
-                NowPlayingInformation.RepeatEnabled ? accentBrush : new SolidColorBrush(Colors.White);
-
-            shuffleButton.Foreground =
-                NowPlayingInformation.ShuffleEnabled ? accentBrush : new SolidColorBrush(Colors.White);
         }
 
         public void ResumeLayout()
         {
-            if (songList.Children.Count == 0)
+            if (songList.Items.Count == 0)
                 return;
 
-            int currentIndex = NowPlayingInformation.CurrentIndex;
-            this.DefaultViewModel["Song"] = NowPlayingInformation.CurrentSong;
+            Song song = NowPlayingInformation.CurrentSong;
+            this.DefaultViewModel["Song"] = song;
 
-            if (_currentlyPlayingTextBlock != null)
-            {
-                _currentlyPlayingTextBlock.Margin = new Thickness(0, 0, 0, 0);
-                _currentlyPlayingTextBlock.Height = _currentlyPlayingTextBlock.MinHeight =
-                    _currentlyPlayingTextBlock.MaxHeight = 21;
-                _currentlyPlayingTextBlock.SetValue(VariableSizedWrapGrid.RowSpanProperty, 21);
-                _currentlyPlayingTextBlock.FontSize = 16;
-                _currentlyPlayingTextBlock.Style = (Style)this.Resources["ListViewItemSubheaderTextBlockStyle"];
-            }
-
-            _currentlyPlayingTextBlock = (TextBlock)songList.Children[currentIndex];
-
-            if (_currentlyPlayingTextBlock != null)
-            {
-                _currentlyPlayingTextBlock.Margin = new Thickness(0, -6, 0, 0);
-                _currentlyPlayingTextBlock.Height = _currentlyPlayingTextBlock.MinHeight =
-                    _currentlyPlayingTextBlock.MaxHeight = 37;
-                _currentlyPlayingTextBlock.SetValue(VariableSizedWrapGrid.RowSpanProperty, 37);
-                _currentlyPlayingTextBlock.FontSize = 27;
-                _currentlyPlayingTextBlock.Style = (Style)this.Resources["SubheaderTextBlockStyle"];
-            }
-
-            ScrollToCorrectSongLocation(currentIndex);
+            ScrollToCorrectSongLocation(song);
         }
 
-        private void ScrollToCorrectSongLocation(int currentIndex, bool disableAnimation = false)
+        private void ScrollToCorrectSongLocation(Song song, bool disableAnimation = false)
         {
             //songList.ScrollIntoView(songList.Items[currentIndex - 1], ScrollIntoViewAlignment.Leading);
-            songListScroller.ChangeView(null, Math.Max(0, (currentIndex - 1) * 21), null, disableAnimation);
+            int currentIndex = NowPlayingInformation.CurrentIndex;
+            if (songListScroller != null)
+                songListScroller.ChangeView(null, Math.Max(0, (currentIndex + 1)), null, disableAnimation);
+            //songList.ScrollIntoView(songList.Items[Math.Max(0, (currentIndex - 1))]);
+
             albumArtList.ScrollIntoView(albumArtList.Items[currentIndex], ScrollIntoViewAlignment.Leading);
             //albumArtScroller.ChangeView(currentIndex * SIZE_OF_ALBUM_ART, null, null, disableAnimation);
         }
 
         internal void NowPlayingInformation_OnCurrentPlaylistUpdated()
         {
-            int currentIndex = NowPlayingInformation.CurrentIndex;
-            this.DefaultViewModel["Song"] = NowPlayingInformation.CurrentSong;
+            SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
+            repeatButton.Foreground =
+                NowPlayingInformation.RepeatEnabled ? accentBrush : new SolidColorBrush(Colors.White);
 
-            int idx = 0;
+            shuffleButton.Foreground =
+                NowPlayingInformation.ShuffleEnabled ? accentBrush : new SolidColorBrush(Colors.White);
 
-            _currentlyPlayingTextBlock = null;
-            songList.Children.Clear();
-            foreach (Song song in NowPlayingInformation.CurrentPlaylist.GetSongList())
+            Song song = NowPlayingInformation.CurrentSong;
+            this.DefaultViewModel["Song"] = song;
+
+            List<Song> songs = NowPlayingInformation.CurrentPlaylist.GetSongList();
+            songList.ItemsSource = songs;
+
+            foreach (Song s in NowPlayingInformation.CurrentPlaylist.GetSongList())
             {
-                TextBlock block = new TextBlock()
-                {
-                    Height = 21,
-                    MinHeight = 21,
-                    MaxHeight = 21,
-                    Width = 320,
-                    Text = song.SongTitle,
-                    TextWrapping = TextWrapping.NoWrap,
-                    HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
-                    Style = (Style)this.Resources["ListViewItemSubheaderTextBlockStyle"]
-                };
-                if (idx == currentIndex)
-                {
-                    block.Margin = new Thickness(0, -6, 0, 0);
-                    block.Height = block.MinHeight = block.MaxHeight = 37;
-                    block.SetValue(VariableSizedWrapGrid.RowSpanProperty, 37);
-                    block.FontSize = 27;
-                    block.Style = (Style)this.Resources["SubheaderTextBlockStyle"];
-                    _currentlyPlayingTextBlock = block;
-                }
-                else
-                    block.SetValue(VariableSizedWrapGrid.RowSpanProperty, 21);
-                songList.Children.Add(block);
-                idx++;
+                if (string.IsNullOrEmpty(s.CachedImagePath))
+                    s.CachedImagePath = MusicLibrary.Instance.GetAlbum(s).CachedImagePath;
             }
-            
-            double height = (songListScroller.ActualHeight - 21 - 36);//This is supposed to be 36, it removes a hanging pixel at the bottom
-            if(height > 0)
-            {
-                var endblock = new TextBlock()
-                {
-                    MinHeight = height,
-                    Height = height,
-                    Width = 320,
-                    Text = "None",
-                    Foreground = new SolidColorBrush(Colors.Transparent)
-                };
-                endblock.SetValue(VariableSizedWrapGrid.RowSpanProperty, height);
-                songList.Children.Add(endblock);
-            }
-
-            albumArtList.Items.Clear();
-
-            foreach (Song song in NowPlayingInformation.CurrentPlaylist.GetSongList())
-            {
-                if (string.IsNullOrEmpty(song.CachedImagePath))
-                    song.CachedImagePath = MusicLibrary.Instance.GetAlbum(song).CachedImagePath;
-                albumArtList.Items.Add(song);
-            }
+            albumArtList.ItemsSource = songs;
 
             var aa = Dispatcher.RunIdleAsync((o) =>
             {
-                ScrollToCorrectSongLocation(currentIndex, true);
+                ScrollToCorrectSongLocation(song, true);
             });
         }
 
         private void songListScroller_Loaded(object sender, RoutedEventArgs e)
         {
+            songListScroller = (ScrollViewer)sender;
             //This keeps the previous song/selected song at the top of the songList even at the bottom of the songList
-            double height = (songListScroller.ActualHeight - 21 - 36);//This is supposed to be 36, it removes a hanging pixel at the bottom
+            /*double height = (songList.ActualHeight - 21 - 36);//This is supposed to be 36, it removes a hanging pixel at the bottom
             var block = new TextBlock()
             {
                 MinHeight = height,
@@ -183,9 +120,7 @@ namespace ModernMusic.Controls
                 Width = 320,
                 Text = "None",
                 Foreground = new SolidColorBrush(Colors.Transparent)
-            };
-            block.SetValue(VariableSizedWrapGrid.RowSpanProperty, height);
-            songList.Children.Add(block);
+            };*/
         }
 
         private void NowPlayingManager_OnMediaPlayerStateChanged(MediaPlayer sender, object args)
@@ -256,14 +191,12 @@ namespace ModernMusic.Controls
 
         private void shuffleButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            bool needToUpdateShuffleList;
-            NowPlayingInformation.ShuffleEnabled = needToUpdateShuffleList = !NowPlayingInformation.ShuffleEnabled;
+            NowPlayingInformation.ShuffleEnabled = !NowPlayingInformation.ShuffleEnabled;
             SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
             ((SymbolIcon)sender).Foreground =
                 NowPlayingInformation.ShuffleEnabled ? accentBrush : new SolidColorBrush(Colors.White);
 
-            if (needToUpdateShuffleList)//This changes the shuffle list
-                NowPlayingInformation.CurrentPlaylist = NowPlayingInformation.CurrentPlaylist;
+            NowPlayingInformation.CurrentPlaylist = NowPlayingInformation.CurrentPlaylist;
 
             NowPlayingManager.ReplaySong(Dispatcher);
 
@@ -277,8 +210,7 @@ namespace ModernMusic.Controls
         
         private void playlistButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (!Page.Frame.Navigate(typeof(PlaylistView), new KeyValuePair<Playlist, int>(
-                NowPlayingInformation.CurrentPlaylist, NowPlayingInformation.CurrentIndex)))
+            if (!Page.Frame.Navigate(typeof(PlaylistView), NowPlayingInformation.CurrentPlaylist))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
                 throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));

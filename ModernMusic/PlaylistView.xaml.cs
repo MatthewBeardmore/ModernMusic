@@ -33,14 +33,11 @@ namespace ModernMusic
         private readonly NavigationHelper navigationHelper;
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private Playlist _currentPlaylist = null;
-        private int _currentSongIndex;
         private List<SongItemControl> _controls = new List<SongItemControl>();
 
         public PlaylistView()
         {
             this.InitializeComponent();
-
-            NowPlayingManager.OnChangedTrack += nowPlayingManger_onChangedTrack;
 
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
@@ -85,18 +82,7 @@ namespace ModernMusic
             if (commandBar.Visibility != Windows.UI.Xaml.Visibility.Visible)
                 commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
 
-            KeyValuePair<Playlist, int> playlist;
-            if (e.NavigationParameter is Playlist)
-                playlist = new KeyValuePair<Playlist, int>((Playlist)e.NavigationParameter, 0);
-            else
-                playlist = (KeyValuePair<Playlist, int>)e.NavigationParameter;
-            _currentPlaylist = playlist.Key;
-            _currentSongIndex = playlist.Value;
-
-            for (int i = 0; i < playlist.Key.Songs.Count; i++)
-                _currentPlaylist.Songs[i].Selected = false;
-
-            _currentPlaylist.Songs[_currentSongIndex].Selected = true;
+            _currentPlaylist = (Playlist)e.NavigationParameter;
 
             foreach(Song song in _currentPlaylist.Songs)
             {
@@ -108,21 +94,9 @@ namespace ModernMusic
 
         private void songView_Loaded(object sender, RoutedEventArgs e)
         {
-            songView.ScrollIntoView(_currentPlaylist.Songs[Math.Max(0, _currentSongIndex - 1)], ScrollIntoViewAlignment.Leading);
-        }
-
-        private void nowPlayingManger_onChangedTrack()
-        {
-            var a = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                _currentPlaylist.Songs[_currentSongIndex].Selected = false;
-                _currentPlaylist.Songs[_currentSongIndex].FirePropertyChanged();
-
-                _currentSongIndex = NowPlayingInformation.CurrentIndex;
-
-                _currentPlaylist.Songs[_currentSongIndex].Selected = true;
-                _currentPlaylist.Songs[_currentSongIndex].FirePropertyChanged();
-            });
+            if (_currentPlaylist == NowPlayingInformation.CurrentPlaylist)
+                songView.ScrollIntoView(_currentPlaylist.Songs[Math.Max(0, NowPlayingInformation.CurrentIndex - 1)],
+                    ScrollIntoViewAlignment.Leading);
         }
 
         private void songItem_Tapped(Song song)

@@ -32,6 +32,7 @@ namespace ModernMusic.Library
         ///  
 
         public const string ChangedTrack = "ChangedTrack";
+        public const string Seek = "Seek";
         public const string BackgroundTaskIsRunning = "BackgroundTaskIsRunning";
         public const string BackgroundTaskIsStopping = "BackgroundTaskIsStopping";
     }

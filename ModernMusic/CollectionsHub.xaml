@@ -11,6 +11,28 @@
     xmlns:controls="using:ModernMusic.Controls"
     xmlns:helpers="using:ModernMusic.Helpers"
     Background="{ThemeResource PageBackgroundThemeBrush}">
+    <Page.Resources>
+        <MenuFlyout x:Key="SongFlyout">
+            <MenuFlyout.MenuFlyoutPresenterStyle>
+                <Style TargetType="MenuFlyoutPresenter">
+                    <Setter Property="BorderBrush" Value="CornflowerBlue"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+            </MenuFlyout.MenuFlyoutPresenterStyle>
+            <MenuFlyoutItem Text="add to now playing" DataContext="{Binding}" Click="addToNowPlaying_Click"/>
+            <MenuFlyoutItem Text="delete song" DataContext="{Binding}" Click="deleteSong_Click"/>
+        </MenuFlyout>
+        <MenuFlyout x:Key="AlbumArtistFlyout">
+            <MenuFlyout.MenuFlyoutPresenterStyle>
+                <Style TargetType="MenuFlyoutPresenter">
+                    <Setter Property="BorderBrush" Value="CornflowerBlue"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+            </MenuFlyout.MenuFlyoutPresenterStyle>
+            <MenuFlyoutItem Text="add to now playing" DataContext="{Binding}" Click="addToNowPlaying_Click"/>
+            <MenuFlyoutItem Text="pin to start" DataContext="{Binding}" Click="pinItem_Click"/>
+        </MenuFlyout>
+    </Page.Resources>
     <!--<Page.BottomAppBar>
         <CommandBar>
             <AppBarButton Label="now playing" Click="nowPlaying_click" Icon="AllApps"/>
@@ -40,9 +62,13 @@
                             ItemsSource="{Binding ArtistsCollection.View}">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <controls:ArtistItemControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                <controls:ArtistItemControl 
+                                    HorizontalAlignment="Stretch" 
+                                    VerticalAlignment="Stretch"
                                     OnItem_Tapped="ArtistItem_Tapped"
-                                    OnPlay_Tapped="ArtistPlay_Tapped"/>
+                                    OnPlay_Tapped="ArtistPlay_Tapped"
+                                    Holding="control_Holding"
+                                    FlyoutBase.AttachedFlyout="{StaticResource AlbumArtistFlyout}"/>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                         <ListView.GroupStyle>
@@ -76,7 +102,9 @@
                             <DataTemplate>
                                 <controls:AlbumItemControl
                                     OnAlbumArtTapped="AlbumArt_Tapped"
-                                    OnItemTapped="AlbumItem_Tapped"/>
+                                    OnItemTapped="AlbumItem_Tapped"
+                                    Holding="control_Holding"
+                                    FlyoutBase.AttachedFlyout="{StaticResource AlbumArtistFlyout}"/>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                         <ListView.GroupStyle>
@@ -108,7 +136,10 @@
                             ItemsSource="{Binding SongsCollection.View}">
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <controls:SongItemControl OnItemTapped="SongItem_Tapped"/>
+                                <controls:SongItemControl 
+                                    OnItemTapped="SongItem_Tapped"
+                                    Holding="control_Holding"
+                                    FlyoutBase.AttachedFlyout="{StaticResource SongFlyout}"/>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                         <ListView.GroupStyle>

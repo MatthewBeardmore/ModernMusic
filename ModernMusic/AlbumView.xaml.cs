@@ -71,6 +71,9 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
+            if (commandBar.Visibility != Windows.UI.Xaml.Visibility.Visible)
+                commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
+
             _currentAlbum = (Album)e.NavigationParameter;
 
             this.DefaultViewModel["Artist"] = MusicLibrary.Instance.GetArtist(_currentAlbum);
@@ -81,8 +84,18 @@ namespace ModernMusic
             foreach (Song song in MusicLibrary.Instance.GetSongs(_currentAlbum))
             {
                 SongItemControl control = new SongItemControl(song);
+                control.SetValue(FlyoutBase.AttachedFlyoutProperty, this.Resources["AddToNowPlayingFlyout"]);
+                control.Holding += SongItemControl_Holding;
                 songView.Items.Add(control);
             }
+        }
+
+        private void SongItemControl_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            FrameworkElement senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+
+            flyoutBase.ShowAt(senderElement);
         }
 
         private void songView_ItemClick(object sender, ItemClickEventArgs e)
@@ -98,6 +111,13 @@ namespace ModernMusic
                 kvp = new KeyValuePair<Album, int>(_currentAlbum,
                     MusicLibrary.Instance.GetSongs(_currentAlbum).IndexOf(((Song)control.DataContext)));
             }
+
+            SwitchToNowPlayingView(kvp);
+        }
+
+        private void SwitchToNowPlayingView(object kvp)
+        {
+            commandBar.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             if (!Frame.Navigate(typeof(NowPlaying), kvp))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
@@ -134,16 +154,51 @@ namespace ModernMusic
         private void addToNowPlaying_Click(object sender, RoutedEventArgs e)
         {
             NowPlayingManager.AddToNowPlaying(_currentAlbum);
+            if (Settings.Instance.AddToNowPlayingSwitchesView)
+                SwitchToNowPlayingView(null);
+        }
+
+        private void addSongToNowPlaying_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Song song = item.DataContext as Song;
+
+                if (song != null)
+                {
+                    NowPlayingManager.AddToNowPlaying(song);
+                    if (Settings.Instance.AddToNowPlayingSwitchesView)
+                        SwitchToNowPlayingView(null);
+                }
+            }
+        }
+
+        private async void deleteSong_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Song song = item.DataContext as Song;
+
+                if (song != null)
+                {
+                    DeletionResult result = await song.Delete();
+                    if(result != DeletionResult.Song)
+                    {
+                        if (!Frame.Navigate(typeof(CollectionsHub), null))
+                        {
+                            var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+                            throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
+                        }
+                    }
+                }
+            }
         }
 
         private async void pin_Click(object sender, RoutedEventArgs e)
         {
-            string activationArguments = "Album:" + _currentAlbum.ID.ToString();
-            string appbarTileId = "ModernMusic." + activationArguments.Replace(':','.');
-
-            Uri square150x150Logo = await Utilities.ResizeImage(new Uri(_currentAlbum.CachedImagePath), 150);
-
-            SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo, activationArguments);
+            await _currentAlbum.PinToStart();
         }
     }
 }

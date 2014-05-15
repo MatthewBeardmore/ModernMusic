@@ -195,8 +195,10 @@ namespace BackgroundAudioTask
             switch (args.Button)
             {
                 case SystemMediaTransportControlsButton.FastForward:
-                    BackgroundMediaPlayer.Current.Position = 
-                        BackgroundMediaPlayer.Current.Position.Add(TimeSpan.FromSeconds(5));
+                    BackgroundMediaPlayer.Current.PlaybackRate = 2.0;
+                    break;
+                case SystemMediaTransportControlsButton.Rewind:
+                    BackgroundMediaPlayer.Current.PlaybackRate = -2.0;
                     break;
                 case SystemMediaTransportControlsButton.Play: 
                     Debug.WriteLine("UVC play button pressed");
@@ -210,7 +212,10 @@ namespace BackgroundAudioTask
                         if (!result)
                             throw new Exception("Background Task didnt initialize in time");
                     }
-                    BackgroundMediaPlayer.Current.Play();
+                    if (BackgroundMediaPlayer.Current.PlaybackRate != 1.0)
+                        BackgroundMediaPlayer.Current.PlaybackRate = 1.0;
+                    else
+                        BackgroundMediaPlayer.Current.Play();
                     break;
                 case SystemMediaTransportControlsButton.Pause: 
                     Debug.WriteLine("UVC pause button pressed");
@@ -304,12 +309,16 @@ namespace BackgroundAudioTask
                         BackgroundMediaPlayer.SendMessageToForeground(message);
                         break;
                     case Constants.StartPlaying:
-                        if(e.Data[key] != null)
+                        if (e.Data[key] != null)
                         {
                             //If it's not null, then the playlist changed and we need to recache it
                             _currentCachedPlaylist = null;
                         }
                         BeginPlaying();
+                        break;
+                    case Constants.ClearCache:
+                        _currentCachedPlaylist = null;
+                        BeginPlaying(false);
                         break;
                     case Constants.PlayTrack:
                         Play();
@@ -333,7 +342,7 @@ namespace BackgroundAudioTask
             BackgroundMediaPlayer.SendMessageToForeground(value);
         }
 
-        private async void BeginPlaying()
+        private async void BeginPlaying(bool autoPlay = true)
         {
             if (_currentCachedPlaylist == null)
                 _currentCachedPlaylist = NowPlayingInformation.CurrentPlaylist;
@@ -349,7 +358,7 @@ namespace BackgroundAudioTask
             UpdateUVCOnNewTrack(currentSong, file);
 
             BackgroundMediaPlayer.Current.PlaybackRate = 1;
-            BackgroundMediaPlayer.Current.AutoPlay = true;
+            BackgroundMediaPlayer.Current.AutoPlay = autoPlay;
             BackgroundMediaPlayer.Current.SetFileSource(file);
         }
 

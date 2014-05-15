@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Storage;
 
 namespace ModernMusic.Library
 {
@@ -30,7 +31,7 @@ namespace ModernMusic.Library
         public uint TrackNumber { get; set; }
 
         public Song Self { get { return this; } }
-        public bool Selected { get; private set; }
+
         public string ArtistCaps { get { return Artist.ToUpper(); } }
         public string AlbumLower { get { return Album.ToLower(); } }
         //Caches the property of Album
@@ -47,6 +48,15 @@ namespace ModernMusic.Library
             this.TrackNumber = trackNumber;
         }
 
+        public async Task<DeletionResult> Delete()
+        {
+            StorageFile file = await StorageFile.GetFileFromPathAsync(FilePath);
+            await file.DeleteAsync();
+            await PlaylistManager.Instance.DeleteSong(this);
+
+            return await MusicLibrary.Instance.DeleteSong(this);
+        }
+
         public override string ToString()
         {
             return this.SongTitle;
@@ -54,28 +64,11 @@ namespace ModernMusic.Library
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void OnPropertyChanged<T>([CallerMemberName]string caller = null)
+        public bool Selected { get; set; }
+        public void FirePropertyChanged()
         {
-            // make sure only to call this if the value actually changes
-
-            var handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(caller));
-            }
-        }
-
-        public void ClearSelection(bool fireProperty = true)
-        {
-            Selected = false;
-            if (fireProperty)
-                this.OnPropertyChanged<bool>();
-        }
-
-        public void Select()
-        {
-            Selected = true;
-            this.OnPropertyChanged<bool>();
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs("Selected"));
         }
     }
 }

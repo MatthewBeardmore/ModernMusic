@@ -34,6 +34,7 @@ namespace ModernMusic
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private Playlist _currentPlaylist = null;
         private int _currentSongIndex;
+        private List<SongItemControl> _controls = new List<SongItemControl>();
 
         public PlaylistView()
         {
@@ -81,6 +82,9 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
+            if (commandBar.Visibility != Windows.UI.Xaml.Visibility.Visible)
+                commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
+
             KeyValuePair<Playlist, int> playlist;
             if (e.NavigationParameter is Playlist)
                 playlist = new KeyValuePair<Playlist, int>((Playlist)e.NavigationParameter, 0);
@@ -89,17 +93,15 @@ namespace ModernMusic
             _currentPlaylist = playlist.Key;
             _currentSongIndex = playlist.Value;
 
+            for (int i = 0; i < playlist.Key.Songs.Count; i++)
+                _currentPlaylist.Songs[i].Selected = false;
+
+            _currentPlaylist.Songs[_currentSongIndex].Selected = true;
+
             foreach(Song song in _currentPlaylist.Songs)
             {
-                SongItemControl playlistItem = new SongItemControl(song);
-                playlistItem.OnItemTapped += songItem_Tapped;
-                playlistItem.Holding += SongItemControl_Holding;
-                playlistItem.SetValue(FlyoutBase.AttachedFlyoutProperty, this.Resources["PlaylistFlyout"]);
-
-                songView.Items.Add(playlistItem);
+                songView.Items.Add(song);
             }
-
-            ((SongItemControl)songView.Items[_currentSongIndex]).Select();
 
             ResetCommandBarVisibility();
         }
@@ -113,9 +115,13 @@ namespace ModernMusic
         {
             var a = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
-                ((SongItemControl)songView.Items[_currentSongIndex]).Deselect();
+                _currentPlaylist.Songs[_currentSongIndex].Selected = false;
+                _currentPlaylist.Songs[_currentSongIndex].FirePropertyChanged();
+
                 _currentSongIndex = NowPlayingInformation.CurrentIndex;
-                ((SongItemControl)songView.Items[_currentSongIndex]).Select();
+
+                _currentPlaylist.Songs[_currentSongIndex].Selected = true;
+                _currentPlaylist.Songs[_currentSongIndex].FirePropertyChanged();
             });
         }
 
@@ -123,6 +129,8 @@ namespace ModernMusic
         {
             KeyValuePair<Playlist, int> kvp = new KeyValuePair<Playlist, int>(_currentPlaylist,
                 _currentPlaylist.Songs.IndexOf(song));
+
+            commandBar.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             if (!Frame.Navigate(typeof(NowPlaying), kvp))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
@@ -184,6 +192,8 @@ namespace ModernMusic
                 if (song != null)
                 {
                     _currentPlaylist.Songs.Remove(song);
+                    if (NowPlayingInformation.CurrentPlaylist.ID == _currentPlaylist.ID)
+                        NowPlayingInformation.CurrentPlaylist = _currentPlaylist;
                     //Songs.Remove(song);
 
                     await PlaylistManager.Instance.Serialize();
@@ -199,6 +209,8 @@ namespace ModernMusic
                 _currentPlaylist.Songs.Remove((Song)song);
                 //Songs.Remove((Song)song);
             }
+            if (NowPlayingInformation.CurrentPlaylist.ID == _currentPlaylist.ID)
+                NowPlayingInformation.CurrentPlaylist = _currentPlaylist;
 
             await PlaylistManager.Instance.Serialize();
         }
@@ -244,6 +256,12 @@ namespace ModernMusic
                     });
                 });
             }
+        }
+
+        private void SongItemControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            SongItemControl control = (SongItemControl)sender;
+            _controls.Add(control);
         }
     }
 }

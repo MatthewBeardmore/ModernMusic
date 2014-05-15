@@ -22,6 +22,7 @@ namespace ModernMusic.Library
 
         public const string BackgroundTaskQuery = "BackgroundTaskQuery";
         public const string StartPlaying = "StartPlaying";
+        public const string ClearCache = "ClearCache";
         public const string PlayTrack = "PlayTrack";
         public const string PauseTrack = "PauseTrack";
         public const string StopPlayback = "StopPlayback";

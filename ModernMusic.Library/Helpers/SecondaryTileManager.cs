@@ -9,7 +9,7 @@ using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 
-namespace ModernMusic
+namespace ModernMusic.Helpers
 {
     public static class SecondaryTileManager
     {

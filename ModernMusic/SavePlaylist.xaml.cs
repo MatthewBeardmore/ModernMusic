@@ -75,7 +75,7 @@ namespace ModernMusic
             if(e.Key == Windows.System.VirtualKey.Enter && !string.IsNullOrEmpty(playlistName.Text))
             {
                 _currentPlaylist.Name = playlistName.Text;
-                PlaylistManager.Instance.AddPlaylist(_currentPlaylist);
+                await PlaylistManager.Instance.AddPlaylist(_currentPlaylist);
                 await PlaylistManager.Instance.Serialize();
 
                 if (!Frame.Navigate(typeof(HubPage), _currentPlaylist))

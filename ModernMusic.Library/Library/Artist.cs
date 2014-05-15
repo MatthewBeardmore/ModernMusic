@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using ModernMusic.Helpers;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -59,6 +60,23 @@ namespace ModernMusic.Library
             {
                 handler(this, new PropertyChangedEventArgs(caller));
             }
+        }
+
+        public async Task PinToStart()
+        {
+            string activationArguments = "Artist:" + ID.ToString();
+            string appbarTileId = "ModernMusic." + activationArguments.Replace(':', '.');
+
+            await MusicLibrary.Instance.DownloadAlbumArt(this);
+            Uri square150x150Logo = new Uri("ms-appx:///Assets/Square150x150Logo.scale-240.png");
+            if (ImagePath != null)
+            {
+                Uri source = new Uri(ImagePath);
+                if (!source.IsFile)
+                    square150x150Logo = await Utilities.ResizeImage(new Uri(ImagePath), 150);
+            }
+
+            SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo, activationArguments);
         }
     }
 }

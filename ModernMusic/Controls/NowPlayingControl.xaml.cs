@@ -31,7 +31,6 @@ namespace ModernMusic.Controls
     {
         private readonly ObservableDictionary defaultViewModel = new ObservableDictionary();
         private Page Page;
-        internal Playlist _currentPlaylist = null;
         private ManualResetEventSlim _programChangingScrollViewer = new ManualResetEventSlim();
         private TextBlock _currentlyPlayingTextBlock;
         private const int SIZE_OF_ALBUM_ART = 450;
@@ -67,11 +66,11 @@ namespace ModernMusic.Controls
 
         public void ResumeLayout()
         {
-            if (songList.Children.Count == 0 || _currentPlaylist == null)
+            if (songList.Children.Count == 0)
                 return;
 
             int currentIndex = NowPlayingInformation.CurrentIndex;
-            this.DefaultViewModel["Song"] = _currentPlaylist.Songs[currentIndex];
+            this.DefaultViewModel["Song"] = NowPlayingInformation.CurrentSong;
 
             if (_currentlyPlayingTextBlock != null)
             {
@@ -106,70 +105,87 @@ namespace ModernMusic.Controls
             //albumArtScroller.ChangeView(currentIndex * SIZE_OF_ALBUM_ART, null, null, disableAnimation);
         }
 
-        internal void NowPlayingInformation_OnCurrentPlaylistUpdated(Playlist playlist)
+        internal void NowPlayingInformation_OnCurrentPlaylistUpdated()
         {
-            _currentPlaylist = playlist;
-
             int currentIndex = NowPlayingInformation.CurrentIndex;
-            this.DefaultViewModel["Song"] = _currentPlaylist.Songs[currentIndex];
+            this.DefaultViewModel["Song"] = NowPlayingInformation.CurrentSong;
 
-            var a = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, () =>
+            int idx = 0;
+
+            _currentlyPlayingTextBlock = null;
+            songList.Children.Clear();
+            foreach (Song song in NowPlayingInformation.CurrentPlaylist.GetSongList())
             {
-                int idx = 0;
-
-                _currentlyPlayingTextBlock = null;
-                songList.Children.Clear();
-                foreach (Song song in _currentPlaylist.Songs)
+                TextBlock block = new TextBlock()
                 {
-                    TextBlock block = new TextBlock()
-                    {
-                        Height = 21,
-                        MinHeight = 21,
-                        MaxHeight = 21,
-                        Width = 320,
-                        Text = song.SongTitle,
-                        TextWrapping = TextWrapping.NoWrap,
-                        HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
-                        Style = (Style)this.Resources["ListViewItemSubheaderTextBlockStyle"]
-                    };
-                    if (idx == currentIndex)
-                    {
-                        block.Margin = new Thickness(0, -6, 0, 0);
-                        block.Height = block.MinHeight = block.MaxHeight = 37;
-                        block.SetValue(VariableSizedWrapGrid.RowSpanProperty, 37);
-                        block.FontSize = 27;
-                        block.Style = (Style)this.Resources["SubheaderTextBlockStyle"];
-                        _currentlyPlayingTextBlock = block;
-                    }
-                    else
-                        block.SetValue(VariableSizedWrapGrid.RowSpanProperty, 21);
-                    songList.Children.Add(block);
-                    idx++;
+                    Height = 21,
+                    MinHeight = 21,
+                    MaxHeight = 21,
+                    Width = 320,
+                    Text = song.SongTitle,
+                    TextWrapping = TextWrapping.NoWrap,
+                    HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment.Stretch,
+                    Style = (Style)this.Resources["ListViewItemSubheaderTextBlockStyle"]
+                };
+                if (idx == currentIndex)
+                {
+                    block.Margin = new Thickness(0, -6, 0, 0);
+                    block.Height = block.MinHeight = block.MaxHeight = 37;
+                    block.SetValue(VariableSizedWrapGrid.RowSpanProperty, 37);
+                    block.FontSize = 27;
+                    block.Style = (Style)this.Resources["SubheaderTextBlockStyle"];
+                    _currentlyPlayingTextBlock = block;
                 }
-
-                //This keeps the previous song/selected song at the top of the songList even at the bottom of the songList
-                for (int i = 0; i < 10; i++)
-                {
-                    var block = new TextBlock() { MinHeight = 21, Height = 21, Width = 320, 
-                        Text = "None", Foreground = new SolidColorBrush(Colors.Transparent) };
+                else
                     block.SetValue(VariableSizedWrapGrid.RowSpanProperty, 21);
-                    songList.Children.Add(block);
-                }
-
-                albumArtList.Items.Clear();
-
-                foreach (Song song in _currentPlaylist.Songs)
+                songList.Children.Add(block);
+                idx++;
+            }
+            
+            double height = (songListScroller.ActualHeight - 21 - 36);//This is supposed to be 36, it removes a hanging pixel at the bottom
+            if(height > 0)
+            {
+                var endblock = new TextBlock()
                 {
-                    if (string.IsNullOrEmpty(song.CachedImagePath))
-                        song.CachedImagePath = MusicLibrary.Instance.GetAlbum(song).CachedImagePath;
-                    albumArtList.Items.Add(song);
-                }
+                    MinHeight = height,
+                    Height = height,
+                    Width = 320,
+                    Text = "None",
+                    Foreground = new SolidColorBrush(Colors.Transparent)
+                };
+                endblock.SetValue(VariableSizedWrapGrid.RowSpanProperty, height);
+                songList.Children.Add(endblock);
+            }
 
-                var aa = Dispatcher.RunIdleAsync((o) =>
-                {
-                    ScrollToCorrectSongLocation(currentIndex, true);
-                });
+            albumArtList.Items.Clear();
+
+            foreach (Song song in NowPlayingInformation.CurrentPlaylist.GetSongList())
+            {
+                if (string.IsNullOrEmpty(song.CachedImagePath))
+                    song.CachedImagePath = MusicLibrary.Instance.GetAlbum(song).CachedImagePath;
+                albumArtList.Items.Add(song);
+            }
+
+            var aa = Dispatcher.RunIdleAsync((o) =>
+            {
+                ScrollToCorrectSongLocation(currentIndex, true);
             });
+        }
+
+        private void songListScroller_Loaded(object sender, RoutedEventArgs e)
+        {
+            //This keeps the previous song/selected song at the top of the songList even at the bottom of the songList
+            double height = (songListScroller.ActualHeight - 21 - 36);//This is supposed to be 36, it removes a hanging pixel at the bottom
+            var block = new TextBlock()
+            {
+                MinHeight = height,
+                Height = height,
+                Width = 320,
+                Text = "None",
+                Foreground = new SolidColorBrush(Colors.Transparent)
+            };
+            block.SetValue(VariableSizedWrapGrid.RowSpanProperty, height);
+            songList.Children.Add(block);
         }
 
         private void NowPlayingManager_OnMediaPlayerStateChanged(MediaPlayer sender, object args)
@@ -218,13 +234,13 @@ namespace ModernMusic.Controls
 
         private void nextButton_Click(object sender, RoutedEventArgs e)
         {
-            NowPlayingManager.SkipToNextSong(Dispatcher, _currentPlaylist);
+            NowPlayingManager.SkipToNextSong(Dispatcher, NowPlayingInformation.CurrentPlaylist);
             ResumeLayout();
         }
 
         private void previousButton_Click(object sender, RoutedEventArgs e)
         {
-            if (NowPlayingManager.SkipToPreviousSong(Dispatcher, _currentPlaylist))
+            if (NowPlayingManager.SkipToPreviousSong(Dispatcher, NowPlayingInformation.CurrentPlaylist))
                 ResumeLayout();
         }
 
@@ -235,17 +251,23 @@ namespace ModernMusic.Controls
             ((SymbolIcon)sender).Foreground =
                 NowPlayingInformation.RepeatEnabled ? accentBrush : new SolidColorBrush(Colors.White);
 
-            ResumeLayout();
+            NowPlayingInformation_OnCurrentPlaylistUpdated();
         }
 
         private void shuffleButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            NowPlayingInformation.ShuffleEnabled = !NowPlayingInformation.ShuffleEnabled;
+            bool needToUpdateShuffleList;
+            NowPlayingInformation.ShuffleEnabled = needToUpdateShuffleList = !NowPlayingInformation.ShuffleEnabled;
             SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
             ((SymbolIcon)sender).Foreground =
                 NowPlayingInformation.ShuffleEnabled ? accentBrush : new SolidColorBrush(Colors.White);
 
-            ResumeLayout();
+            if (needToUpdateShuffleList)//This changes the shuffle list
+                NowPlayingInformation.CurrentPlaylist = NowPlayingInformation.CurrentPlaylist;
+
+            NowPlayingManager.ReplaySong(Dispatcher);
+
+            NowPlayingInformation_OnCurrentPlaylistUpdated();
         }
 
         private void songList_tapped(object sender, TappedRoutedEventArgs e)

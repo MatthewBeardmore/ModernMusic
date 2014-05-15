@@ -109,24 +109,48 @@ namespace ModernMusic
                 rootFrame.ContentTransitions = null;
                 rootFrame.Navigated += this.RootFrame_FirstNavigated;
 
-                StorageFile file = await ModernMusic.Library.MusicLibrary.Instance.HasCache();
-                if (file != null)
+                await GoToFirstFrame(e, rootFrame);
+            }
+            else
+            {
+                if (!CommandArgumentsExist(e) || !(await ParseLaunchArgument(e)))
                 {
-                    // When the navigation stack isn't restored navigate to the first page,
-                    // configuring the new page by passing required information as a navigation
-                    // parameter.
-                    if (!CommandArgumentsExist(e) || !(await ParseLaunchArgument(e)))
+                    if (!(rootFrame.Content is LoadingScreen) && !(rootFrame.Content is HubPage))
                     {
-                        var a = MusicLibrary.Instance.LoadCache(Window.Current.Dispatcher, file);
-                        if (!rootFrame.Navigate(typeof(HubPage), e.Arguments))
-                        {
-                            throw new Exception("Failed to create initial page");
-                        }
+                        Window.Current.Content = rootFrame = null;
+                        await GoToFirstFrame(e, rootFrame);
+                        rootFrame = (Frame)Window.Current.Content;
                     }
                 }
-                else
+            }
+
+            //Just to make sure that the cache is loading
+            var a = MusicLibrary.Instance.LoadCache(Window.Current.Dispatcher);
+
+            if (rootFrame.Content is ILaunchable)
+                ((ILaunchable)rootFrame.Content).OnLaunched(e);
+
+            // Ensure the current window is active.
+            Window.Current.Activate();
+        }
+
+        private async Task GoToFirstFrame(LaunchActivatedEventArgs e, Frame rootFrame)
+        {
+            StorageFile file = await ModernMusic.Library.MusicLibrary.Instance.HasCache();
+            if (file != null)
+            {
+                // When the navigation stack isn't restored navigate to the first page,
+                // configuring the new page by passing required information as a navigation
+                // parameter.
+                if (!CommandArgumentsExist(e) || !(await ParseLaunchArgument(e)))
                 {
-                    if (!rootFrame.Navigate(typeof(LoadingScreen), e.Arguments))
+                    var a = MusicLibrary.Instance.LoadCache(Window.Current.Dispatcher, file);
+                    if(rootFrame == null)
+                    {
+                        rootFrame = new Frame();
+                        Window.Current.Content = rootFrame;
+                    }
+                    if (!rootFrame.Navigate(typeof(HubPage), e.Arguments))
                     {
                         throw new Exception("Failed to create initial page");
                     }
@@ -134,17 +158,16 @@ namespace ModernMusic
             }
             else
             {
-                if (CommandArgumentsExist(e))
+                if (rootFrame == null)
                 {
-                    await ParseLaunchArgument(e);
+                    rootFrame = new Frame();
+                    Window.Current.Content = rootFrame;
+                }
+                if (!rootFrame.Navigate(typeof(LoadingScreen), e.Arguments))
+                {
+                    throw new Exception("Failed to create initial page");
                 }
             }
-
-            if (rootFrame.Content is ILaunchable)
-                ((ILaunchable)rootFrame.Content).OnLaunched(e);
-
-            // Ensure the current window is active.
-            Window.Current.Activate();
         }
 
         private bool CommandArgumentsExist(LaunchActivatedEventArgs e)
@@ -154,11 +177,6 @@ namespace ModernMusic
 
         private async Task<bool> ParseLaunchArgument(LaunchActivatedEventArgs e)
         {
-            if(e.PreviousExecutionState == ApplicationExecutionState.Running)
-            {
-                Window.Current.Content = null;
-            }
-
             string[] param = e.Arguments.Split(':');
 
             string type = param[0];
@@ -166,7 +184,11 @@ namespace ModernMusic
 
             object kvp = null;
 
-            await MusicLibrary.Instance.LoadCache(Window.Current.Dispatcher);
+            Task t = MusicLibrary.Instance.LoadCache(Window.Current.Dispatcher);
+            if (t != null)
+                await t;
+            //Load playlists as well
+            PlaylistManager manager = PlaylistManager.Instance;
 
             if (type == "Artist")
             {
@@ -180,9 +202,23 @@ namespace ModernMusic
 
                 kvp = album;
             }
+            else if (type == "Playlist")
+            {
+                Playlist playlist = PlaylistManager.Instance.GetPlaylist(new Guid(guid));
+
+                if (playlist == null)
+                    return false;
+
+                kvp = new KeyValuePair<Playlist, int>(playlist, 0);
+            }
 
             if (kvp == null)
                 return false;
+
+            if (e.PreviousExecutionState == ApplicationExecutionState.Running)
+            {
+                Window.Current.Content = null;
+            }
 
             Frame rootFrame = new Frame();
             Window.Current.Content = rootFrame;

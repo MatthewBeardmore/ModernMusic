@@ -71,6 +71,9 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
+            if (commandBar.Visibility != Windows.UI.Xaml.Visibility.Visible)
+                commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
+
             _currentArtist = (Artist)e.NavigationParameter;
             this.DefaultViewModel["Artist"] = _currentArtist;
             this.DefaultViewModel["Albums"] = MusicLibrary.Instance.GetAlbums(_currentArtist);
@@ -125,16 +128,18 @@ namespace ModernMusic
 
         private void SongItem_Tapped(Song song)
         {
-            if (!Frame.Navigate(typeof(NowPlaying), song))
-            {
-                var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
-                throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
-            }
+            SwitchToNowPlayingView(song);
         }
 
         private void AlbumArt_Tapped(Album album)
         {
-            if (!Frame.Navigate(typeof(NowPlaying), album))
+            SwitchToNowPlayingView(album);
+        }
+
+        private void SwitchToNowPlayingView(object kvp)
+        {
+            commandBar.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            if (!Frame.Navigate(typeof(NowPlaying), kvp))
             {
                 var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
                 throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
@@ -153,23 +158,77 @@ namespace ModernMusic
         private void addToNowPlaying_Click(object sender, RoutedEventArgs e)
         {
             NowPlayingManager.AddToNowPlaying(_currentArtist);
+            if (Settings.Instance.AddToNowPlayingSwitchesView)
+                SwitchToNowPlayingView(null);
         }
 
         private async void pin_Click(object sender, RoutedEventArgs e)
         {
-            string activationArguments = "Artist:" + _currentArtist.ID.ToString();
-            string appbarTileId = "ModernMusic." + activationArguments.Replace(':', '.');
+            await _currentArtist.PinToStart();
+        }
 
-            await MusicLibrary.Instance.DownloadAlbumArt(_currentArtist);
-            Uri square150x150Logo = new Uri("ms-appx:///Assets/Square150x150Logo.scale-240.png");
-            if(_currentArtist.ImagePath != null)
+        private async void pinAlbum_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
             {
-                Uri source = new Uri(_currentArtist.ImagePath);
-                if(!source.IsFile)
-                    square150x150Logo = await Utilities.ResizeImage(new Uri(_currentArtist.ImagePath), 150);
+                Album album = item.DataContext as Album;
+                if (album != null)
+                {
+                    await album.PinToStart();
+                }
             }
+        }
 
-            SecondaryTileManager.PinSecondaryTile(appbarTileId, "Modern Music", square150x150Logo, activationArguments);
+        private void control_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            FrameworkElement senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+
+            flyoutBase.ShowAt(senderElement);
+        }
+
+        private void addSongToNowPlaying_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Song song = item.DataContext as Song;
+                Album album = item.DataContext as Album;
+
+                if (song != null)
+                {
+                    NowPlayingManager.AddToNowPlaying(song);
+                }
+                else if (album != null)
+                {
+                    NowPlayingManager.AddToNowPlaying(album);
+                }
+                if (Settings.Instance.AddToNowPlayingSwitchesView)
+                    SwitchToNowPlayingView(null);
+            }
+        }
+
+        private async void deleteSong_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Song song = item.DataContext as Song;
+
+                if (song != null)
+                {
+                    DeletionResult result = await song.Delete();
+                    if (result == DeletionResult.Artist)
+                    {
+                        if (!Frame.Navigate(typeof(CollectionsHub), null))
+                        {
+                            var resourceLoader = ResourceLoader.GetForCurrentView("Resources");
+                            throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
+                        }
+                    }
+                }
+            }
         }
     }
 }

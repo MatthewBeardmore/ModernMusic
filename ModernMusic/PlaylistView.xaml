@@ -45,7 +45,16 @@
                    CommonNavigationTransitionInfo.IsStaggerElement="True">
             <ListView x:Name="songView"
                 SelectionMode="Extended"
-                Loaded="songView_Loaded"/>
+                Loaded="songView_Loaded">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <controls:SongItemControl Loaded="SongItemControl_Loaded"
+                                    OnItemTapped="songItem_Tapped"
+                                    Holding="SongItemControl_Holding"
+                                    FlyoutBase.AttachedFlyout="{StaticResource PlaylistFlyout}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
         </PivotItem>
     </Pivot>
 </Page>

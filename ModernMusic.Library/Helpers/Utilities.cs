@@ -55,11 +55,26 @@ namespace ModernMusic.Helpers
             catch { return null; }
         }
 
+        public static async Task<Uri> ResizeImageFileToFile(Uri uri, uint size)
+        {
+            IRandomAccessStream ras = await ResizeImageFile(uri, size);
+
+            string fileName = Path.GetRandomFileName();
+            var file = await ApplicationData.Current.LocalFolder.CreateFileAsync(
+                fileName + ".jpg", CreationCollisionOption.GenerateUniqueName);
+
+            using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                await RandomAccessStream.CopyAndCloseAsync(ras.GetInputStreamAt(0), fileStream.GetOutputStreamAt(0));
+            }
+            return new Uri("ms-appdata:///local/" + file.Name);
+        }
+
         public static async Task<IRandomAccessStream> ResizeImageFile(Uri uri, uint size)
         {
             StorageFile file = await StorageFile.GetFileFromApplicationUriAsync(uri);
 
-            using (var fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
+            using (var fileStream = await file.OpenAsync(FileAccessMode.Read))
             {
                 BitmapDecoder bmpDecoder = await BitmapDecoder.CreateAsync(fileStream);
                 BitmapFrame frame = await bmpDecoder.GetFrameAsync(0);

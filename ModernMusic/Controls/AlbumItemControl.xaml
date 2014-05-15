@@ -23,7 +23,7 @@
         <Grid Tapped="AlbumArt_Tapped" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Image Stretch="UniformToFill">
                 <Image.Source>
-                    <BitmapImage UriSource="{Binding CachedImagePath}" DecodePixelWidth="128" DecodePixelHeight="128"/>
+                    <BitmapImage UriSource="{Binding CachedImagePath}" DecodePixelWidth="128" DecodePixelHeight="128" CreateOptions="None"/>
                 </Image.Source>
             </Image>
             <Border VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,5,5,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90"  Width="30" Height="30">

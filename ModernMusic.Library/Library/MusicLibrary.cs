@@ -38,6 +38,7 @@ namespace ModernMusic.Library
         }
 
         private int _hasLoadedArtists;
+        private int _hasLoadedCache;
 
         private string _lastLoadedArtist = "";
         public event Action<string> OnLoadLibraryFromDiskProgress;
@@ -65,6 +66,13 @@ namespace ModernMusic.Library
 
         public static void AddItemToGroup<T>(RealObservableCollection<GroupInfoList<T>> group, T addition, Func<T, char> keyConversion)
         {
+            GroupInfoList<T> list = GetItemGroup(group, addition, keyConversion);
+            if (list.FirstOrDefault((a)=>((dynamic)a).ID == ((dynamic)addition).ID) == null)
+                list.Add(addition);
+        }
+
+        internal static GroupInfoList<T> GetItemGroup<T>(RealObservableCollection<GroupInfoList<T>> group, T addition, Func<T, char> keyConversion)
+        {
             string key = (keyConversion(addition).ToString().ToLower());
             if (Char.IsDigit(key[0]) || Char.IsSymbol(key[0]))
                 key = "#";
@@ -72,13 +80,12 @@ namespace ModernMusic.Library
                 key = "\uD83C\uDF10";
 
             GroupInfoList<T> list = group.FirstOrDefault((g) => g.Key.ToString() == key);
-            if(list == null)
+            if (list == null)
             {
                 key = "\uD83C\uDF10";
                 list = group.First((g) => g.Key.ToString() == key);
             }
-            if (list.FirstOrDefault((a)=>((dynamic)a).ID == ((dynamic)addition).ID) == null)
-                list.Add(addition);
+            return list;
         }
 
         private MusicLibraryCache _cache;
@@ -134,6 +141,9 @@ namespace ModernMusic.Library
 
         public Task LoadCache(CoreDispatcher dispatcher, StorageFile cacheFile = null)
         {
+            if (Interlocked.CompareExchange(ref _hasLoadedCache, 1, 0) == 1)
+                return null;
+
             return Task.Run(new Action(() =>
                 {
                     try
@@ -297,6 +307,11 @@ namespace ModernMusic.Library
             return _cache.GetAlbum(id);
         }
 
+        public List<Song> GetAllSongs()
+        {
+            return _cache.GetAllSongs();
+        }
+
         public List<Song> GetSongs(Album album)
         {
             return _cache.GetSongs(album.Artist, album.AlbumName);
@@ -311,6 +326,22 @@ namespace ModernMusic.Library
         {
             return _cache.Get(album.Artist);
         }
+
+        public async Task<DeletionResult> DeleteSong(Song song)
+        {
+            DeletionResult result = _cache.DeleteSong(song, ArtistGroupDictionary, AlbumGroupDictionary, SongGroupDictionary);
+
+            await _cache.Serialize();
+
+            return result;
+        }
+    }
+
+    public enum DeletionResult
+    {
+        Song,
+        Album,
+        Artist
     }
 
     [ProtoContract]
@@ -451,6 +482,56 @@ namespace ModernMusic.Library
                 songs.AddRange(song);
             }
             return songs;
+        }
+
+        public List<Song> GetAllSongs()
+        {
+            List<Song> allSongs = new List<Song>();
+            foreach(string artist in Artists.Keys)
+            {
+                allSongs.AddRange(GetSongsForArtist(artist));
+            }
+            return allSongs;
+        }
+
+        public DeletionResult DeleteSong(Song song, RealObservableCollection<GroupInfoList<Artist>> artistsList,
+            RealObservableCollection<GroupInfoList<Album>> albumsList,
+            RealObservableCollection<GroupInfoList<Song>> songsList)
+        {
+            GroupInfoList<Song> songList = MusicLibrary.GetItemGroup(songsList, song, a => a.SongTitle[0]);
+
+            List<Song> songs;
+            if (Songs.TryGetValue(song.Artist.ToLower() + "--" + song.Album.ToLower(), out songs))
+            {
+                songList.Remove(song);
+                songs.Remove(song);
+            }
+            songs = GetSongs(song.Artist, song.Album);
+            if (songs.Count == 0)
+            {
+                Songs.Remove(song.Artist.ToLower() + "--" + song.Album.ToLower());
+                List<Album> albums;
+                if (Albums.TryGetValue(song.Artist.ToLower(), out albums))
+                {
+                    Album album = albums.FirstOrDefault((a) => a.AlbumName == song.Album);
+                    albums.Remove(album);
+                    if(albums.Count == 0)
+                    {
+                        GroupInfoList<Album> albumList = MusicLibrary.GetItemGroup(albumsList, album, aa => aa.AlbumName[0]);
+                        Albums.Remove(song.Artist.ToLower());
+                        albumList.Remove(album);
+
+                        Artist artist = Artists[song.Artist.ToLower()];
+
+                        GroupInfoList<Artist> artistList = MusicLibrary.GetItemGroup(artistsList, artist, a => a.ArtistName[0]);
+                        Artists.Remove(song.Artist.ToLower());
+                        artistList.Remove(artist);
+                        return DeletionResult.Artist;
+                    }
+                    return DeletionResult.Album;
+                }
+            }
+            return DeletionResult.Song;
         }
         
         public async static Task<MusicLibraryCache> Deserialize(StorageFile file)

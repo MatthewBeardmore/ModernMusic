@@ -11,9 +11,11 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using ModernMusic.Helpers;
+using ProtoBuf;
 
 namespace ModernMusic.Library
 {
+    [ProtoContract]
     public class PlaylistManager
     {
         private static PlaylistManager _instance;
@@ -32,7 +34,7 @@ namespace ModernMusic.Library
 
         private int _hasLoadedPlaylist;
 
-        [DataMember]
+        [ProtoMember(1)]
         public List<Playlist> PlaylistDataMember { get; set; }
 
         public ObservableCollection<Playlist> Playlists { get; private set; }
@@ -43,16 +45,43 @@ namespace ModernMusic.Library
             Playlists = new ObservableCollection<Playlist>();
         }
 
-        public void AddPlaylist(Playlist playlist)
+        public async Task AddPlaylist(Playlist playlist)
         {
             PlaylistDataMember.Add(playlist);
             Playlists.Add(playlist);
+            await PlaylistManager.Instance.Serialize();
         }
 
-        public void RemovePlaylist(Playlist playlist)
+        public Playlist GetPlaylist(Guid id)
+        {
+            foreach (Playlist playlist in PlaylistDataMember)
+            {
+                if (playlist.ID == id)
+                    return playlist;
+            }
+
+            return null;
+        }
+
+        public async Task RemovePlaylist(Playlist playlist)
         {
             PlaylistDataMember.Remove(playlist);
             Playlists.Remove(playlist);
+            await PlaylistManager.Instance.Serialize();
+        }
+
+        public async Task DeleteSong(Song song)
+        {
+            foreach (Playlist playlist in PlaylistDataMember)
+            {
+                if (playlist.Songs.Contains(song))
+                {
+                    playlist.Songs.Remove(song);
+                    if (NowPlayingInformation.CurrentPlaylist.ID == playlist.ID)
+                        NowPlayingInformation.CurrentPlaylist = playlist;
+                }
+            }
+            await PlaylistManager.Instance.Serialize();
         }
 
         public async Task LoadPlaylists()
@@ -75,31 +104,22 @@ namespace ModernMusic.Library
 
             using (IInputStream inStream = await file.OpenSequentialReadAsync())
             {
-                var serializer = new DataContractJsonSerializer(typeof(PlaylistManager));
-                var cache = (PlaylistManager)serializer.ReadObject(inStream.AsStreamForRead());
-
+                var cache = (PlaylistManager)LibrarySerializer.Create().Deserialize(inStream.AsStreamForRead(),
+                    null, typeof(PlaylistManager));
                 if (cache != null)
                 {
                     foreach (var playlist in cache.PlaylistDataMember)
-                        this.AddPlaylist(playlist);
+                        await this.AddPlaylist(playlist);
                 }
             }
         }
 
         public async Task Serialize()
         {
-            using (MemoryStream ms = new MemoryStream())
+            StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("playlistcache", CreationCollisionOption.ReplaceExisting);
+            using (Stream fileStream = await file.OpenStreamForWriteAsync())
             {
-                var _Serializer = new DataContractJsonSerializer(GetType());
-                _Serializer.WriteObject(ms, this);
-                ms.Position = 0;
-
-                StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("playlistcache", CreationCollisionOption.ReplaceExisting);
-                using (Stream fileStream = await file.OpenStreamForWriteAsync())
-                {
-                    await ms.CopyToAsync(fileStream);
-                    await fileStream.FlushAsync();
-                }
+                LibrarySerializer.Create().Serialize(fileStream, this);
             }
         }
     }

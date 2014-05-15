@@ -162,5 +162,71 @@ namespace ModernMusic
                 throw new Exception(resourceLoader.GetString("NavigationFailedExceptionMessage"));
             }
         }
+
+        private void addToNowPlaying_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Song song = item.DataContext as Song;
+                Album album = item.DataContext as Album;
+                Artist artist = item.DataContext as Artist;
+
+                if (song != null)
+                {
+                    NowPlayingManager.AddToNowPlaying(song);
+                }
+                else if (album != null)
+                {
+                    NowPlayingManager.AddToNowPlaying(album);
+                }
+                else if (artist != null)
+                {
+                    NowPlayingManager.AddToNowPlaying(artist);
+                }
+                if (Settings.Instance.AddToNowPlayingSwitchesView)
+                    this.Frame.Navigate(typeof(NowPlaying), null);
+            }
+        }
+
+        private async void pinItem_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Album album = item.DataContext as Album;
+                Artist artist = item.DataContext as Artist;
+                if (album != null)
+                {
+                    await album.PinToStart();
+                }
+                else if (artist != null)
+                {
+                    await artist.PinToStart();
+                }
+            }
+        }
+
+        private void control_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            FrameworkElement senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+
+            flyoutBase.ShowAt(senderElement);
+        }
+
+        private async void deleteSong_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Song song = item.DataContext as Song;
+
+                if (song != null)
+                {
+                    await song.Delete();
+                }
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using ProtoBuf;
+﻿using ModernMusic.Helpers;
+using ProtoBuf;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -54,6 +55,16 @@ namespace ModernMusic.Library
         public override string ToString()
         {
             return this.AlbumName;
+        }
+
+        public async Task PinToStart()
+        {
+            string activationArguments = "Album:" + ID.ToString();
+            string appbarTileId = "ModernMusic." + activationArguments.Replace(':', '.');
+
+            Uri square150x150Logo = await Utilities.ResizeImageFileToFile(new Uri(CachedImagePath), 150);
+
+            SecondaryTileManager.PinSecondaryTile(appbarTileId, AlbumName, square150x150Logo, activationArguments, true);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

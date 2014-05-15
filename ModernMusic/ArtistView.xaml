@@ -9,8 +9,30 @@
     xmlns:controls="using:ModernMusic.Controls"
     DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     Background="{ThemeResource PageBackgroundThemeBrush}">
+    <Page.Resources>
+        <MenuFlyout x:Key="SongFlyout">
+            <MenuFlyout.MenuFlyoutPresenterStyle>
+                <Style TargetType="MenuFlyoutPresenter">
+                    <Setter Property="BorderBrush" Value="CornflowerBlue"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+            </MenuFlyout.MenuFlyoutPresenterStyle>
+            <MenuFlyoutItem Text="add to now playing" DataContext="{Binding}" Click="addSongToNowPlaying_Click"/>
+            <MenuFlyoutItem Text="delete song" DataContext="{Binding}" Click="deleteSong_Click"/>
+        </MenuFlyout>
+        <MenuFlyout x:Key="AlbumFlyout">
+            <MenuFlyout.MenuFlyoutPresenterStyle>
+                <Style TargetType="MenuFlyoutPresenter">
+                    <Setter Property="BorderBrush" Value="CornflowerBlue"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+            </MenuFlyout.MenuFlyoutPresenterStyle>
+            <MenuFlyoutItem Text="add to now playing" DataContext="{Binding}" Click="addSongToNowPlaying_Click"/>
+            <MenuFlyoutItem Text="pin to start" DataContext="{Binding}" Click="pinAlbum_Click"/>
+        </MenuFlyout>
+    </Page.Resources>
     <Page.BottomAppBar>
-        <CommandBar>
+        <CommandBar x:Name="commandBar">
             <AppBarButton Icon="Pin" Label="pin" Click="pin_Click"/>
             <CommandBar.SecondaryCommands>
                 <AppBarButton Label="add to now playing" Click="addToNowPlaying_Click"/>
@@ -43,7 +65,11 @@
                 IsSwipeEnabled="false">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <controls:AlbumItemControl OnAlbumArtTapped="AlbumArt_Tapped" OnItemTapped="AlbumItem_Tapped"/>
+                        <controls:AlbumItemControl
+                            OnAlbumArtTapped="AlbumArt_Tapped" 
+                            OnItemTapped="AlbumItem_Tapped"
+                            Holding="control_Holding"
+                            FlyoutBase.AttachedFlyout="{StaticResource AlbumFlyout}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -59,7 +85,10 @@
                 IsSwipeEnabled="false">
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <controls:SongItemControl OnItemTapped="SongItem_Tapped"/>
+                        <controls:SongItemControl 
+                            OnItemTapped="SongItem_Tapped"
+                            Holding="control_Holding"
+                            FlyoutBase.AttachedFlyout="{StaticResource SongFlyout}"/>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

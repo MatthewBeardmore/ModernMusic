@@ -25,6 +25,7 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.Storage.Streams;
+using Windows.Media.Playback;
 
 // The Universal Hub Application project template is documented at http://go.microsoft.com/fwlink/?LinkID=391955
 
@@ -46,6 +47,11 @@ namespace ModernMusic
 
             // Hub is only supported in Portrait orientation
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Portrait;
+
+            DispatcherTimer timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromSeconds(0.5);
+            timer.Start();
+            timer.Tick += timer_Tick;
 
             this.navigationHelper = new NavigationHelper(this);
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
@@ -82,7 +88,8 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
+            if (commandBar.Visibility != Windows.UI.Xaml.Visibility.Visible)
+                commandBar.Visibility = Windows.UI.Xaml.Visibility.Visible;
 
             if(e.NavigationParameter is Playlist)
             {
@@ -100,12 +107,14 @@ namespace ModernMusic
                     Album album = MusicLibrary.Instance.GetAlbum(currentSong);
                     if (currentSong != null && album != null && !string.IsNullOrEmpty(album.CachedImagePath))
                     {
+                        var b = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () => songTitleText.Text = currentSong.SongTitle);
+
                         Uri uri;
                         if (Uri.TryCreate(album.CachedImagePath, UriKind.RelativeOrAbsolute, out uri))
                         {
                             IRandomAccessStream ras = AsyncInline.Run(new Func<Task<IRandomAccessStream>>(() =>
                                 Utilities.ResizeImageFile(uri, 180)));
-                            var b = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                            b = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                             {
                                 nowPlayingArt.SetSource(ras);
                                 nowPlayingRow.Height = new GridLength(180);
@@ -119,6 +128,30 @@ namespace ModernMusic
                 }
                 catch { }
             }));
+        }
+
+        void timer_Tick(object sender, object e)
+        {
+            try
+            {
+                if (NowPlayingManager.IsAudioPlaying)
+                {
+                    TimeSpan position = BackgroundMediaPlayer.Current.Position;
+
+                    string currentTimeText = position.Minutes.ToString("D2") + ":" + position.Seconds.ToString("D2");
+                    if (position.Hours > 0)
+                        currentTimeText = position.Hours.ToString("D2") + ":" + currentTimeText;
+                    playingText.Text = currentTimeText;
+                }
+                else
+                {
+                    playingText.Text = "paused";
+                }
+            }
+            catch
+            {
+                playingText.Text = "paused";
+            }
         }
 
         /// <summary>
@@ -240,18 +273,72 @@ namespace ModernMusic
 
                 if (playlist != null)
                 {
-                    PlaylistManager.Instance.RemovePlaylist(playlist);
-                    await PlaylistManager.Instance.Serialize();
+                    await PlaylistManager.Instance.RemovePlaylist(playlist);
                 }
             }
         }
 
         private void nowPlayingArt_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if (!Frame.Navigate(typeof(NowPlaying), null))
+            SwitchToNowPlayingView(null);
+        }
+
+        private void SwitchToNowPlayingView(object kvp)
+        {
+            commandBar.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            if (!Frame.Navigate(typeof(NowPlaying), kvp))
             {
                 throw new Exception(this.resourceLoader.GetString("NavigationFailedExceptionMessage"));
             }
+        }
+
+        private void pinPlaylistToStart_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Playlist playlist = item.DataContext as Playlist;
+
+                if (playlist != null)
+                {
+                    playlist.PinToStart();
+                }
+            }
+        }
+
+        private void addPlaylistToNowPlaying_Click(object sender, RoutedEventArgs e)
+        {
+            MenuFlyoutItem item = sender as MenuFlyoutItem;
+            if (item != null)
+            {
+                Playlist playlist = item.DataContext as Playlist;
+
+                if (playlist != null)
+                {
+                    NowPlayingManager.AddToNowPlaying(playlist);
+                    if (Settings.Instance.AddToNowPlayingSwitchesView)
+                        SwitchToNowPlayingView(new KeyValuePair<Playlist, int>(playlist, 0));
+                }
+            }
+        }
+
+        private void control_Holding(object sender, HoldingRoutedEventArgs e)
+        {
+            FrameworkElement senderElement = sender as FrameworkElement;
+            FlyoutBase flyoutBase = FlyoutBase.GetAttachedFlyout(senderElement);
+
+            flyoutBase.ShowAt(senderElement);
+        }
+
+        private void playMusic_Click(object sender, RoutedEventArgs e)
+        {
+            Playlist playlist = new Playlist();
+            playlist.Songs = MusicLibrary.Instance.GetAllSongs();
+
+            //Enable shuffle
+            NowPlayingInformation.ShuffleEnabled = true;
+
+            SwitchToNowPlayingView(new KeyValuePair<Playlist, int>(playlist, 0));
         }
     }
 }

@@ -1,0 +1,1 @@
+precompile "C:\SSD\ModernMusic\ModernMusic.Library\bin\Release\ModernMusic.Library.dll" -o:LibrarySerializer.dll -t:LibrarySerializer

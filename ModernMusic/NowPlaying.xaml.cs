@@ -51,8 +51,8 @@ namespace ModernMusic
             if(e.NavigationParameter == null)
             {
                 //This signifies that we should play the current playlist
-                if (!e.IsNavigatingBack || NowPlayingInformation.CurrentPlaylist != nowPlayingControl._currentPlaylist)
-                    nowPlayingControl.NowPlayingInformation_OnCurrentPlaylistUpdated(NowPlayingInformation.CurrentPlaylist);
+                if (!e.IsNavigatingBack)
+                    nowPlayingControl.NowPlayingInformation_OnCurrentPlaylistUpdated();
                 nowPlayingControl.EnsurePlayback();
                 return;
             }
@@ -63,12 +63,12 @@ namespace ModernMusic
             if (e.NavigationParameter is Artist)
             {
                 Artist artist = (Artist)e.NavigationParameter;
-                playlist.Songs = MusicLibrary.Instance.GetSongs(artist);
+                playlist.Songs = new List<Song>(MusicLibrary.Instance.GetSongs(artist));
             }
             else if (e.NavigationParameter is Album)
             {
                 Album album = (Album)e.NavigationParameter;
-                playlist.Songs = MusicLibrary.Instance.GetSongs(album);
+                playlist.Songs = new List<Song>(MusicLibrary.Instance.GetSongs(album));
             }
             else if (e.NavigationParameter is Song)
             {
@@ -79,7 +79,7 @@ namespace ModernMusic
             else if (e.NavigationParameter is KeyValuePair<Album, int>)
             {
                 KeyValuePair<Album, int> kvp = ((KeyValuePair<Album, int>)e.NavigationParameter);
-                playlist.Songs = MusicLibrary.Instance.GetSongs(kvp.Key);
+                playlist.Songs = new List<Song>(MusicLibrary.Instance.GetSongs(kvp.Key));
                 currentSongIndex = kvp.Value;
             }
             else if (e.NavigationParameter is KeyValuePair<Playlist, int>)
@@ -90,7 +90,7 @@ namespace ModernMusic
             }
 
             NowPlayingManager.BeginPlaylist(Dispatcher, playlist, currentSongIndex);
-            nowPlayingControl.NowPlayingInformation_OnCurrentPlaylistUpdated(playlist);
+            nowPlayingControl.NowPlayingInformation_OnCurrentPlaylistUpdated();
         }
 
         /// <summary>

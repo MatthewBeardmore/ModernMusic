@@ -25,6 +25,16 @@ namespace ModernMusic.Controls
 
         public bool AllowSelection { get; set; }
 
+        public SolidColorBrush ForegroundStyle
+        {
+            get
+            {
+                if (((Song)DataContext).Selected)
+                    return (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
+                return new SolidColorBrush(Colors.White);
+            }
+        }
+
         public SongItemControl()
         {
             this.InitializeComponent();
@@ -36,16 +46,20 @@ namespace ModernMusic.Controls
             DataContext = song;
         }
 
-        public void Select()
+        private void userControl_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
         {
-            songText.Foreground = artistText.Foreground =
-                (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
+            ((Song)DataContext).PropertyChanged += SongItemControl_PropertyChanged;
         }
 
-        public void Deselect()
+        private void userControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            border.BorderBrush = songText.Foreground = artistText.Foreground = icon.Foreground =
-                new SolidColorBrush(Colors.White);
+            ((Song)DataContext).PropertyChanged -= SongItemControl_PropertyChanged;
+        }
+
+        void SongItemControl_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            songText.Foreground = ForegroundStyle;
+            artistText.Foreground = ForegroundStyle;
         }
 
         private void StackPanel_Tapped(object sender, TappedRoutedEventArgs e)

@@ -60,7 +60,8 @@ namespace ModernMusic
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
             clearCacheOnNextStart.IsOn = Settings.ClearCacheOnNextStart;
-            xboxIntegration.IsOn = Settings.AllowXboxMusicIntegration; 
+            xboxIntegration.IsOn = Settings.AllowXboxMusicIntegration;
+            addGoesToNowPlaying.IsOn = Settings.AddToNowPlayingSwitchesView;
         }
 
         /// <summary>
@@ -74,7 +75,8 @@ namespace ModernMusic
         private void NavigationHelper_SaveState(object sender, SaveStateEventArgs e)
         {
             Settings.ClearCacheOnNextStart = clearCacheOnNextStart.IsOn;
-            Settings.AllowXboxMusicIntegration = xboxIntegration.IsOn; 
+            Settings.AllowXboxMusicIntegration = xboxIntegration.IsOn;
+            Settings.AddToNowPlayingSwitchesView = addGoesToNowPlaying.IsOn; 
             Settings.Save();
 
             if (Settings.ClearCacheOnNextStart)

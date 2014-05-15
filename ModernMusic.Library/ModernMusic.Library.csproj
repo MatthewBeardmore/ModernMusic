@@ -43,6 +43,7 @@
     <Compile Include="Helpers\JsonSerialization.cs" />
     <Compile Include="Helpers\ObservableDictionary.cs" />
     <Compile Include="Helpers\RealObservableCollection.cs" />
+    <Compile Include="Helpers\SecondaryTileManager.cs" />
     <Compile Include="Helpers\Settings.cs" />
     <Compile Include="Helpers\Utilities.cs" />
     <Compile Include="Library\Album.cs" />

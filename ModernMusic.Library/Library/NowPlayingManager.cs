@@ -11,6 +11,8 @@ using Windows.Foundation.Collections;
 using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.UI.Core;
+using System.IO;
+using Windows.Storage.Streams;
 
 namespace ModernMusic.Library
 {
@@ -121,17 +123,20 @@ namespace ModernMusic.Library
             BackgroundMediaPlayer.Current.Position = TimeSpan.FromSeconds(time);
         }
 
-        public static void AddToNowPlaying(Song song)
+        public static async void AddToNowPlaying(Song song)
         {
             Playlist currentPlaylist = NowPlayingInformation.CurrentPlaylist;
             if (currentPlaylist != null)
             {
                 currentPlaylist.Songs.Add(song);
                 NowPlayingInformation.CurrentPlaylist = currentPlaylist;
+
+                if (!string.IsNullOrEmpty(currentPlaylist.Name))
+                    await PlaylistManager.Instance.Serialize();
             }
         }
 
-        public static void AddToNowPlaying(Album album)
+        public static async void AddToNowPlaying(Album album)
         {
             Playlist currentPlaylist = NowPlayingInformation.CurrentPlaylist;
             if (currentPlaylist != null)
@@ -139,10 +144,13 @@ namespace ModernMusic.Library
                 foreach (Song song in MusicLibrary.Instance.GetSongs(album))
                     currentPlaylist.Songs.Add(song);
                 NowPlayingInformation.CurrentPlaylist = currentPlaylist;
+
+                if (!string.IsNullOrEmpty(currentPlaylist.Name))
+                    await PlaylistManager.Instance.Serialize();
             }
         }
 
-        public static void AddToNowPlaying(Artist artist)
+        public static async void AddToNowPlaying(Artist artist)
         {
             Playlist currentPlaylist = NowPlayingInformation.CurrentPlaylist;
             if (currentPlaylist != null)
@@ -150,6 +158,23 @@ namespace ModernMusic.Library
                 foreach (Song song in MusicLibrary.Instance.GetSongs(artist))
                     currentPlaylist.Songs.Add(song);
                 NowPlayingInformation.CurrentPlaylist = currentPlaylist;
+
+                if (!string.IsNullOrEmpty(currentPlaylist.Name))
+                    await PlaylistManager.Instance.Serialize();
+            }
+        }
+
+        public static async void AddToNowPlaying(Playlist playlist)
+        {
+            Playlist currentPlaylist = NowPlayingInformation.CurrentPlaylist;
+            if (currentPlaylist != null)
+            {
+                foreach (Song song in new List<Song>(playlist.Songs))
+                    currentPlaylist.Songs.Add(song);
+                NowPlayingInformation.CurrentPlaylist = currentPlaylist;
+
+                if (!string.IsNullOrEmpty(currentPlaylist.Name))
+                    await PlaylistManager.Instance.Serialize();
             }
         }
 
@@ -194,6 +219,28 @@ namespace ModernMusic.Library
             return true;
         }
 
+        public static void ReplaySong(CoreDispatcher dispatcher)
+        {
+            var t = Task.Run(new Action(() =>
+            {
+                if (!ServerInitialized.WaitOne(0))
+                    StartBackgroundAudioTask(dispatcher);
+
+                if (IsAudioPlaying)
+                {
+                    ValueSet message = new ValueSet();
+                    message.Add(Constants.StartPlaying, true);
+                    BackgroundMediaPlayer.SendMessageToBackground(message);
+                }
+                else
+                {
+                    ValueSet message = new ValueSet();
+                    message.Add(Constants.ClearCache, true);
+                    BackgroundMediaPlayer.SendMessageToBackground(message);
+                }
+            }));
+        }
+
         public static bool SkipToPreviousSong(CoreDispatcher dispatcher, Playlist playlist = null)
         {
             if(BackgroundMediaPlayer.Current.Position.TotalSeconds > 5)
@@ -223,10 +270,10 @@ namespace ModernMusic.Library
             int previousIndex, currentIndex, nextIndex, subsequentIndex;
             NowPlayingInformation.GetNowPlayingIndices(out previousIndex, out currentIndex, out nextIndex, out subsequentIndex, playlist);
 
-            previousSong = previousIndex == -1 ? null : playlist.Songs[previousIndex];
-            currentSong = currentIndex == -1 ? null : playlist.Songs[currentIndex];
-            nextSong = nextIndex == -1 ? null : playlist.Songs[nextIndex];
-            subsequentSong = subsequentIndex == -1 ? null : playlist.Songs[subsequentIndex];
+            previousSong = playlist.GetSong(previousIndex);
+            currentSong = playlist.GetSong(currentIndex);
+            nextSong = playlist.GetSong(nextIndex);
+            subsequentSong = playlist.GetSong(subsequentIndex);
         }
 
         #endregion
@@ -334,7 +381,7 @@ namespace ModernMusic.Library
 
     public static class NowPlayingInformation
     {
-        public static event Action<Playlist> OnCurrentPlaylistUpdated;
+        public static event Action OnCurrentPlaylistUpdated;
         private static Playlist _cachedPlaylist = null;
 
         public static bool DisableCaching { get; set; }
@@ -346,17 +393,17 @@ namespace ModernMusic.Library
                 if (!DisableCaching && _cachedPlaylist != null)
                     return _cachedPlaylist;
 
-                string val = AsyncInline.Run<string>(new Func<Task<string>>(() => GetFile("CurrentPlaylist")));
-                if (val == null)
-                    return null;
-                return _cachedPlaylist = JsonSerialization.Deserialize<Playlist>(val);
+                _cachedPlaylist = AsyncInline.Run<Playlist>(new Func<Task<Playlist>>(() => GetPlaylist("CurrentPlaylist")));
+                return _cachedPlaylist;
             }
             set
             {
+                if (value != null)
+                    value.GenerateShuffleList();
                 _cachedPlaylist = value;
-                AsyncInline.Run(new Func<Task>(() => SetFile("CurrentPlaylist", value == null ? null : JsonSerialization.Serialize(value))));
+                AsyncInline.Run(new Func<Task>(() => SetPlaylist("CurrentPlaylist", value)));
                 if (OnCurrentPlaylistUpdated != null)
-                    OnCurrentPlaylistUpdated(value);
+                    OnCurrentPlaylistUpdated();
             }
         }
 
@@ -421,7 +468,7 @@ namespace ModernMusic.Library
             if (index < 0 || playlist == null || index >= playlist.Songs.Count)
                 return null;
 
-            return playlist.Songs[index];
+            return playlist.GetSong(index);
         }
 
         public static void GetNowPlayingIndices(out int previousIndex, out int currentIndex, out int nextIndex, out int subsequentIndex, Playlist playlist = null)
@@ -471,12 +518,13 @@ namespace ModernMusic.Library
                 ApplicationData.Current.LocalSettings.Values[key] = val;
         }
 
-        private static async Task<string> GetFile(string key)
+        private static async Task<Playlist> GetPlaylist(string key)
         {
             try
             {
                 StorageFile file = await ApplicationData.Current.LocalCacheFolder.GetFileAsync(key);
-                return await Windows.Storage.FileIO.ReadTextAsync(file);
+                using (IInputStream inStream = await file.OpenSequentialReadAsync())
+                    return Playlist.DeserializeFrom(inStream);
             }
             catch
             {
@@ -484,7 +532,7 @@ namespace ModernMusic.Library
             }
         }
 
-        private static async Task SetFile(string key, string val)
+        private static async Task SetPlaylist(string key, Playlist val)
         {
             try
             {
@@ -493,7 +541,8 @@ namespace ModernMusic.Library
                     await file.DeleteAsync();
                 else
                 {
-                    await Windows.Storage.FileIO.WriteTextAsync(file, val);
+                    using (Stream fileStream = await file.OpenStreamForWriteAsync())
+                        val.SerializeTo(fileStream);
                 }
             }
             catch { }

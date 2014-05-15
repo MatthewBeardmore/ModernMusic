@@ -9,8 +9,20 @@
     xmlns:controls="using:ModernMusic.Controls"
     DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     Background="{ThemeResource PageBackgroundThemeBrush}">
+    <Page.Resources>
+        <MenuFlyout x:Key="AddToNowPlayingFlyout">
+            <MenuFlyout.MenuFlyoutPresenterStyle>
+                <Style TargetType="MenuFlyoutPresenter">
+                    <Setter Property="BorderBrush" Value="CornflowerBlue"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Style>
+            </MenuFlyout.MenuFlyoutPresenterStyle>
+            <MenuFlyoutItem Text="add to now playing" DataContext="{Binding}" Click="addSongToNowPlaying_Click"/>
+            <MenuFlyoutItem Text="delete song" DataContext="{Binding}" Click="deleteSong_Click"/>
+        </MenuFlyout>
+    </Page.Resources>
     <Page.BottomAppBar>
-        <CommandBar>
+        <CommandBar x:Name="commandBar">
             <AppBarButton Icon="Pin" Label="pin" Click="pin_Click"/>
             <CommandBar.SecondaryCommands>
                 <AppBarButton Label="add to now playing" Click="addToNowPlaying_Click"/>

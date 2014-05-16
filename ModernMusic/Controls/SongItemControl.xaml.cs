@@ -38,6 +38,11 @@ namespace ModernMusic.Controls
         public SongItemControl()
         {
             this.InitializeComponent();
+
+            if (!Windows.ApplicationModel.DesignMode.DesignModeEnabled)
+            {
+                stackPanel.Background = new SolidColorBrush(Colors.Transparent);
+            }
         }
 
         public SongItemControl(Song song)

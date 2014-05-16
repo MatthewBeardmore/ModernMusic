@@ -71,7 +71,7 @@ namespace ModernMusic.Library
                 list.Add(addition);
         }
 
-        internal static GroupInfoList<T> GetItemGroup<T>(RealObservableCollection<GroupInfoList<T>> group, T addition, Func<T, char> keyConversion)
+        public static GroupInfoList<T> GetItemGroup<T>(RealObservableCollection<GroupInfoList<T>> group, T addition, Func<T, char> keyConversion)
         {
             string key = (keyConversion(addition).ToString().ToLower());
             if (Char.IsDigit(key[0]) || Char.IsSymbol(key[0]))
@@ -79,6 +79,11 @@ namespace ModernMusic.Library
             else if (!Char.IsLetter(key[0]))
                 key = "\uD83C\uDF10";
 
+            return GetItemGroup<T>(group, key);
+        }
+
+        public static GroupInfoList<T> GetItemGroup<T>(RealObservableCollection<GroupInfoList<T>> group, string key)
+        {
             GroupInfoList<T> list = group.FirstOrDefault((g) => g.Key.ToString() == key);
             if (list == null)
             {

@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Graphics.Imaging;
+using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Data;
@@ -147,6 +149,19 @@ namespace ModernMusic.Helpers
                 }
                 return new Uri("ms-appdata:///local/" + file.Name);
             }
+        }
+
+        public static void CreateSeekingTask(double displacement, CancellationToken cancellationToken, Action fireOnSeek, int idx = 1)
+        {
+            Task.Delay(100, cancellationToken).ContinueWith(new Action<Task>((t) =>
+            {
+                double newDisplacement = idx < 60 ? (displacement * (1 + (idx / 10d))) : (7 * displacement);
+                BackgroundMediaPlayer.Current.Position =
+                    BackgroundMediaPlayer.Current.Position.Add(TimeSpan.FromSeconds(newDisplacement));
+                Task.Run(fireOnSeek);
+
+                CreateSeekingTask(displacement, cancellationToken, fireOnSeek, idx + 1);
+            }), cancellationToken);
         }
     }
 }

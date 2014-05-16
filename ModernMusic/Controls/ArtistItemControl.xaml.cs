@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -27,6 +28,11 @@ namespace ModernMusic.Controls
         public ArtistItemControl()
         {
             this.InitializeComponent();
+
+            if (!Windows.ApplicationModel.DesignMode.DesignModeEnabled)
+            {
+                stackPanel.Background = new SolidColorBrush(Colors.Transparent);
+            }
         }
 
         private void ArtistPlay_Tapped(object sender, TappedRoutedEventArgs e)

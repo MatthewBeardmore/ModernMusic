@@ -35,6 +35,7 @@ namespace ModernMusic
         public CollectionsHub()
         {
             this.InitializeComponent();
+            NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Required;
 
             this.navigationHelper = new NavigationHelper(this) { OnBackClearState = true };
             this.navigationHelper.LoadState += this.NavigationHelper_LoadState;
@@ -71,10 +72,10 @@ namespace ModernMusic
         /// session.  The state will be null the first time a page is visited.</param>
         private void NavigationHelper_LoadState(object sender, LoadStateEventArgs e)
         {
-            this.DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
-
             if (e.NavigationParameter == null)
                 return;
+
+            this.DefaultViewModel["MusicLibrary"] = MusicLibrary.Instance;
 
             if(e.NavigationParameter.ToString() == "Artists")
             {
@@ -226,6 +227,57 @@ namespace ModernMusic
                 {
                     await song.Delete();
                 }
+            }
+        }
+
+        private void Border_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            Border border = (Border)sender;
+            if (border.DataContext is GroupInfoList<Artist>)
+            {
+                Popup.DataContext = MusicLibrary.Instance.ArtistsCollection.View;
+                Popup.Tag = "Artist";
+                Popup.IsOpen = true;
+            }
+            else if (border.DataContext is GroupInfoList<Album>)
+            {
+                Popup.DataContext = MusicLibrary.Instance.AlbumsCollection.View;
+                Popup.Tag = "Album";
+                Popup.IsOpen = true;
+            }
+            else if (border.DataContext is GroupInfoList<Song>)
+            {
+                Popup.DataContext = MusicLibrary.Instance.SongsCollection.View;
+                Popup.Tag = "Song";
+                Popup.IsOpen = true;
+            }
+            if (Popup.IsOpen)
+                navigationHelper.BlockBackStateTemporarily = new Action(() => Popup.IsOpen = false);
+        }
+
+        private void Header_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            string header = ((TextBlock)((Border)sender).Child).Text;
+            Popup.IsOpen = false;
+            navigationHelper.BlockBackStateTemporarily = null;
+
+            if ((string)Popup.Tag == "Artist")
+            {
+                GroupInfoList<Artist> group = MusicLibrary.GetItemGroup(MusicLibrary.Instance.ArtistGroupDictionary, header);
+
+                lvArtists.ScrollIntoView(group[0], ScrollIntoViewAlignment.Leading);
+            }
+            else if ((string)Popup.Tag == "Album")
+            {
+                GroupInfoList<Album> group = MusicLibrary.GetItemGroup(MusicLibrary.Instance.AlbumGroupDictionary, header);
+
+                lvAlbums.ScrollIntoView(group[0], ScrollIntoViewAlignment.Leading);
+            }
+            else if ((string)Popup.Tag == "Song")
+            {
+                GroupInfoList<Song> group = MusicLibrary.GetItemGroup(MusicLibrary.Instance.SongGroupDictionary, header);
+
+                lvSongs.ScrollIntoView(group[0], ScrollIntoViewAlignment.Leading);
             }
         }
     }

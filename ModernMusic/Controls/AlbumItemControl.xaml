@@ -8,7 +8,7 @@
     mc:Ignorable="d"
     d:DesignHeight="148"
     d:DesignWidth="360">
-    <Grid Tapped="AlbumItem_Tapped" Height="148" Width="360" Background="{StaticResource PageBackgroundThemeBrush}">
+    <Grid x:Name="grid" Tapped="AlbumItem_Tapped" Height="148" Width="360" Background="{StaticResource PageBackgroundThemeBrush}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="0"/>
             <ColumnDefinition Width="128"/>
@@ -20,16 +20,14 @@
             <RowDefinition Height="10*"/>
         </Grid.RowDefinitions>
 
-        <Grid Tapped="AlbumArt_Tapped" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <Image Stretch="UniformToFill">
-                <Image.Source>
-                    <BitmapImage UriSource="{Binding CachedImagePath}" DecodePixelWidth="128" DecodePixelHeight="128" CreateOptions="None"/>
-                </Image.Source>
-            </Image>
-            <Border VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,5,5,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90"  Width="30" Height="30">
-                <SymbolIcon Symbol="Play" HorizontalAlignment="Center" VerticalAlignment="Center" Width="22" Margin="-3,0,0,0"/>
-            </Border>
-        </Grid>
+        <Image Tapped="AlbumArt_Tapped" Grid.Row="1" Grid.Column="1" Stretch="UniformToFill">
+            <Image.Source>
+                <BitmapImage UriSource="{Binding CachedImagePath}" DecodePixelWidth="128" DecodePixelHeight="128" CreateOptions="None"/>
+            </Image.Source>
+        </Image>
+        <Border Tapped="AlbumArt_Tapped" Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="0,5,5,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90"  Width="30" Height="30">
+            <SymbolIcon Symbol="Play" HorizontalAlignment="Center" VerticalAlignment="Center" Width="22" Margin="-3,0,0,0"/>
+        </Border>
 
         <StackPanel Grid.Column="2" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="12,0,0,0">
             <TextBlock Text="{Binding AlbumName}" Style="{ThemeResource ListViewItemTextBlockStyle}" FontSize="24" LineHeight="25" MaxHeight="60" TextWrapping="WrapWholeWords"/>

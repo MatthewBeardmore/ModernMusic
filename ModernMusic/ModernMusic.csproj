@@ -96,6 +96,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Controls\AppBarButtonControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\ArtistItemControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -164,6 +168,9 @@
     <Compile Include="Common\SuspensionManager.cs" />
     <Compile Include="Controls\AlbumItemControl.xaml.cs">
       <DependentUpon>AlbumItemControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\AppBarButtonControl.xaml.cs">
+      <DependentUpon>AppBarButtonControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ArtistItemControl.xaml.cs">
       <DependentUpon>ArtistItemControl.xaml</DependentUpon>

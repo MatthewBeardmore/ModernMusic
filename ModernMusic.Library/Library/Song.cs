@@ -68,6 +68,9 @@ namespace ModernMusic.Library
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public bool Blank { get; set; }
+        public double BlankHeight { get; set; }
+
         private bool _selected;
         public bool Selected 
         {
@@ -75,7 +78,7 @@ namespace ModernMusic.Library
             set { _selected = value; FirePropertyChanged(); }
         }
 
-        private void FirePropertyChanged()
+        public void FirePropertyChanged()
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs("Selected"));

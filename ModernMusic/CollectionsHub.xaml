@@ -5,6 +5,8 @@
     xmlns:local="using:ModernMusic"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:primitives="using:Windows.UI.Xaml.Controls.Primitives"
+    xmlns:xamlcontrols="using:Windows.UI.Xaml.Controls" 
     mc:Ignorable="d"
     DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     xmlns:data="using:ModernMusic.Library"
@@ -32,6 +34,63 @@
             <MenuFlyoutItem Text="add to now playing" DataContext="{Binding}" Click="addToNowPlaying_Click"/>
             <MenuFlyoutItem Text="pin to start" DataContext="{Binding}" Click="pinItem_Click"/>
         </MenuFlyout>
+        <Style TargetType="SemanticZoom">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="TabNavigation" Value="Once" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="SemanticZoom">
+                        <Grid>
+                            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}">
+                                <Grid Margin="0">
+                                    <ContentPresenter x:Name="ZoomedInPresenter"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      Content="{TemplateBinding ZoomedInView}"/>
+                                    <Popup x:Name="Popup">
+                                        <Popup.ChildTransitions>
+                                            <TransitionCollection>
+                                                <PopupThemeTransition/>
+                                            </TransitionCollection>
+                                        </Popup.ChildTransitions>
+                                        <Border x:Name="PopupBorder">
+                                            <ContentPresenter x:Name="ZoomedOutPresenter"
+                                      HorizontalAlignment="Left"
+                                      VerticalAlignment="Top"
+                                      Content="{TemplateBinding ZoomedOutView}" />
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <DataTemplate x:Key="AlphaGroupHeaderTemplate">
+            <Border Background="{ThemeResource PhoneAccentBrush}"
+                    Width="50"
+                    Height="50"
+                    Margin="0,10,0,10"
+                    Tapped="Border_Tapped"
+                    HorizontalAlignment="Left">
+                <TextBlock Text="{Binding Key}"
+                           TextLineBounds="Tight"
+                           Foreground="{StaticResource PhoneForegroundBrush}"
+                           FontSize="40"
+                           Margin="5.5,0,0,11.5"
+                           FontFamily="{StaticResource PhoneFontFamilySemiLight}"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Bottom" />
+            </Border>
+        </DataTemplate>
     </Page.Resources>
     <!--<Page.BottomAppBar>
         <CommandBar>
@@ -47,118 +106,137 @@
             </NavigationThemeTransition>
         </TransitionCollection>
     </Page.Transitions>
-
-    <Pivot Title="MODERN MUSIC" 
-               x:Name="pivot"
-               DataContext="{Binding MusicLibrary}">
-        <PivotItem x:Name="artistsPivot" Header="artists">
-            <SemanticZoom>
-                <SemanticZoom.ZoomedInView>
-                    <ListView x:Name="lvArtists" 
-                            ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
-                            ScrollViewer.IsVerticalScrollChainingEnabled="False" 
-                            IsSwipeEnabled="False"
-                            IncrementalLoadingThreshold="10"
-                            ItemsSource="{Binding ArtistsCollection.View}">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <controls:ArtistItemControl 
-                                    HorizontalAlignment="Stretch" 
-                                    VerticalAlignment="Stretch"
-                                    OnItem_Tapped="ArtistItem_Tapped"
-                                    OnPlay_Tapped="ArtistPlay_Tapped"
-                                    Holding="control_Holding"
-                                    FlyoutBase.AttachedFlyout="{StaticResource AlbumArtistFlyout}"/>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                        <ListView.GroupStyle>
-                            <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
+    <Grid>
+        <Popup x:Name="Popup" Width="400" Height="640" Canvas.ZIndex="1">
+            <Popup.ChildTransitions>
+                <TransitionCollection>
+                    <PopupThemeTransition/>
+                </TransitionCollection>
+            </Popup.ChildTransitions>
+            <Border x:Name="PopupBorder" Width="400" Height="640">
+                <ContentPresenter Width="400" Height="640">
+                    <ContentPresenter.Content>
+                        <GridView x:Name="popupGridView" Margin="20,0,20,0"
+                                  Width="360" Height="640"
+                                  ItemsSource="{Binding CollectionGroups}">
+                            <GridView.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding Converter={StaticResource JumpListItemBackgroundConverter}}"
+                                            Width="79"
+                                            Height="79"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,0,9.5,9.5" Tapped="Header_Tapped">
+                                        <TextBlock Text="{Binding Group.Key}"
+                                           Foreground="{Binding Converter={StaticResource JumpListItemForegroundConverter}}"
+                                           FontSize="38.667"
+                                           Margin="9.5,0"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Bottom"
+                                           FontWeight="SemiBold"
+                                           IsColorFontEnabled="False" />
+                                    </Border>
+                                </DataTemplate>
+                            </GridView.ItemTemplate>
+                        </GridView>
+                    </ContentPresenter.Content>
+                </ContentPresenter>
+            </Border>
+        </Popup>
+        <Pivot Title="MODERN MUSIC" 
+            x:Name="pivot"
+            DataContext="{Binding MusicLibrary}" 
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch">
+            <PivotItem x:Name="artistsPivot" Header="artists">
+                <ListView x:Name="lvArtists" 
+                    ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
+                    ScrollViewer.IsVerticalScrollChainingEnabled="False" 
+                    ScrollViewer.HorizontalScrollMode="Disabled"
+                    IsSwipeEnabled="False"
+                    IncrementalLoadingThreshold="1"
+                    DataFetchSize="40"
+                    ItemsSource="{Binding ArtistsCollection.View}"
+                    IsHoldingEnabled="False" 
+                    IsRightTapEnabled="False">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <controls:ArtistItemControl 
+                            HorizontalAlignment="Stretch" 
+                            VerticalAlignment="Stretch"
+                            OnItem_Tapped="ArtistItem_Tapped"
+                            OnPlay_Tapped="ArtistPlay_Tapped"
+                            Holding="control_Holding"
+                            FlyoutBase.AttachedFlyout="{StaticResource AlbumArtistFlyout}"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.GroupStyle>
+                        <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
+                                HidesIfEmpty="True" />
+                    </ListView.GroupStyle>
+                    <ListView.FooterTemplate>
+                        <DataTemplate>
+                            <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
+                        </DataTemplate>
+                    </ListView.FooterTemplate>
+                </ListView>
+            </PivotItem>
+            <PivotItem x:Name="albumPivot" Header="albums">
+                <ListView x:Name="lvAlbums"
+                    ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
+                    ScrollViewer.IsVerticalScrollChainingEnabled="False"
+                    ScrollViewer.HorizontalScrollMode="Disabled" 
+                    IsSwipeEnabled="False"
+                    IncrementalLoadingThreshold="1"
+                    DataFetchSize="40"
+                    ItemsSource="{Binding AlbumsCollection.View}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <controls:AlbumItemControl
+                            OnAlbumArtTapped="AlbumArt_Tapped"
+                            OnItemTapped="AlbumItem_Tapped"
+                            Holding="control_Holding"
+                            FlyoutBase.AttachedFlyout="{StaticResource AlbumArtistFlyout}"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.GroupStyle>
+                        <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
                                         HidesIfEmpty="True" />
-                        </ListView.GroupStyle>
-                        <ListView.FooterTemplate>
-                            <DataTemplate>
-                                <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
-                            </DataTemplate>
-                        </ListView.FooterTemplate>
-                    </ListView>
-                </SemanticZoom.ZoomedInView>
-                <SemanticZoom.ZoomedOutView>
-                    <GridView Margin="20,20,0,0"
-                              ItemsSource="{Binding ArtistsCollection.View.CollectionGroups}"
-                              ItemTemplate="{StaticResource AlphaJumpListItemTemplate}" />
-                </SemanticZoom.ZoomedOutView>
-            </SemanticZoom>
-        </PivotItem>
-        <PivotItem x:Name="albumPivot" Header="albums">
-            <SemanticZoom>
-                <SemanticZoom.ZoomedInView>
-                    <ListView x:Name="lvAlbums"
-                            ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
-                            ScrollViewer.IsVerticalScrollChainingEnabled="False" 
-                            IsSwipeEnabled="False"
-                            IncrementalLoadingThreshold="10"
-                            ItemsSource="{Binding AlbumsCollection.View}">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <controls:AlbumItemControl
-                                    OnAlbumArtTapped="AlbumArt_Tapped"
-                                    OnItemTapped="AlbumItem_Tapped"
-                                    Holding="control_Holding"
-                                    FlyoutBase.AttachedFlyout="{StaticResource AlbumArtistFlyout}"/>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                        <ListView.GroupStyle>
-                            <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
+                    </ListView.GroupStyle>
+                    <ListView.FooterTemplate>
+                        <DataTemplate>
+                            <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
+                        </DataTemplate>
+                    </ListView.FooterTemplate>
+                </ListView>
+            </PivotItem>
+            <PivotItem x:Name="songsPivot" Header="songs">
+                <ListView x:Name="lvSongs"
+                    ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
+                    ScrollViewer.IsVerticalScrollChainingEnabled="False" 
+                    ScrollViewer.HorizontalScrollMode="Disabled"
+                    IsSwipeEnabled="False"
+                    IncrementalLoadingThreshold="1"
+                    DataFetchSize="40"
+                    ItemsSource="{Binding SongsCollection.View}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <controls:SongItemControl 
+                            OnItemTapped="SongItem_Tapped"
+                            Holding="control_Holding"
+                            FlyoutBase.AttachedFlyout="{StaticResource SongFlyout}"/>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.GroupStyle>
+                        <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
                                                 HidesIfEmpty="True" />
-                        </ListView.GroupStyle>
-                        <ListView.FooterTemplate>
-                            <DataTemplate>
-                                <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
-                            </DataTemplate>
-                        </ListView.FooterTemplate>
-                    </ListView>
-                </SemanticZoom.ZoomedInView>
-                <SemanticZoom.ZoomedOutView>
-                    <GridView Margin="20,20,0,0"
-                              ItemsSource="{Binding AlbumsCollection.View.CollectionGroups}"
-                              ItemTemplate="{StaticResource AlphaJumpListItemTemplate}" />
-                </SemanticZoom.ZoomedOutView>
-            </SemanticZoom>
-        </PivotItem>
-        <PivotItem x:Name="songsPivot" Header="songs">
-            <SemanticZoom>
-                <SemanticZoom.ZoomedInView>
-                    <ListView x:Name="lvSongs"
-                            ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
-                            ScrollViewer.IsVerticalScrollChainingEnabled="False" 
-                            IsSwipeEnabled="False"
-                            IncrementalLoadingThreshold="10"
-                            ItemsSource="{Binding SongsCollection.View}">
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <controls:SongItemControl 
-                                    OnItemTapped="SongItem_Tapped"
-                                    Holding="control_Holding"
-                                    FlyoutBase.AttachedFlyout="{StaticResource SongFlyout}"/>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                        <ListView.GroupStyle>
-                            <GroupStyle HeaderTemplate="{StaticResource AlphaGroupHeaderTemplate}"
-                                                        HidesIfEmpty="True" />
-                        </ListView.GroupStyle>
-                        <ListView.FooterTemplate>
-                            <DataTemplate>
-                                <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
-                            </DataTemplate>
-                        </ListView.FooterTemplate>
-                    </ListView>
-                </SemanticZoom.ZoomedInView>
-                <SemanticZoom.ZoomedOutView>
-                    <GridView Margin="20,20,0,0"
-                              ItemsSource="{Binding SongsCollection.View.CollectionGroups}"
-                              ItemTemplate="{StaticResource AlphaJumpListItemTemplate}" />
-                </SemanticZoom.ZoomedOutView>
-            </SemanticZoom>
-        </PivotItem>
-    </Pivot>
+                    </ListView.GroupStyle>
+                    <ListView.FooterTemplate>
+                        <DataTemplate>
+                            <Border Height="10" Margin="0,10,0,0" BorderThickness="0"/>
+                        </DataTemplate>
+                    </ListView.FooterTemplate>
+                </ListView>
+            </PivotItem>
+        </Pivot>
+    </Grid>
 </Page>

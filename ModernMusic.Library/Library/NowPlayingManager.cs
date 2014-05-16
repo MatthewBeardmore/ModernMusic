@@ -378,7 +378,7 @@ namespace ModernMusic.Library
                 OnChangedTrack();
         }
 
-        private static void FireOnSeek()
+        public static void FireOnSeek()
         {
             if (OnSeek != null)
                 OnSeek();

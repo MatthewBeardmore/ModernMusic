@@ -22,6 +22,7 @@ using System.Threading;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.Storage.Streams;
+using Windows.UI.Xaml.Shapes;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -34,6 +35,7 @@ namespace ModernMusic.Controls
         private ManualResetEventSlim _programChangingScrollViewer = new ManualResetEventSlim();
         private const int SIZE_OF_ALBUM_ART = 450;
         private ScrollViewer songListScroller;
+        private CancellationTokenSource _cancellationToken;
 
         public NowPlayingControl()
         {
@@ -70,14 +72,11 @@ namespace ModernMusic.Controls
 
         private void ScrollToCorrectSongLocation(Song song, bool disableAnimation = false)
         {
-            //songList.ScrollIntoView(songList.Items[currentIndex - 1], ScrollIntoViewAlignment.Leading);
             int currentIndex = NowPlayingInformation.CurrentIndex;
             if (songListScroller != null)
                 songListScroller.ChangeView(null, Math.Max(0, (currentIndex + 1)), null, disableAnimation);
-            //songList.ScrollIntoView(songList.Items[Math.Max(0, (currentIndex - 1))]);
 
-            albumArtList.ScrollIntoView(albumArtList.Items[currentIndex], ScrollIntoViewAlignment.Leading);
-            //albumArtScroller.ChangeView(currentIndex * SIZE_OF_ALBUM_ART, null, null, disableAnimation);
+            albumArtList.SelectedIndex = currentIndex;
         }
 
         internal void NowPlayingInformation_OnCurrentPlaylistUpdated()
@@ -93,9 +92,12 @@ namespace ModernMusic.Controls
             this.DefaultViewModel["Song"] = song;
 
             List<Song> songs = NowPlayingInformation.CurrentPlaylist.GetSongList();
-            songList.ItemsSource = songs;
 
-            foreach (Song s in NowPlayingInformation.CurrentPlaylist.GetSongList())
+            List<Song> songListSongs = new List<Song>(songs);
+            songListSongs.Add(new Song() { Blank = true, BlankHeight = 150, SongTitle = "None" });
+            songList.ItemsSource = songListSongs;
+
+            foreach (Song s in songs)
             {
                 if (string.IsNullOrEmpty(s.CachedImagePath))
                     s.CachedImagePath = MusicLibrary.Instance.GetAlbum(s).CachedImagePath;
@@ -112,15 +114,12 @@ namespace ModernMusic.Controls
         {
             songListScroller = (ScrollViewer)sender;
             //This keeps the previous song/selected song at the top of the songList even at the bottom of the songList
-            /*double height = (songList.ActualHeight - 21 - 36);//This is supposed to be 36, it removes a hanging pixel at the bottom
-            var block = new TextBlock()
-            {
-                MinHeight = height,
-                Height = height,
-                Width = 320,
-                Text = "None",
-                Foreground = new SolidColorBrush(Colors.Transparent)
-            };*/
+            double height = (songList.ActualHeight - 21 - 33);
+
+            List<Song> songs = ((List<Song>)songList.ItemsSource);
+            Song song = songs.FirstOrDefault((s)=>s.Blank);
+            song.BlankHeight = height;
+            song.FirePropertyChanged();
         }
 
         private void NowPlayingManager_OnMediaPlayerStateChanged(MediaPlayer sender, object args)
@@ -154,7 +153,9 @@ namespace ModernMusic.Controls
             }
         }
 
-        private void playButton_Click(object sender, TappedRoutedEventArgs e)
+        #region Next,Previous,Play buttons
+
+        private void playButton_Click()
         {
             if (!NowPlayingManager.IsAudioPlaying)
             {
@@ -167,17 +168,51 @@ namespace ModernMusic.Controls
             }
         }
 
-        private void nextButton_Click(object sender, RoutedEventArgs e)
+        private void nextButton_Holding(HoldingRoutedEventArgs e)
+        {
+            if (e.HoldingState == Windows.UI.Input.HoldingState.Started)
+            {
+                _cancellationToken = new CancellationTokenSource();
+                Utilities.CreateSeekingTask(1, _cancellationToken.Token, NowPlayingManager.FireOnSeek);
+            }
+            else
+            {
+                if (_cancellationToken != null)
+                    _cancellationToken.Cancel();
+                _cancellationToken = null;
+            }
+        }
+
+        private void nextButton_Click()
         {
             NowPlayingManager.SkipToNextSong(Dispatcher, NowPlayingInformation.CurrentPlaylist);
             ResumeLayout();
         }
 
-        private void previousButton_Click(object sender, RoutedEventArgs e)
+        private void previousButton_Holding(HoldingRoutedEventArgs e)
+        {
+            if (e.HoldingState == Windows.UI.Input.HoldingState.Started)
+            {
+                _cancellationToken = new CancellationTokenSource();
+                Utilities.CreateSeekingTask(-1, _cancellationToken.Token, NowPlayingManager.FireOnSeek);
+            }
+            else
+            {
+                if (_cancellationToken != null)
+                    _cancellationToken.Cancel();
+                _cancellationToken = null;
+            }
+        }
+
+        private void previousButton_Click()
         {
             if (NowPlayingManager.SkipToPreviousSong(Dispatcher, NowPlayingInformation.CurrentPlaylist))
                 ResumeLayout();
         }
+
+        #endregion
+
+        #region Repeat/Shuffle/Playlist
 
         private void repeatButton_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -217,43 +252,26 @@ namespace ModernMusic.Controls
             }
         }
 
-        private void icon_PointerPressed(object sender, PointerRoutedEventArgs e)
-        {
-            Grid grid = (Grid)sender;
-            Border border = (Border)grid.Children[0];
-            SymbolIcon symbol = (SymbolIcon)border.Child;
+        #endregion
 
-            symbol.Foreground = new SolidColorBrush(Colors.Black);
-            border.BorderThickness = new Thickness(0);
-            border.Background = new SolidColorBrush(Colors.White);
-        }
-
-        private void icon_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
-        {
-            Grid grid = (Grid)sender;
-            Border border = (Border)grid.Children[0];
-            SymbolIcon symbol = (SymbolIcon)border.Child;
-
-            symbol.Foreground = new SolidColorBrush(Colors.White);
-            border.BorderThickness = new Thickness(3);
-            border.Background = new SolidColorBrush(Colors.Transparent);
-        }
+        #region Album Art
 
         private void albumArtScroller_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             _programChangingScrollViewer.Set();
         }
 
-        private void albumArtScroller_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        private void albumArtList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (!e.IsIntermediate && _programChangingScrollViewer.IsSet)
+            if (_programChangingScrollViewer.IsSet)
             {
                 _programChangingScrollViewer.Reset();
-                ScrollViewer viewer = (ScrollViewer)sender;
-                int idx = (int)(viewer.HorizontalOffset / SIZE_OF_ALBUM_ART);
-                if (NowPlayingManager.SkipToSong(idx, Dispatcher))
+
+                if (NowPlayingManager.SkipToSong(albumArtList.SelectedIndex, Dispatcher))
                     ResumeLayout();
             }
         }
+
+        #endregion
     }
 }

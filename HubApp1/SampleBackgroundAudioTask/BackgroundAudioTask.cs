@@ -13,6 +13,7 @@ using Windows.Foundation.Collections;
 using Windows.Storage;
 using ModernMusic.Library;
 using System.Threading.Tasks;
+using ModernMusic.Helpers;
 
 /* This is the Sample background task that will start running the first time 
  * MediaPlayer singleton instance is accessed from foreground. When a new audio 
@@ -199,13 +200,13 @@ namespace BackgroundAudioTask
                     BackgroundMediaPlayer.Current.Pause();
                     
                     _cancellationToken = new CancellationTokenSource();
-                    CreateSeekingTask(1, _cancellationToken.Token);
+                    Utilities.CreateSeekingTask(1, _cancellationToken.Token, FireOnSeek);
                     break;
                 case SystemMediaTransportControlsButton.Rewind:
                     BackgroundMediaPlayer.Current.Pause();
 
                     _cancellationToken = new CancellationTokenSource();
-                    CreateSeekingTask(-1, _cancellationToken.Token);
+                    Utilities.CreateSeekingTask(-1, _cancellationToken.Token, FireOnSeek);
                     break;
                 case SystemMediaTransportControlsButton.Play: 
                     Debug.WriteLine("UVC play button pressed");
@@ -263,19 +264,6 @@ namespace BackgroundAudioTask
                     }
                     break;
             }
-        }
-
-        private void CreateSeekingTask(double displacement, CancellationToken cancellationToken, int idx = 1)
-        {
-            Task.Delay(100, cancellationToken).ContinueWith(new Action<Task>((t) =>
-            {
-                double newDisplacement = idx < 60 ? (displacement * (1 + (idx / 10d))) : (7 * displacement);
-                BackgroundMediaPlayer.Current.Position =
-                    BackgroundMediaPlayer.Current.Position.Add(TimeSpan.FromSeconds(newDisplacement));
-                Task.Run(new Action(FireOnSeek));
-
-                CreateSeekingTask(displacement, cancellationToken, idx + 1);
-            }), cancellationToken);
         }
 
         #endregion

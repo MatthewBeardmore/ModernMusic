@@ -83,7 +83,7 @@ namespace ModernMusic.Library
                 }
                 return songs;
             }
-            return Songs;
+            return new List<Song>(Songs);
         }
 
         public Song GetSong(int index)

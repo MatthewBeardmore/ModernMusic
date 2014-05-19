@@ -1,4 +1,5 @@
-﻿using ModernMusic.Library;
+﻿using ModernMusic.Helpers;
+using ModernMusic.Library;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -92,6 +93,11 @@ namespace ModernMusic
 
                 // Place the frame in the current Window.
                 Window.Current.Content = rootFrame;
+            }
+
+            if (Settings.Instance.AlwaysScanAtStartup)
+            {
+                var b = MusicLibrary.Instance.LoadLibraryFromDisk();
             }
 
             if (rootFrame.Content == null)

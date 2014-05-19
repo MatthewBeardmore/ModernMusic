@@ -168,13 +168,16 @@
 
         <controls:AppBarButtonControl Grid.Row="3" Grid.ColumnSpan="3"
             HorizontalAlignment="Left"
+            Symbol="Previous"
             OnButtonHolding="previousButton_Holding"
             OnButtonPressed="previousButton_Click"/>
         <controls:AppBarButtonControl x:Name="playButton" Grid.Row="3" Grid.ColumnSpan="3"
             HorizontalAlignment="Center"
+            Symbol="Play"
             OnButtonPressed="playButton_Click"/>
         <controls:AppBarButtonControl Grid.Row="3" Grid.ColumnSpan="3"
             HorizontalAlignment="Right"
+            Symbol="Next"
             OnButtonHolding="nextButton_Holding"
             OnButtonPressed="nextButton_Click"/>
     </Grid>

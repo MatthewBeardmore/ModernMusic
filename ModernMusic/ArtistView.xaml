@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     xmlns:controls="using:ModernMusic.Controls"
-    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
-    Background="{ThemeResource PageBackgroundThemeBrush}">
+    Background="{StaticResource PageBackgroundThemeBrush}"
+    DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}">
     <Page.Resources>
         <MenuFlyout x:Key="SongFlyout">
             <MenuFlyout.MenuFlyoutPresenterStyle>
@@ -49,12 +49,14 @@
         </TransitionCollection>
     </Page.Transitions>
 
-    <Pivot Title="{Binding Artist.ArtistNameCaps}"
+    <Grid>
+        <Rectangle x:Name="rect" Fill="Transparent"/>
+        <Pivot Title="{Binding Artist.ArtistNameCaps}"
                x:Name="pivot"
                CommonNavigationTransitionInfo.IsStaggerElement="True"
                Margin="0">
-        <PivotItem x:Name="albumsPivot" Header="albums" CommonNavigationTransitionInfo.IsStaggerElement="True">
-            <ListView
+            <PivotItem x:Name="albumsPivot" Header="albums" CommonNavigationTransitionInfo.IsStaggerElement="True">
+                <ListView
                 x:Name="itemListView"
                 AutomationProperties.AutomationId="ItemListView"
                 AutomationProperties.Name="Items In Group"
@@ -63,19 +65,19 @@
                 IsItemClickEnabled="True"
                 SelectionMode="None"
                 IsSwipeEnabled="false">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <controls:AlbumItemControl
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <controls:AlbumItemControl
                             OnAlbumArtTapped="AlbumArt_Tapped" 
                             OnItemTapped="AlbumItem_Tapped"
                             Holding="control_Holding"
                             FlyoutBase.AttachedFlyout="{StaticResource AlbumFlyout}"/>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </PivotItem>
-        <PivotItem x:Name="songsPivot" Header="songs" CommonNavigationTransitionInfo.IsStaggerElement="True">
-            <ListView
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </PivotItem>
+            <PivotItem x:Name="songsPivot" Header="songs" CommonNavigationTransitionInfo.IsStaggerElement="True">
+                <ListView
                 AutomationProperties.AutomationId="ItemListView"
                 AutomationProperties.Name="Items In Group"
                 TabIndex="1"
@@ -83,15 +85,16 @@
                 IsItemClickEnabled="True"
                 SelectionMode="None"
                 IsSwipeEnabled="false">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <controls:SongItemControl 
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <controls:SongItemControl 
                             OnItemTapped="SongItem_Tapped"
                             Holding="control_Holding"
                             FlyoutBase.AttachedFlyout="{StaticResource SongFlyout}"/>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </PivotItem>
-    </Pivot>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </PivotItem>
+        </Pivot>
+    </Grid>
 </Page>

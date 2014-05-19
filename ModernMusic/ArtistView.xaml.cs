@@ -79,25 +79,27 @@ namespace ModernMusic
             this.DefaultViewModel["Albums"] = MusicLibrary.Instance.GetAlbums(_currentArtist);
             this.DefaultViewModel["Songs"] = MusicLibrary.Instance.GetSongs(_currentArtist);
 
-            /*Task.Run(new Action(() =>
+            Task.Run(new Action(() =>
             {
                 Task t = MusicLibrary.Instance.DownloadAlbumArt(_currentArtist);
                 t.Wait();
                 if(_currentArtist.ImagePath == null)
                     return;
+
                 Uri source = new Uri(_currentArtist.ImagePath);
                 if(!source.IsFile)
                 {
                     var a = Dispatcher.RunIdleAsync((o) =>
                     {
-                        this.Background = new ImageBrush
+                        rect.Opacity = 0.5;
+                        rect.Fill = new ImageBrush
                         {
                             Stretch = Windows.UI.Xaml.Media.Stretch.UniformToFill,
                             ImageSource = new BitmapImage { UriSource = source }
                         };
                     });
                 }
-            }));*/
+            }));
         }
 
         #region NavigationHelper registration

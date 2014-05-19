@@ -41,14 +41,18 @@ namespace ModernMusic.Library
             set { _cachedImagePath = value; OnPropertyChanged<string>(); }
         }
 
+        [ProtoMember(6)]
+        public uint Year { get; set; }
+
         public Album Self { get { return this; } }
 
         public Album() { }
 
-        public Album(string artist, string albumName)
+        public Album(string artist, string albumName, uint year)
         {
             this.Artist = artist;
             this.AlbumName = albumName;
+            this.Year = year;
             this.CachedImagePath = "ms-appx:///Assets/DarkGray.png";
         }
 

@@ -24,19 +24,40 @@ namespace ModernMusic.Library
         public static Action OnSeek;
         public static TypedEventHandler<MediaPlayer, object> OnMediaPlayerStateChanged;
 
-        public static MediaPlayerState CurrentState
+        public static TimeSpan? CurrentPosition
         {
-            get { return BackgroundMediaPlayer.Current.CurrentState; }
+            get
+            {
+                if (NowPlayingManager.IsAudioOpen)
+                    return BackgroundMediaPlayer.Current.Position;
+                return null;
+            }
+        }
+
+        public static TimeSpan? CurrentTrackDuration
+        {
+            get
+            {
+                try
+                {
+                    return BackgroundMediaPlayer.Current.NaturalDuration;
+                }
+                catch { return null; }
+            }
         }
 
         public static bool IsAudioPlaying
         {
             get
             {
-                MediaPlayerState state = BackgroundMediaPlayer.Current.CurrentState;
-                return state == MediaPlayerState.Playing ||
-                    state == MediaPlayerState.Buffering ||
-                    state == MediaPlayerState.Opening;
+                try
+                {
+                    MediaPlayerState state = BackgroundMediaPlayer.Current.CurrentState;
+                    return state == MediaPlayerState.Playing ||
+                        state == MediaPlayerState.Buffering ||
+                        state == MediaPlayerState.Opening;
+                }
+                catch { return false; }
             }
         }
 
@@ -44,11 +65,15 @@ namespace ModernMusic.Library
         {
             get
             {
-                MediaPlayerState state = BackgroundMediaPlayer.Current.CurrentState;
-                return state == MediaPlayerState.Playing ||
-                    state == MediaPlayerState.Paused ||
-                    state == MediaPlayerState.Buffering ||
-                    state == MediaPlayerState.Opening;
+                try
+                {
+                    MediaPlayerState state = BackgroundMediaPlayer.Current.CurrentState;
+                    return state == MediaPlayerState.Playing ||
+                        state == MediaPlayerState.Paused ||
+                        state == MediaPlayerState.Buffering ||
+                        state == MediaPlayerState.Opening;
+                }
+                catch { return false; }
             }
         }
 

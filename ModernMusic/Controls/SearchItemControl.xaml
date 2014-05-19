@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="ModernMusic.Controls.SongItemControl"
+    x:Class="ModernMusic.Controls.SearchItemControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ModernMusic.Controls"
@@ -8,14 +8,14 @@
     mc:Ignorable="d"
     x:Name="userControl"
     d:DataContext="{Binding Source={d:DesignData Source=../../ModernMusic.Library/Library/Samples/SampleSongView.json}}"
-    d:DesignHeight="60"
-    d:DesignWidth="400" DataContextChanged="userControl_DataContextChanged" Unloaded="userControl_Unloaded">
-    <StackPanel x:Name="stackPanel" Tapped="StackPanel_Tapped" Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Height="60" Width="400">
-        <Border x:Name="border" VerticalAlignment="Top" Margin="0,10,0,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90" Width="38" Height="38">
+    d:DesignHeight="100"
+    d:DesignWidth="400" DataContextChanged="userControl_DataContextChanged">
+    <StackPanel x:Name="stackPanel" Tapped="StackPanel_Tapped" Background="{ThemeResource PageBackgroundThemeBrush}" Orientation="Horizontal" Height="100" Width="400">
+        <Border x:Name="border" VerticalAlignment="Top" Margin="0,10,0,0" BorderThickness="2.5" BorderBrush="White" CornerRadius="90" Width="38" Height="38" Tapped="border_Tapped">
             <SymbolIcon PointerPressed="icon_PointerPressed" PointerReleased="icon_PointerCaptureLost" PointerExited="icon_PointerCaptureLost" PointerCaptureLost="icon_PointerCaptureLost" x:Name="icon" Symbol="Play" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Border>
-        <StackPanel Margin="20,0,0,0" Height="60" Width="340">
-            <TextBlock x:Name="songText" Style="{StaticResource ListViewItemTextBlockStyle}"
+        <StackPanel Margin="20,0,0,0" Height="100" Width="340">
+            <TextBlock x:Name="searchText" Style="{StaticResource ListViewItemTextBlockStyle}"
                                            Text="{Binding SongTitle}"
                                            Foreground="{Binding ForegroundStyle, ElementName=userControl, UpdateSourceTrigger=Explicit}"
                                            Padding="0,0,0,0" TextWrapping="WrapWholeWords" MaxHeight="40"
@@ -25,10 +25,11 @@
                                            Foreground="{Binding ForegroundStyle, ElementName=userControl, UpdateSourceTrigger=Explicit}"
                                            Padding="0,0,0,0" TextWrapping="NoWrap"
                                            CommonNavigationTransitionInfo.IsStaggerElement="True"/>
-            <!--<TextBlock Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"
-                                           Text="{Binding Album}"
-                                           Padding="10,0,0,10"
-                                           CommonNavigationTransitionInfo.IsStaggerElement="True"/>-->
+            <TextBlock x:Name="typeText" Style="{StaticResource ListViewItemSubheaderTextBlockStyle}"
+                                           Text="{Binding Artist}"
+                                           Foreground="{Binding ForegroundStyle, ElementName=userControl, UpdateSourceTrigger=Explicit}"
+                                           Padding="0,0,0,0" TextWrapping="NoWrap"
+                                           CommonNavigationTransitionInfo.IsStaggerElement="True"/>
         </StackPanel>
     </StackPanel>
 </UserControl>

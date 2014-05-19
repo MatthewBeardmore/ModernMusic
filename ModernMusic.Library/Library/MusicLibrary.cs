@@ -177,6 +177,34 @@ namespace ModernMusic.Library
                 }));
         }
 
+        public void Search(string keyword, int searchIdx, Action<int, Artist> onArtist, Action<int, Album> onAlbum, Action<int, Song> onSong)
+        {
+            Task.Run(() =>
+            {
+                foreach (Artist artist in _cache.Artists.Values)
+                {
+                    if (artist.ArtistName.Contains(keyword))
+                        onArtist(searchIdx, artist);
+                }
+                foreach (List<Album> albums in _cache.Albums.Values)
+                {
+                    foreach (Album album in albums)
+                    {
+                        if (album.AlbumName.Contains(keyword))
+                            onAlbum(searchIdx, album);
+                    }
+                }
+                foreach (List<Song> songs in _cache.Songs.Values)
+                {
+                    foreach (Song song in songs)
+                    {
+                        if (song.SongTitle.Contains(keyword))
+                            onSong(searchIdx, song);
+                    }
+                }
+            });
+        }
+
         private async Task TraverseFolder(StorageFolder folder)
         {
             foreach (StorageFile file in await folder.GetFilesAsync())
@@ -187,7 +215,7 @@ namespace ModernMusic.Library
                     continue;
 
                 Artist artist = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist));
-                Album album = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album));
+                Album album = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album), songProperties.Year);
                 Song song = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album),
                     FixSongName(songProperties.Title, file.DisplayName), file.Path, songProperties);
 
@@ -378,9 +406,9 @@ namespace ModernMusic.Library
             return null;
         }
 
-        public Album CreateIfNotExist(string artistName, string albumName)
+        public Album CreateIfNotExist(string artistName, string albumName, uint year)
         {
-            Album album = new Album(artistName, albumName);
+            Album album = new Album(artistName, albumName, year);
             List<Album> albums;
             if (!Albums.TryGetValue(artistName.ToLower(), out albums))
             {
@@ -463,6 +491,7 @@ namespace ModernMusic.Library
             List<Album> albums;
             if (!Albums.TryGetValue(artistName.ToLower(), out albums))
                 return null;
+            albums.Sort((a,b)=>a.Year.CompareTo(b.Year));
             return albums;
         }
 

@@ -62,6 +62,7 @@ namespace ModernMusic
             clearCacheOnNextStart.IsOn = Settings.ClearCacheOnNextStart;
             xboxIntegration.IsOn = Settings.AllowXboxMusicIntegration;
             addGoesToNowPlaying.IsOn = Settings.AddToNowPlayingSwitchesView;
+            alwaysScanAtStartup.IsOn = Settings.AlwaysScanAtStartup;
         }
 
         /// <summary>
@@ -76,7 +77,8 @@ namespace ModernMusic
         {
             Settings.ClearCacheOnNextStart = clearCacheOnNextStart.IsOn;
             Settings.AllowXboxMusicIntegration = xboxIntegration.IsOn;
-            Settings.AddToNowPlayingSwitchesView = addGoesToNowPlaying.IsOn; 
+            Settings.AddToNowPlayingSwitchesView = addGoesToNowPlaying.IsOn;
+            Settings.AlwaysScanAtStartup = alwaysScanAtStartup.IsOn; 
             Settings.Save();
 
             if (Settings.ClearCacheOnNextStart)

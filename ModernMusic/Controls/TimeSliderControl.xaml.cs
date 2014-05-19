@@ -51,21 +51,21 @@ namespace ModernMusic.Controls
 
             try
             {
-                if (NowPlayingManager.IsAudioOpen)
+                TimeSpan? position = NowPlayingManager.CurrentPosition;
+                TimeSpan? duration;
+                if (position.HasValue && (duration = NowPlayingManager.CurrentTrackDuration).HasValue)
                 {
-                    TimeSpan position = BackgroundMediaPlayer.Current.Position;
-                    TimeSpan duration = BackgroundMediaPlayer.Current.NaturalDuration;
-                    TimeSpan durationLeft = duration - position;
+                    TimeSpan durationLeft = duration.Value - position.Value;
 
-                    positionSlider.Value = position.TotalSeconds;
-                    if (duration.TotalSeconds < 1.0f)
+                    positionSlider.Value = position.Value.TotalSeconds;
+                    if (duration.Value.TotalSeconds < 1.0f)
                         positionSlider.Maximum = 100f;
-                    else if (positionSlider.Maximum != duration.TotalSeconds)
-                        positionSlider.Maximum = duration.TotalSeconds;
+                    else if (positionSlider.Maximum != duration.Value.TotalSeconds)
+                        positionSlider.Maximum = duration.Value.TotalSeconds;
 
-                    string currentTimeText = position.Minutes.ToString("D2") + ":" + position.Seconds.ToString("D2");
-                    if (position.Hours > 0)
-                        currentTimeText = position.Hours.ToString("D2") + ":" + currentTimeText;
+                    string currentTimeText = position.Value.Minutes.ToString("D2") + ":" + position.Value.Seconds.ToString("D2");
+                    if (position.Value.Hours > 0)
+                        currentTimeText = position.Value.Hours.ToString("D2") + ":" + currentTimeText;
                     currentTime.Text = currentTimeText;
 
                     string timeLeftText = durationLeft.Minutes.ToString("D2") + ":" + durationLeft.Seconds.ToString("D2");

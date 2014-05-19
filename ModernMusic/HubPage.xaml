@@ -35,6 +35,7 @@
         <CommandBar x:Name="commandBar" Visibility="Collapsed">
             <AppBarButton x:Name="pinToStart" Label="pin to start" Click="pinToStart_Click" Icon="Pin"/>
             <AppBarButton Icon="Play" Label="play music" Click="playMusic_Click"/>
+            <AppBarButton Label="search" Click="search_Click" Icon="Find"/>
             <AppBarButton Icon="Setting" Label="Settings" Click="Settings_Click"/>
         </CommandBar>
     </Page.BottomAppBar>

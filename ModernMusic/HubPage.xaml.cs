@@ -134,13 +134,12 @@ namespace ModernMusic
         {
             try
             {
-                if (NowPlayingManager.IsAudioPlaying)
+                TimeSpan? position = NowPlayingManager.CurrentPosition;
+                if (position.HasValue)
                 {
-                    TimeSpan position = BackgroundMediaPlayer.Current.Position;
-
-                    string currentTimeText = position.Minutes.ToString("D2") + ":" + position.Seconds.ToString("D2");
-                    if (position.Hours > 0)
-                        currentTimeText = position.Hours.ToString("D2") + ":" + currentTimeText;
+                    string currentTimeText = position.Value.Minutes.ToString("D2") + ":" + position.Value.Seconds.ToString("D2");
+                    if (position.Value.Hours > 0)
+                        currentTimeText = position.Value.Hours.ToString("D2") + ":" + currentTimeText;
                     playingText.Text = currentTimeText;
                 }
                 else
@@ -339,6 +338,15 @@ namespace ModernMusic
             NowPlayingInformation.ShuffleEnabled = true;
 
             SwitchToNowPlayingView(new KeyValuePair<Playlist, int>(playlist, 0));
+        }
+
+        private void search_Click(object sender, RoutedEventArgs e)
+        {
+            commandBar.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            if (!Frame.Navigate(typeof(SearchView), null))
+            {
+                throw new Exception(this.resourceLoader.GetString("NavigationFailedExceptionMessage"));
+            }
         }
     }
 }

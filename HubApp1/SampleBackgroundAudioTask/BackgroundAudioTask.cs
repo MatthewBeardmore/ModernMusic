@@ -131,9 +131,6 @@ namespace BackgroundAudioTask
 
             try
             {
-                NowPlayingInformation.CurrentIndex = -1;
-                NowPlayingInformation.CurrentPlaylist = null;
-
                 backgroundtaskrunning = false;
                 //unsubscribe event handlers
                 systemmediatransportcontrol.ButtonPressed -= systemmediatransportcontrol_ButtonPressed;
@@ -167,9 +164,6 @@ namespace BackgroundAudioTask
             if(file == null)
                 file = await StorageFile.GetFileFromPathAsync(song.FilePath);
             systemmediatransportcontrol.PlaybackStatus = MediaPlaybackStatus.Playing;
-            /*systemmediatransportcontrol.DisplayUpdater.Type = MediaPlaybackType.Music;
-            systemmediatransportcontrol.DisplayUpdater.MusicProperties.Title = song.SongTitle;
-            systemmediatransportcontrol.DisplayUpdater.MusicProperties.Artist = song.Artist;*/
             await systemmediatransportcontrol.DisplayUpdater.CopyFromFileAsync(MediaPlaybackType.Music, file);
             systemmediatransportcontrol.DisplayUpdater.Update();
         }

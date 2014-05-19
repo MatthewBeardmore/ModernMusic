@@ -1,0 +1,33 @@
+﻿<Page
+    x:Class="ModernMusic.SearchView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ModernMusic"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:ModernMusic.Controls"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="10"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Column="1" Grid.Row="1" Text="SEARCH COLLECTION" Style="{StaticResource TitleTextBlockStyle}"/>
+        <TextBox x:Name="searchText" Grid.Row="1" Grid.Column="1" Margin="0,30,0,0" AcceptsReturn="True" KeyUp="searchText_KeyUp"/>
+        <ListView x:Name="listView" Grid.Column="1" Grid.Row="2" IsTabStop="True">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <controls:SearchItemControl OnItemTapped="SearchItemControl_OnItemTapped" OnPlayTapped="SearchItemControl_OnPlayTapped"/>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>

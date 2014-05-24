@@ -12,6 +12,7 @@ using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -99,6 +100,8 @@ namespace ModernMusic
             {
                 var b = MusicLibrary.Instance.LoadLibraryFromDisk();
             }
+
+            MusicLibrary.Dispatcher = Window.Current.Dispatcher;
 
             if (rootFrame.Content == null)
             {

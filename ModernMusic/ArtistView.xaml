@@ -57,6 +57,7 @@
                Margin="0">
             <PivotItem x:Name="albumsPivot" Header="albums" CommonNavigationTransitionInfo.IsStaggerElement="True">
                 <ListView
+                Margin="0,-30,0,0"
                 x:Name="itemListView"
                 AutomationProperties.AutomationId="ItemListView"
                 AutomationProperties.Name="Items In Group"
@@ -78,6 +79,7 @@
             </PivotItem>
             <PivotItem x:Name="songsPivot" Header="songs" CommonNavigationTransitionInfo.IsStaggerElement="True">
                 <ListView
+                Margin="0,-30,0,0"
                 AutomationProperties.AutomationId="ItemListView"
                 AutomationProperties.Name="Items In Group"
                 TabIndex="1"

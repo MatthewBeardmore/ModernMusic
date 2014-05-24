@@ -45,12 +45,13 @@
                Margin="0">
         <PivotItem x:Name="songsPivot" Header="songs" CommonNavigationTransitionInfo.IsStaggerElement="True">
             <ListView
-                    x:Name="songView"
-                    IsItemClickEnabled="True"
-                    ItemClick="songView_ItemClick"
-                    SelectionMode="None"
-                    IsSwipeEnabled="false"
-                    Grid.Row="1" Grid.ColumnSpan="2">
+                Margin="0,-30,0,0"
+                x:Name="songView"
+                IsItemClickEnabled="True"
+                ItemClick="songView_ItemClick"
+                SelectionMode="None"
+                IsSwipeEnabled="false"
+                Grid.Row="1" Grid.ColumnSpan="2">
             </ListView>
         </PivotItem>
     </Pivot>

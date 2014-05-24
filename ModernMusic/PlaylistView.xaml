@@ -44,6 +44,7 @@
         <PivotItem x:Name="songsPivot" Header="playlist" 
                    CommonNavigationTransitionInfo.IsStaggerElement="True">
             <ListView x:Name="songView"
+                Margin="0,-30,0,0"
                 SelectionMode="Extended"
                 Loaded="songView_Loaded">
                 <ListView.ItemTemplate>

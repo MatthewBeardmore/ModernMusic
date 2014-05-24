@@ -66,6 +66,7 @@ namespace BackgroundAudioTask
         public void Run(IBackgroundTaskInstance taskInstance)
         {
             NowPlayingInformation.DisableCaching = true;
+            MusicLibrary.IsBackgroundTask = true;
 
             Debug.WriteLine("Background Audio Task " + taskInstance.Task.Name + " starting...");
             // Initialize SMTC object to talk with UVC. 

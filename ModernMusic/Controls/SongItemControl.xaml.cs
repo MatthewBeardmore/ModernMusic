@@ -23,6 +23,8 @@ namespace ModernMusic.Controls
     {
         public event Song.SongTappedHandler OnItemTapped;
 
+        private Song _oldDataContext;
+
         public bool AllowSelection { get; set; }
 
         public SolidColorBrush ForegroundStyle
@@ -45,22 +47,23 @@ namespace ModernMusic.Controls
             }
         }
 
-        public SongItemControl(Song song)
-        {
-            this.InitializeComponent();
-            DataContext = song;
-        }
-
         private void userControl_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
         {
-            if (DataContext != null)
-                ((Song)DataContext).PropertyChanged += SongItemControl_PropertyChanged;
+            if (_oldDataContext != null)
+                _oldDataContext.PropertyChanged -= SongItemControl_PropertyChanged;
+
+            _oldDataContext = DataContext as Song;
+
+            if (_oldDataContext != null)
+            {
+                songText.Foreground = ForegroundStyle;
+                artistText.Foreground = ForegroundStyle;
+                _oldDataContext.PropertyChanged += SongItemControl_PropertyChanged;
+            }
         }
 
         private void userControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            if (DataContext != null)
-                ((Song)DataContext).PropertyChanged -= SongItemControl_PropertyChanged;
         }
 
         void SongItemControl_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

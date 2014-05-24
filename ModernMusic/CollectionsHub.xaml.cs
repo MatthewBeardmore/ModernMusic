@@ -152,7 +152,18 @@ namespace ModernMusic
 
         private void SongItem_Tapped(Song song)
         {
-            this.Frame.Navigate(typeof(NowPlaying), song);
+            Playlist playlist = new Playlist();
+            int idx = 0;
+            foreach(GroupInfoList<Song> songs in MusicLibrary.Instance.SongGroupDictionary)
+            {
+                foreach (Song s in songs)
+                {
+                    if (s == song)
+                        idx = playlist.Songs.Count;
+                    playlist.Songs.Add(s);
+                }
+            }
+            this.Frame.Navigate(typeof(NowPlaying), new KeyValuePair<Playlist, int>(playlist, idx));
         }
 
         private void nowPlaying_click(object sender, RoutedEventArgs e)
@@ -232,6 +243,7 @@ namespace ModernMusic
 
         private void Border_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            pivot.Opacity = 0.5;
             Border border = (Border)sender;
             if (border.DataContext is GroupInfoList<Artist>)
             {
@@ -252,11 +264,13 @@ namespace ModernMusic
                 Popup.IsOpen = true;
             }
             if (Popup.IsOpen)
-                navigationHelper.BlockBackStateTemporarily = new Action(() => Popup.IsOpen = false);
+                navigationHelper.BlockBackStateTemporarily = new Action(() => { Popup.IsOpen = false; pivot.Opacity = 1.0; });
         }
 
         private void Header_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            pivot.Opacity = 1.0;
+
             string header = ((TextBlock)((Border)sender).Child).Text;
             Popup.IsOpen = false;
             navigationHelper.BlockBackStateTemporarily = null;

@@ -23,13 +23,14 @@ namespace ModernMusic.Controls
     public sealed partial class TimeSliderControl : UserControl
     {
         private bool _userScanning = false;
+        private bool _beforeScanWasPlaying = false;
 
         public TimeSliderControl()
         {
             this.InitializeComponent();
 
             DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromSeconds(0.5);
+            timer.Interval = TimeSpan.FromSeconds(0.05);
             timer.Start();
             timer.Tick += timer_Tick;
 
@@ -46,9 +47,6 @@ namespace ModernMusic.Controls
 
         void timer_Tick(object sender, object e)
         {
-            if (_userScanning)
-                return;
-
             try
             {
                 TimeSpan? position = NowPlayingManager.CurrentPosition;
@@ -57,11 +55,19 @@ namespace ModernMusic.Controls
                 {
                     TimeSpan durationLeft = duration.Value - position.Value;
 
-                    positionSlider.Value = position.Value.TotalSeconds;
-                    if (duration.Value.TotalSeconds < 1.0f)
-                        positionSlider.Maximum = 100f;
-                    else if (positionSlider.Maximum != duration.Value.TotalSeconds)
-                        positionSlider.Maximum = duration.Value.TotalSeconds;
+                    if (!_userScanning)
+                    {
+                        positionSlider.Value = position.Value.TotalSeconds;
+                        if (duration.Value.TotalSeconds < 1.0f)
+                            positionSlider.Maximum = 100f;
+                        else if (positionSlider.Maximum != duration.Value.TotalSeconds)
+                            positionSlider.Maximum = duration.Value.TotalSeconds;
+                    }
+                    else
+                    {
+                        position = TimeSpan.FromSeconds(positionSlider.Value);
+                        durationLeft = duration.Value - position.Value;
+                    }
 
                     string currentTimeText = position.Value.Minutes.ToString("D2") + ":" + position.Value.Seconds.ToString("D2");
                     if (position.Value.Hours > 0)
@@ -94,12 +100,19 @@ namespace ModernMusic.Controls
 
         private void positionSlider_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            _userScanning = true;
+            if (!_userScanning)
+            {
+                _userScanning = true;
+                _beforeScanWasPlaying = BackgroundMediaPlayer.Current.CurrentState == MediaPlayerState.Playing;
+                BackgroundMediaPlayer.Current.Pause();
+            }
         }
 
-        private void positionSlider_PointerExited(object sender, PointerRoutedEventArgs e)
+        private void positionSlider_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
         {
             _userScanning = false;
+            if (_beforeScanWasPlaying)
+                BackgroundMediaPlayer.Current.Play();
             NowPlayingManager.Seek(positionSlider.Value);
         }
     }

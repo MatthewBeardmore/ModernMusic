@@ -13,6 +13,36 @@
     DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     d:DataContext="{Binding Source={d:DesignData Source=../../ModernMusic.Library/Library/Samples/SampleSong.json}}">
     <UserControl.Resources>
+        <Style x:Name="appBarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Foreground" Value="{ThemeResource PhoneForegroundBrush}" />
+            <Setter Property="BorderThickness" Value="{ThemeResource PhoneBorderThickness}" />
+            <Setter Property="FontFamily" Value="{ThemeResource PhoneFontFamilyNormal}" />
+            <Setter Property="FontWeight" Value="{ThemeResource PhoneButtonFontWeight}" />
+            <Setter Property="FontSize" Value="{ThemeResource TextStyleLargeFontSize}" />
+            <Setter Property="Padding" Value="0,0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="Grid" Background="Transparent">
+                            <Border x:Name="Border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                    Background="{TemplateBinding Background}">
+                                <ContentPresenter x:Name="ContentPresenter" Foreground="{TemplateBinding Foreground}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Margin="{TemplateBinding Padding}"
+                                Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                                AutomationProperties.AccessibilityView="Raw"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style TargetType="ListBox">
             <Setter Property="Foreground" Value="{ThemeResource ListBoxForegroundThemeBrush}" />
             <Setter Property="Background" Value="{ThemeResource ListBoxBackgroundThemeBrush}" />
@@ -111,7 +141,7 @@
             <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Column="1" Margin="0,12.5,0,0" HorizontalAlignment="Left">
+        <StackPanel Grid.Column="1" Grid.ColumnSpan="2" Margin="0,12.5,0,0" HorizontalAlignment="Left">
             <TextBlock Text="{Binding Song.ArtistCaps}" HorizontalAlignment="Left" Style="{StaticResource TitleTextBlockStyle}" TextWrapping="NoWrap"/>
             <TextBlock Text="{Binding Song.AlbumLower}" HorizontalAlignment="Left" CharacterSpacing="-25" FontSize="57" FontFamily="Segoe WP SemiLight" Padding="0,0,0,6.5" Margin="-3,-6.5,0,0" TextWrapping="NoWrap"/>
         </StackPanel>
@@ -128,6 +158,7 @@
             </Grid.ColumnDefinitions>
 
             <FlipView x:Name="albumArtList" 
+                      Canvas.ZIndex="1"
                       HorizontalAlignment="Stretch" 
                       VerticalAlignment="Stretch" 
                       Grid.ColumnSpan="4" 
@@ -140,7 +171,7 @@
                       SelectionChanged="albumArtList_SelectionChanged">
                 <FlipView.ItemTemplate>
                     <DataTemplate>
-                        <Image HorizontalAlignment="Left" Stretch="Uniform" Width="250" Height="250" Margin="20,0,0,0">
+                        <Image HorizontalAlignment="Left" Stretch="Uniform" Width="250" Height="250" Margin="17.6,0,0,0">
                             <Image.Source>
                                 <BitmapImage DecodePixelWidth="250" DecodePixelHeight="250" CreateOptions="None" UriSource="{Binding CachedImagePath}"/>
                             </Image.Source>
@@ -150,11 +181,16 @@
             </FlipView>
             
             <StackPanel Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Stretch" Orientation="Vertical">
-                <SymbolIcon Margin="0,0,0,60" Tapped="repeatButton_Tapped" x:Name="repeatButton" Symbol="RepeatAll" Width="60" Height="40"/>
-                <SymbolIcon Margin="0,0,0,60" Tapped="shuffleButton_Tapped" x:Name="shuffleButton" Symbol="Shuffle" Width="60" Height="40"/>
-                <SymbolIcon Margin="0,0,0,0" Tapped="playlistButton_Tapped" x:Name="playlistButton" Symbol="AllApps" Width="60" Height="40"/>
+                <SymbolIcon Margin="0,0,0,60" x:Name="repeatButton" Symbol="RepeatAll" Width="60" Height="40"/>
+                <SymbolIcon Margin="0,0,0,60" x:Name="shuffleButton" Symbol="Shuffle" Width="60" Height="40"/>
+                <SymbolIcon Margin="0,0,0,0" x:Name="playlistButton" Symbol="AllApps" Width="60" Height="40"/>
             </StackPanel>
-            <controls:TimeSliderControl Grid.Column="1" Grid.Row="1" Height="33"/>
+            <StackPanel Canvas.ZIndex="2" Grid.Column="2" HorizontalAlignment="Left" VerticalAlignment="Stretch" Orientation="Vertical">
+                <Button Style="{StaticResource appBarButtonStyle}" Margin="0,0,0,35" Tapped="repeatButton_Tapped" Width="70" Height="60"/>
+                <Button Style="{StaticResource appBarButtonStyle}" Margin="0,0,0,35" Tapped="shuffleButton_Tapped" Width="70" Height="60"/>
+                <Button Style="{StaticResource appBarButtonStyle}" Margin="0,0,0,0" Tapped="playlistButton_Tapped" Width="70" Height="60"/>
+            </StackPanel>
+            <controls:TimeSliderControl Margin="0,0,0,0" Grid.Column="1" Grid.Row="1" Height="32.6"/>
         </Grid>
 
         <ListBox Background="Transparent" x:Name="songList" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
@@ -173,7 +209,7 @@
             OnButtonPressed="previousButton_Click"/>
         <controls:AppBarButtonControl x:Name="playButton" Grid.Row="3" Grid.ColumnSpan="3"
             HorizontalAlignment="Center"
-            Symbol="Play"
+            Symbol="Pause"
             OnButtonPressed="playButton_Click"/>
         <controls:AppBarButtonControl Grid.Row="3" Grid.ColumnSpan="3"
             HorizontalAlignment="Right"

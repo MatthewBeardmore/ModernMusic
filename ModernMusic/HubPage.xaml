@@ -78,9 +78,10 @@
             </PivotItem>
             <PivotItem x:Name="playlistsPivot" Header="playlists" CommonNavigationTransitionInfo.IsStaggerElement="True">
                 <ListView x:Name="lvPlaylists" 
-                            ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
-                            ScrollViewer.IsVerticalScrollChainingEnabled="False" 
-                            ItemsSource="{Binding PlaylistManager.Playlists}">
+                        Margin="0,-20,0,0"
+                        ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
+                        ScrollViewer.IsVerticalScrollChainingEnabled="False" 
+                        ItemsSource="{Binding PlaylistManager.Playlists}">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <controls:PlaylistItemControl

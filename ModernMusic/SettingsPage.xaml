@@ -18,7 +18,7 @@
                 <ToggleSwitch x:Name="xboxIntegration" Header="Enable Xbox Music Integration" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Top"/>
                 <ToggleSwitch x:Name="alwaysScanAtStartup" Header="Always scan on launch" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Top"/>
                 <ToggleSwitch x:Name="addGoesToNowPlaying" Header="Add to Now Playing switches view" HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Top"/>
-                <Button Content="Load Library from Disk" Click="loadFromDisk_Click"/>
+                <Button Content="Rescan Library Now" Click="loadFromDisk_Click"/>
             </StackPanel>
         </PivotItem>
     </Pivot>

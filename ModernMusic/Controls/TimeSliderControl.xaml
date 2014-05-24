@@ -166,9 +166,9 @@
     </UserControl.Resources>
     <Grid x:Name="grid" Background="{StaticResource PageBackgroundThemeBrush}">
         <Slider x:Name="positionSlider"
-                        Margin="0,-11,0,0"
+                        Margin="0,-11,0,0" Value="20"
                         Height="50" Orientation="Horizontal"
-                        Foreground="{ThemeResource PhoneAccentBrush}" PointerEntered="positionSlider_PointerEntered" PointerExited="positionSlider_PointerExited"/>
+                        Foreground="{ThemeResource PhoneAccentBrush}" PointerEntered="positionSlider_PointerEntered" PointerCaptureLost="positionSlider_PointerCaptureLost"/>
         <TextBlock x:Name="currentTime" HorizontalAlignment="Left" Margin="2,0,0,-4" TextWrapping="Wrap" Text="0:00" VerticalAlignment="Bottom" FontSize="12"/>
         <TextBlock x:Name="timeLeft" HorizontalAlignment="Right" Margin="0,0,2,-4" TextWrapping="Wrap" Text="3:30-" FlowDirection="RightToLeft" VerticalAlignment="Bottom" FontSize="12"/>
     </Grid>

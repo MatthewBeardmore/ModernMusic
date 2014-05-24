@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,20 +56,42 @@ namespace ModernMusic.Library
             SecondaryTileManager.PinSecondaryTile(appbarTileId, Name, square150x150Logo, activationArguments, true);
         }
 
-        public void GenerateShuffleList()
+        public void GenerateShuffleList(int currentIndex = -1)
         {
             Random random = new Random();
             ShuffleList = new int[Songs.Count];
 
             List<int> indices = new List<int>();
-            for (int i = 0; i < ShuffleList.Length; i++)
-                indices.Add(i);
 
-            for (int i = 0; i < ShuffleList.Length; i++)
+            if(currentIndex < 1)
             {
-                int idx = random.Next(0, indices.Count);
-                ShuffleList[i] = indices[idx];
-                indices.RemoveAt(idx);
+                for (int i = 1; i < ShuffleList.Length; i++)
+                    indices.Add(i);
+
+                for (int i = 0; i < ShuffleList.Length - 1; i++)
+                {
+                    int idx = random.Next(0, indices.Count);
+                    ShuffleList[i + 1] = indices[idx];
+                    indices.RemoveAt(idx);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < ShuffleList.Length; i++)
+                    if(i != currentIndex)
+                        indices.Add(i);
+
+                ShuffleList[currentIndex] = currentIndex;
+
+                for (int i = 0; i < ShuffleList.Length; i++)
+                {
+                    if(i != currentIndex)
+                    {
+                        int idx = random.Next(0, indices.Count);
+                        ShuffleList[i] = indices[idx];
+                        indices.RemoveAt(idx);
+                    }
+                }
             }
         }
 
@@ -88,7 +111,7 @@ namespace ModernMusic.Library
 
         public Song GetSong(int index)
         {
-            if (index == -1)
+            if (index == -1 || index >= ShuffleList.Length)
                 return null;
 
             if (NowPlayingInformation.ShuffleEnabled)

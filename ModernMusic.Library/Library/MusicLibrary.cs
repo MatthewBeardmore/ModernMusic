@@ -37,6 +37,10 @@ namespace ModernMusic.Library
             }
         }
 
+        public static bool IsBackgroundTask { get; set; }
+
+        public static CoreDispatcher Dispatcher { get; set; }
+
         private int _hasLoadedArtists;
         private int _hasLoadedCache;
 
@@ -144,6 +148,13 @@ namespace ModernMusic.Library
             await _cache.Serialize();
         }
 
+        public void ResetLoadLibrary()
+        {
+            Interlocked.Exchange(ref _hasLoadedArtists, 0);
+        }
+
+        public static Task CacheLoadTask { get; private set; }
+
         public Task LoadCache(CoreDispatcher dispatcher, StorageFile cacheFile = null)
         {
             if (Interlocked.CompareExchange(ref _hasLoadedCache, 1, 0) == 1)
@@ -207,36 +218,40 @@ namespace ModernMusic.Library
 
         private async Task TraverseFolder(StorageFolder folder)
         {
-            foreach (StorageFile file in await folder.GetFilesAsync())
+            try
             {
-                MusicProperties songProperties = await file.Properties.GetMusicPropertiesAsync();
-
-                if (songProperties.Title == "" && songProperties.Album == "" && songProperties.Artist == "")
-                    continue;
-
-                Artist artist = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist));
-                Album album = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album), songProperties.Year);
-                Song song = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album),
-                    FixSongName(songProperties.Title, file.DisplayName), file.Path, songProperties);
-
-                if (artist != null)
-                    AddItemToGroup(ArtistGroupDictionary, artist, a => a.ArtistName[0]);
-                if (album != null)
-                    AddItemToGroup(AlbumGroupDictionary, album, a => a.AlbumName[0]);
-                if (song != null)
-                    AddItemToGroup(SongGroupDictionary, song, a => song.SongTitle[0]);
-
-                if(_lastLoadedArtist != songProperties.Artist)
+                foreach (StorageFile file in await folder.GetFilesAsync())
                 {
-                    _lastLoadedArtist = songProperties.Artist;
-                    if (OnLoadLibraryFromDiskProgress != null)
-                        OnLoadLibraryFromDiskProgress(_lastLoadedArtist);
+                    MusicProperties songProperties = await file.Properties.GetMusicPropertiesAsync();
+
+                    if (songProperties.Title == "" && songProperties.Album == "" && songProperties.Artist == "")
+                        continue;
+
+                    Artist artist = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist));
+                    Album album = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album), songProperties.Year);
+                    Song song = _cache.CreateIfNotExist(FixArtistName(songProperties.Artist), FixAlbumName(songProperties.Album),
+                        FixSongName(songProperties.Title, file.DisplayName), file.Path, songProperties);
+
+                    if (artist != null)
+                        AddItemToGroup(ArtistGroupDictionary, artist, a => a.ArtistName[0]);
+                    if (album != null)
+                        AddItemToGroup(AlbumGroupDictionary, album, a => a.AlbumName[0]);
+                    if (song != null)
+                        AddItemToGroup(SongGroupDictionary, song, a => song.SongTitle[0]);
+
+                    if (_lastLoadedArtist != songProperties.Artist)
+                    {
+                        _lastLoadedArtist = songProperties.Artist;
+                        if (OnLoadLibraryFromDiskProgress != null)
+                            OnLoadLibraryFromDiskProgress(_lastLoadedArtist);
+                    }
+                }
+                foreach (StorageFolder childFolder in await folder.GetFoldersAsync())
+                {
+                    await TraverseFolder(childFolder);
                 }
             }
-            foreach (StorageFolder childFolder in await folder.GetFoldersAsync())
-            {
-                await TraverseFolder(childFolder);
-            }
+            catch { }
         }
 
         private string FixSongName(string songTitle, string displayName)
@@ -338,6 +353,11 @@ namespace ModernMusic.Library
         public Album GetAlbum(Guid id)
         {
             return _cache.GetAlbum(id);
+        }
+
+        public Song GetSong(Guid id)
+        {
+            return _cache.GetSong(id);
         }
 
         public List<Song> GetAllSongs()
@@ -482,6 +502,19 @@ namespace ModernMusic.Library
             {
                 if (artist.ID == id)
                     return artist;
+            }
+            return null;
+        }
+
+        public Song GetSong(Guid id)
+        {
+            foreach (List<Song> songs in Songs.Values)
+            {
+                foreach(Song song in songs)
+                {
+                    if (song.ID == id)
+                        return song;
+                }
             }
             return null;
         }

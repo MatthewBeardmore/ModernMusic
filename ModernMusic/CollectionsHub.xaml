@@ -83,6 +83,7 @@
                     HorizontalAlignment="Left">
                 <TextBlock Text="{Binding Key}"
                            TextLineBounds="Tight"
+                           IsColorFontEnabled="False"
                            Foreground="{StaticResource PhoneForegroundBrush}"
                            FontSize="40"
                            Margin="5.5,0,0,11.5"
@@ -116,8 +117,8 @@
             <Border x:Name="PopupBorder" Width="400" Height="640">
                 <ContentPresenter Width="400" Height="640">
                     <ContentPresenter.Content>
-                        <GridView x:Name="popupGridView" Margin="20,0,20,0"
-                                  Width="360" Height="640"
+                        <GridView x:Name="popupGridView" Margin="19,0,20,0"
+                                  Width="362" Height="640"
                                   ItemsSource="{Binding CollectionGroups}">
                             <GridView.ItemTemplate>
                                 <DataTemplate>
@@ -149,7 +150,8 @@
             VerticalContentAlignment="Stretch">
             <PivotItem x:Name="artistsPivot" Header="artists">
                 <ListView x:Name="lvArtists" 
-                    ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
+                    Margin="0,-30,0,0"
+                    ScrollViewer.IsHorizontalScrollChainingEnabled="True" 
                     ScrollViewer.IsVerticalScrollChainingEnabled="False" 
                     ScrollViewer.HorizontalScrollMode="Disabled"
                     IsSwipeEnabled="False"
@@ -182,7 +184,8 @@
             </PivotItem>
             <PivotItem x:Name="albumPivot" Header="albums">
                 <ListView x:Name="lvAlbums"
-                    ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
+                    Margin="0,-30,0,0"
+                    ScrollViewer.IsHorizontalScrollChainingEnabled="True" 
                     ScrollViewer.IsVerticalScrollChainingEnabled="False"
                     ScrollViewer.HorizontalScrollMode="Disabled" 
                     IsSwipeEnabled="False"
@@ -210,13 +213,14 @@
                 </ListView>
             </PivotItem>
             <PivotItem x:Name="songsPivot" Header="songs">
-                <ListView x:Name="lvSongs"
-                    ScrollViewer.IsHorizontalScrollChainingEnabled="False" 
+                <ListView x:Name="lvSongs" 
+                    Margin="0,-30,0,0"
+                    ScrollViewer.IsHorizontalScrollChainingEnabled="True" 
                     ScrollViewer.IsVerticalScrollChainingEnabled="False" 
                     ScrollViewer.HorizontalScrollMode="Disabled"
                     IsSwipeEnabled="False"
                     IncrementalLoadingThreshold="1"
-                    DataFetchSize="40"
+                    DataFetchSize="40" 
                     ItemsSource="{Binding SongsCollection.View}">
                     <ListView.ItemTemplate>
                         <DataTemplate>

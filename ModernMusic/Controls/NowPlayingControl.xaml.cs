@@ -218,7 +218,7 @@ namespace ModernMusic.Controls
         {
             NowPlayingInformation.RepeatEnabled = !NowPlayingInformation.RepeatEnabled;
             SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
-            ((SymbolIcon)sender).Foreground =
+            repeatButton.Foreground =
                 NowPlayingInformation.RepeatEnabled ? accentBrush : new SolidColorBrush(Colors.White);
 
             NowPlayingInformation_OnCurrentPlaylistUpdated();
@@ -228,7 +228,7 @@ namespace ModernMusic.Controls
         {
             NowPlayingInformation.ShuffleEnabled = !NowPlayingInformation.ShuffleEnabled;
             SolidColorBrush accentBrush = (SolidColorBrush)App.Current.Resources["PhoneAccentBrush"];
-            ((SymbolIcon)sender).Foreground =
+            shuffleButton.Foreground =
                 NowPlayingInformation.ShuffleEnabled ? accentBrush : new SolidColorBrush(Colors.White);
 
             NowPlayingInformation.CurrentPlaylist = NowPlayingInformation.CurrentPlaylist;
@@ -267,8 +267,11 @@ namespace ModernMusic.Controls
             {
                 _programChangingScrollViewer.Reset();
 
-                if (NowPlayingManager.SkipToSong(albumArtList.SelectedIndex, Dispatcher))
-                    ResumeLayout();
+                if (albumArtList.SelectedIndex != -1)
+                {
+                    if (NowPlayingManager.SkipToSong(albumArtList.SelectedIndex, Dispatcher))
+                        ResumeLayout();
+                }
             }
         }
 

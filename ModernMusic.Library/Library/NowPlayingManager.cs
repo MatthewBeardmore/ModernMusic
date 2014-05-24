@@ -13,6 +13,8 @@ using Windows.Storage;
 using Windows.UI.Core;
 using System.IO;
 using Windows.Storage.Streams;
+using Windows.UI.Xaml;
+using Windows.Media;
 
 namespace ModernMusic.Library
 {
@@ -129,10 +131,18 @@ namespace ModernMusic.Library
 
                 //TODO: Keep audio position when the background task is killed
                 StartBackgroundAudioTask(dispatcher);
-
-                ValueSet message = new ValueSet();
-                message.Add(Constants.StartPlaying, null);
-                BackgroundMediaPlayer.SendMessageToBackground(message);
+                if(IsAudioOpen)
+                {
+                    ValueSet message = new ValueSet();
+                    message.Add(Constants.PlayTrack, null);
+                    BackgroundMediaPlayer.SendMessageToBackground(message);
+                }
+                else
+                {
+                    ValueSet message = new ValueSet();
+                    message.Add(Constants.StartPlaying, null);
+                    BackgroundMediaPlayer.SendMessageToBackground(message);
+                }
             }
             return needsUpdated;
         }
@@ -441,9 +451,9 @@ namespace ModernMusic.Library
 
                 if (value != null)
                 {
-                    value.GenerateShuffleList();
-                    value.ClearSelection();
                     int idx = CurrentIndex;
+                    value.GenerateShuffleList(idx);
+                    value.ClearSelection();
                     if (idx != -1)
                         value.GetSong(idx).Selected = true;
                 }
@@ -465,7 +475,9 @@ namespace ModernMusic.Library
                 if (!DisableCaching && retVal != _lastIndex && _cachedPlaylist != null)
                 {
                     _cachedPlaylist.ClearSelection();
-                    _cachedPlaylist.GetSong(retVal).Selected = true;
+                    Song song = _cachedPlaylist.GetSong(retVal);
+                    if (song != null)
+                        song.Selected = true;
                 }
                 return _lastIndex = retVal;
             }
@@ -476,7 +488,9 @@ namespace ModernMusic.Library
                 {
                     _lastIndex = value;
                     _cachedPlaylist.ClearSelection();
-                    _cachedPlaylist.GetSong(value).Selected = true;
+                    Song song = _cachedPlaylist.GetSong(value);
+                    if(song != null)
+                        song.Selected = true;
                 }
             }
         }
@@ -583,7 +597,27 @@ namespace ModernMusic.Library
             {
                 StorageFile file = await ApplicationData.Current.LocalCacheFolder.GetFileAsync(key);
                 using (IInputStream inStream = await file.OpenSequentialReadAsync())
-                    return Playlist.DeserializeFrom(inStream);
+                {
+                    Playlist playlist = Playlist.DeserializeFrom(inStream);
+                    
+                    if(!MusicLibrary.IsBackgroundTask)
+                    {
+                        Task t = MusicLibrary.Instance.LoadCache(MusicLibrary.Dispatcher);
+                        if (t != null)
+                            await t;
+                        else if (MusicLibrary.CacheLoadTask != null && MusicLibrary.CacheLoadTask.IsCompleted)
+                            await MusicLibrary.CacheLoadTask;
+
+                        for (int i = 0; i < playlist.Songs.Count; i++)
+                        {
+                            Song song = MusicLibrary.Instance.GetSong(playlist.Songs[i].ID);
+                            if (song != null)
+                                playlist.Songs[i] = song;
+                        }
+                    }
+
+                    return playlist;
+                }
             }
             catch
             {

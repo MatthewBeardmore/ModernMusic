@@ -1,4 +1,5 @@
 ﻿using ModernMusic.Helpers;
+using ModernMusic.Library;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -113,6 +114,8 @@ namespace ModernMusic
 
         private void loadFromDisk_Click(object sender, RoutedEventArgs e)
         {
+            MusicLibrary.Instance.ResetLoadLibrary();
+
             if (!Frame.Navigate(typeof(LoadingScreen), null))
             {
                 throw new Exception("Failed to create initial page");

@@ -83,7 +83,8 @@ namespace ModernMusic
             songView.Items.Add(albumControl);
             foreach (Song song in MusicLibrary.Instance.GetSongs(_currentAlbum))
             {
-                SongItemControl control = new SongItemControl(song);
+                SongItemControl control = new SongItemControl();
+                control.DataContext = song;
                 control.SetValue(FlyoutBase.AttachedFlyoutProperty, this.Resources["AddToNowPlayingFlyout"]);
                 control.Holding += SongItemControl_Holding;
                 songView.Items.Add(control);
